@@ -159,7 +159,13 @@ export async function GET(request: NextRequest) {
   }
 
   // ── Admin detail response ──
-  const version = process.env.APP_VERSION || "1.0.0";
+  let version = "unknown";
+  try {
+    const fs = await import("fs/promises");
+    version = (await fs.readFile("/var/www/admin/VERSION", "utf-8")).trim();
+  } catch {
+    version = process.env.APP_VERSION || "unknown";
+  }
 
   return NextResponse.json({
     status,
