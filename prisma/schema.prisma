@@ -1,0 +1,1703 @@
+// ═══════════════════════════════════════════════════════════════════════
+// ZIELONE WZGÓRZA — Full Database Schema
+// Master Plan v5.0 — Unified Reservation System + Multi-Type Resources
+// ═══════════════════════════════════════════════════════════════════════
+//
+// KEY ARCHITECTURAL DECISIONS (v5.0):
+//   1. ResourceCategoryType: ONLY 3 types (ACCOMMODATION / TIME_SLOT / QUANTITY_TIME)
+//   2. ReservationItem replaces ReservationResource (startAt/endAt per item)
+//   3. TimelineEntry: DateTime everywhere (no @db.Date), quantityReserved for QUANTITY_TIME
+//   4. ReservationStatus: added FINISHED + NO_SHOW
+//   5. ClientAccount = auth model (old stats → ClientStats)
+//   6. Property model + propertyId on core models
+//   7. PaymentSchedule for installments
+//   8. Partial exclusion constraint: WHERE categoryType != QUANTITY_TIME
+//   9. One POST /api/reservations with items[] — atomic creation
+//  10. Addons: reservationId (required) + reservationItemId (optional)
+//
+// ═══════════════════════════════════════════════════════════════════════
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// SYSTEM — Users, Sessions, Roles, Settings, Audit, Property
+// ═══════════════════════════════════════════════════════════════════════
+
+model Property {
+  id        String   @id @default(cuid())
+  name      String
+  address   String?
+  city      String?
+  postalCode String?
+  country   String   @default("PL")
+  phone     String?
+  email     String?
+  website   String?
+  logoUrl   String?
+  settings  Json?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  resources    Resource[]
+  reservations Reservation[]
+  ratePlans    RatePlan[]
+  seasons      Season[]
+  @@map("properties")
+}
+
+// ── D0: User roles ──
+enum UserRole {
+  OWNER
+  MANAGER
+  RECEPTION
+}
+
+model User {
+  id                String   @id @default(cuid())
+  email             String   @unique
+  password          String
+  firstName         String
+  lastName          String
+  role              UserRole @default(OWNER)
+  avatar            String?
+  phone             String?
+  isActive          Boolean  @default(true)
+  mustChangePassword Boolean @default(false)
+  lastLoginAt       DateTime?  // renamed from lastLogin (D0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  sessions          Session[]
+  auditLogs         AuditLog[]
+  reservationNotes  ReservationNote[]
+  clientNotes       ClientNote[]
+  assignedClients   Client[]          @relation("ClientAssignee")
+  assignedReservations Reservation[]  @relation("ReservationAssignee")
+  paymentsCreated   Payment[]       @relation("PaymentCreatedBy")
+  paymentsConfirmed Payment[]       @relation("PaymentConfirmedBy")
+  paymentsRejected  Payment[]       @relation("PaymentRejectedBy")
+  cleaningTasks     CleaningTask[]    @relation("CleaningAssignee")
+  operationalTasks  OperationalTask[] @relation("TaskAssignee")
+  emailTemplatesUpdated EmailTemplate[] @relation("EmailTemplateUpdatedBy")
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([token])
+  @@index([userId])
+  @@map("sessions")
+}
+
+model CompanySettings {
+  id             String  @id @default("default")
+  companyName    String  @default("Zielone Wzgórza")
+  legalName      String?
+  nip            String?
+  regon          String?
+  address        String?
+  city           String?
+  postalCode     String?
+  country        String  @default("PL")
+  phone          String?
+  email          String?
+  website        String?
+  logoUrl        String?
+  timezone       String  @default("Europe/Warsaw")
+  currency       String  @default("PLN")
+  locale         String  @default("pl-PL")
+  checkInTime    String  @default("15:00")
+  checkOutTime   String  @default("11:00")
+  // Reservation settings (frontend client)
+  paymentDeadlineHours    Int     @default(24)
+  paymentDeadlineAction   String  @default("CANCEL")
+  requiredDepositPercent  Int     @default(30)
+  minInstallmentAmount    Int     @default(10000)
+  overdueNotificationHours Int    @default(12)
+  // Payment methods — JSON config per Master Plan 9.8
+  // Format: [{ method, isActive, availableForAdmin, availableForWidget,
+  //            availableForOnline, requiresConfirmation, displayName, sortOrder }]
+  paymentMethodsConfig Json   @default("[]")
+  // LEGACY booleans (kept for backward compat, S2b drop)
+  paymentBankTransfer Boolean @default(true)
+  paymentOnline       Boolean @default(true)
+  paymentCash         Boolean @default(true)
+  // E3: Email settings (business config — SMTP credentials in .env)
+  senderEmail         String?   // adres nadawcy emaili (np. system@zielonewzgorza.eu)
+  senderName          String    @default("Zielone Wzgórza")  // nazwa nadawcy
+  replyToEmail        String?   // adres do odpowiedzi (jeśli inny niż sender)
+  // E3: Bank account for payment instructions
+  bankAccountName     String    @default("Grupa Truszkowscy sp. z o.o.")
+  bankAccountIban     String    @default("89 1090 1102 0000 0001 5948 7356")
+  bankName            String    @default("Santander Bank Polska")
+  // E3: Reminder settings
+  reminderEnabled     Boolean   @default(true)
+  reminderDays        Int       @default(3)   // po ilu dniach PENDING → reminder
+  maxReminders        Int       @default(2)   // max reminderów per rezerwację
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  @@map("company_settings")
+}
+
+model TaxConfig {
+  id          String   @id @default(cuid())
+  name        String
+  type        TaxType  @default(PERCENTAGE)
+  rate        Decimal
+  isActive    Boolean  @default(true)
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  reservationTaxes ReservationTax[]
+  @@map("tax_configs")
+}
+
+enum TaxType {
+  PERCENTAGE
+  FIXED_PER_NIGHT
+  FIXED_PER_PERSON
+  FIXED_PER_BOOKING
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  action     String
+  entity     String
+  entityId   String
+  changes    Json?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  @@index([entity, entityId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// MODULE 1 — Resources + Inventory Layer
+// ═══════════════════════════════════════════════════════════════════════
+
+model ResourceCategory {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  type        ResourceCategoryType
+  icon        String?
+  description String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  // D 159-162: nullable override per category (fallback → CompanySettings)
+  checkInTimeOverride  String?  // format "HH:MM", null = use global
+  checkOutTimeOverride String?  // format "HH:MM", null = use global
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  resources Resource[]
+  @@map("resource_categories")
+}
+
+enum ResourceCategoryType {
+  ACCOMMODATION
+  TIME_SLOT
+  QUANTITY_TIME
+}
+
+model Resource {
+  id           String   @id @default(cuid())
+  propertyId   String?
+  categoryId   String
+  name         String
+  slug         String   @unique
+  unitNumber   String?
+  description  String?
+  shortDesc    String?
+  status       ResourceStatus @default(ACTIVE)
+  sortOrder    Int      @default(0)
+  maxCapacity    Int?
+  totalUnits     Int      @default(1)
+  area           Decimal?
+  floor          Int?
+  location       String?
+  unitDuration   Int?
+  minPersons     Int?
+  maxPersons     Int?
+  durationMinutes Int?
+  isSeasonal     Boolean  @default(false)
+  seasonStart    Int?
+  seasonEnd      Int?
+  // E2: widget visibility — only ACTIVE + visibleInWidget + ACCOMMODATION shown in public booking
+  visibleInWidget Boolean @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  property            Property?            @relation(fields: [propertyId], references: [id])
+  category            ResourceCategory     @relation(fields: [categoryId], references: [id])
+  variants            ResourceVariant[]
+  images              ResourceImage[]
+  amenities           ResourceAmenity[]
+  blockedPeriods      BlockedPeriod[]
+  reservationItems    ReservationItem[]
+  channelMappings     ChannelMapping[]
+  availabilityCache   AvailabilityCache[]
+  timelineEntries     TimelineEntry[]
+  @@index([propertyId])
+  @@index([categoryId])
+  @@index([status])
+  @@map("resources")
+}
+
+enum ResourceStatus {
+  ACTIVE
+  INACTIVE
+  MAINTENANCE
+  SEASONAL
+}
+
+model ResourceVariant {
+  id           String   @id @default(cuid())
+  resourceId   String
+  name         String
+  slug         String   @unique
+  unitNumber   String?
+  description  String?
+  capacity     Int
+  basePrice    Decimal?       // LEGACY
+  basePriceMinor Int?         // grosze — source of truth
+  sortOrder    Int      @default(0)
+  isActive     Boolean  @default(true)
+  isDefault    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  resource     Resource       @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  priceEntries PriceEntry[]
+  @@index([resourceId])
+  @@map("resource_variants")
+}
+
+model ResourceImage {
+  id         String   @id @default(cuid())
+  resourceId String
+  url        String
+  alt        String?
+  sortOrder  Int      @default(0)
+  isPrimary  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  resource Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  @@index([resourceId])
+  @@map("resource_images")
+}
+
+model ResourceAmenity {
+  id         String   @id @default(cuid())
+  resourceId String
+  name       String
+  icon       String?
+  createdAt  DateTime @default(now())
+  resource Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  @@index([resourceId])
+  @@map("resource_amenities")
+}
+
+model Addon {
+  id           String         @id @default(cuid())
+  name         String
+  description  String?
+  scope        AddonScope     @default(GLOBAL)
+  pricingType  AddonPricingType
+  price        Decimal       // LEGACY
+  priceMinor   Int           @default(0)  // grosze — source of truth
+  selectType   AddonSelectType @default(CHECKBOX)
+  isRequired   Boolean        @default(false)
+  isActive     Boolean        @default(true)
+  sortOrder    Int            @default(0)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  reservationAddons ReservationAddon[]
+  @@index([scope, isActive])
+  @@map("addons")
+}
+
+enum AddonScope {
+  GLOBAL
+  PER_ITEM
+}
+
+enum AddonPricingType {
+  PER_BOOKING
+  PER_NIGHT
+  PER_PERSON
+  PER_PERSON_NIGHT
+  PER_UNIT
+}
+
+enum AddonSelectType {
+  CHECKBOX
+  QUANTITY
+  SELECT
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// MODULE 2 — Pricing System
+// ═══════════════════════════════════════════════════════════════════════
+
+model Season {
+  id         String   @id @default(cuid())
+  propertyId String?
+  name       String
+  type       String   @default("standard")
+  startDate  DateTime @db.Date
+  endDate    DateTime @db.Date
+  color      String?
+  priority   Int      @default(0)
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  property     Property?    @relation(fields: [propertyId], references: [id])
+  priceEntries PriceEntry[]
+  @@index([propertyId])
+  @@map("seasons")
+}
+
+model RatePlan {
+  id            String    @id @default(cuid())
+  propertyId    String?
+  name          String
+  slug          String    @unique
+  description   String?
+  isActive      Boolean   @default(true)
+  isDefault     Boolean   @default(false)
+  sortOrder     Int       @default(0)
+  parentId      String?
+  modifierType  RatePlanModifier?
+  modifierValue Decimal?          // LEGACY (for FIXED = PLN, for PERCENTAGE = %)
+  modifierValueMinor Int?         // grosze — source of truth gdy FIXED
+  cancellationPolicy CancellationPolicy @default(FLEXIBLE)
+  cancellationDays   Int?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  property      Property?  @relation(fields: [propertyId], references: [id])
+  parent        RatePlan?  @relation("RatePlanInheritance", fields: [parentId], references: [id])
+  children      RatePlan[] @relation("RatePlanInheritance")
+  priceEntries  PriceEntry[]
+  @@index([propertyId])
+  @@map("rate_plans")
+}
+
+enum RatePlanModifier {
+  PERCENTAGE
+  FIXED
+}
+enum CancellationPolicy {
+  FLEXIBLE
+  MODERATE
+  STRICT
+  SUPER_STRICT
+}
+
+model PriceEntry {
+  id         String   @id @default(cuid())
+  variantId  String
+  ratePlanId String
+  seasonId   String?
+  date       DateTime? @db.Date
+  price      Decimal       // LEGACY
+  priceMinor Int      @default(0)  // grosze — source of truth
+  currency   String   @default("PLN")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  variant  ResourceVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  ratePlan RatePlan        @relation(fields: [ratePlanId], references: [id], onDelete: Cascade)
+  season   Season?         @relation(fields: [seasonId], references: [id], onDelete: SetNull)
+  @@unique([variantId, ratePlanId, date])
+  @@index([variantId, ratePlanId])
+  @@index([date])
+  @@map("price_entries")
+}
+
+model PriceRule {
+  id          String        @id @default(cuid())
+  name        String
+  type        PriceRuleType
+  value       Decimal
+  minPersons  Int?
+  maxPersons  Int?
+  isActive    Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  @@map("price_rules")
+}
+
+enum PriceRuleType {
+  PER_ADULT
+  PER_CHILD
+  PER_INFANT
+  PER_HOUR
+  PER_DAY
+  PER_GROUP
+}
+
+model Restriction {
+  id                String   @id @default(cuid())
+  name              String
+  startDate         DateTime @db.Date
+  endDate           DateTime @db.Date
+  minNights         Int?
+  maxNights         Int?
+  allowedArrivalDays   String?
+  allowedDepartureDays String?
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  @@map("restrictions")
+}
+
+model PromoCode {
+  id             String    @id @default(cuid())
+  code           String    @unique
+  name           String
+  discountType   DiscountType
+  discountValue  Decimal       // LEGACY
+  discountValueMinor Int       @default(0)  // grosze — source of truth
+  minBookingValue Decimal?     // LEGACY
+  minBookingValueMinor Int?    // grosze — source of truth
+  maxUses        Int?
+  usedCount      Int       @default(0)
+  validFrom      DateTime
+  validUntil     DateTime
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  reservations Reservation[]
+  @@map("promo_codes")
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// MODULE 3 — Calendar + Timeline (Source of Truth for Availability)
+// ═══════════════════════════════════════════════════════════════════════
+
+model BlockedPeriod {
+  id         String     @id @default(cuid())
+  resourceId String
+  reason     BlockReason
+  note       String?
+  startDate  DateTime   @db.Date
+  endDate    DateTime   @db.Date
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  resource Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  @@index([resourceId, startDate, endDate])
+  @@map("blocked_periods")
+}
+
+enum BlockReason {
+  CAMP
+  MAINTENANCE
+  OWNER_USE
+  EXTERNAL
+  OTHER
+}
+
+model AvailabilityCache {
+  id           String   @id @default(cuid())
+  resourceId   String
+  date         DateTime @db.Date
+  totalUnits   Int
+  bookedUnits  Int      @default(0)
+  blockedUnits Int      @default(0)
+  availableUnits Int    @default(0)
+  minPrice     Decimal?
+  updatedAt    DateTime @updatedAt
+  resource Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  @@unique([resourceId, date])
+  @@index([date])
+  @@index([resourceId, date])
+  @@map("availability_cache")
+}
+
+model CalendarEvent {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  startDate   DateTime
+  endDate     DateTime
+  allDay      Boolean  @default(false)
+  color       String?
+  type        CalendarEventType @default(INTERNAL)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  @@index([startDate, endDate])
+  @@map("calendar_events")
+}
+
+enum CalendarEventType {
+  INTERNAL
+  PUBLIC
+  HOLIDAY
+  MAINTENANCE
+}
+
+model TimelineEntry {
+  id                  String              @id @default(cuid())
+  type                TimelineEntryType
+  status              TimelineEntryStatus @default(ACTIVE)
+  resourceId          String
+  startAt             DateTime
+  endAt               DateTime
+  quantityReserved    Int                 @default(1)
+  label               String?
+  note                String?
+  reservationId       String?
+  reservationItemId   String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  resource        Resource         @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  reservation     Reservation?     @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  reservationItem ReservationItem? @relation(fields: [reservationItemId], references: [id], onDelete: Cascade)
+  @@index([resourceId, startAt, endAt])
+  @@index([type, status])
+  @@index([reservationId])
+  @@index([reservationItemId])
+  @@map("timeline_entries")
+}
+
+enum TimelineEntryType {
+  BOOKING
+  BLOCK
+  OFFER
+}
+enum TimelineEntryStatus {
+  ACTIVE
+  CANCELLED
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// MODULE 4 — Unified Reservation System (v5.0)
+// ═══════════════════════════════════════════════════════════════════════
+
+model Reservation {
+  id                  String              @id @default(cuid())
+  number              String              @unique
+  type                ReservationType
+  status              ReservationStatus   @default(PENDING)
+  propertyId          String?
+  requiresAttention   Boolean             @default(false)
+  requiresAttentionReason String?
+  paymentStatus       ResPaymentStatus    @default(UNPAID)
+  overdue             Boolean             @default(false)
+  clientId            String?
+  assignedUserId      String?
+  source              ReservationSource   @default(PHONE)
+  checkIn             DateTime
+  checkOut            DateTime
+  nights              Int
+  adults              Int                 @default(1)
+  children            Int                 @default(0)
+  subtotal            Decimal             @default(0)  // LEGACY (read-only po C1a)
+  discount            Decimal             @default(0)  // LEGACY
+  total               Decimal             @default(0)  // LEGACY
+  subtotalMinor       Int                 @default(0)  // grosze — source of truth
+  discountMinor       Int                 @default(0)  // grosze — source of truth
+  totalMinor          Int                 @default(0)  // grosze — source of truth
+  requiredDepositMinor Int                @default(0)  // grosze — snapshot progu (9.7)
+  requiredDepositRuleSnapshot Json?                    // snapshot reguły depozytu z CompanySettings (audyt)
+  currency            String              @default("PLN")
+  guestNotes          String?
+  internalNotes       String?
+  promoCodeId         String?
+  cancelledAt         DateTime?
+  cancelReason        String?
+  cancelledBy         String?
+  paymentDeadlineAt   DateTime?
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  property            Property?           @relation(fields: [propertyId], references: [id])
+  client              Client?             @relation(fields: [clientId], references: [id])
+  assignedUser        User?               @relation("ReservationAssignee", fields: [assignedUserId], references: [id])
+  promoCode           PromoCode?          @relation(fields: [promoCodeId], references: [id])
+  items               ReservationItem[]
+  addons              ReservationAddon[]
+  statusLogs          ReservationStatusLog[]
+  notes               ReservationNote[]
+  timelineEntries     TimelineEntry[]
+  offerDetails        OfferDetails?
+  bookingDetails      BookingDetails?
+  payments            Payment[]
+  paymentSchedules    PaymentSchedule[]
+  invoices            Invoice[]
+  deposits            Deposit[]
+  priceSnapshot       ReservationPriceSnapshot?
+  taxes               ReservationTax[]
+  guests              ReservationGuest[]
+  cleaningTasks       CleaningTask[]
+  messageLogs         MessageLog[]
+  quotes              Quote[]
+  emailLogs           EmailLog[]
+  @@index([propertyId])
+  @@index([clientId])
+  @@index([assignedUserId])
+  @@index([type, status])
+  @@index([checkIn, checkOut])
+  @@index([number])
+  @@index([source])
+  @@index([createdAt])
+  @@index([paymentStatus])
+  @@index([overdue])
+  @@map("reservations")
+}
+
+enum ReservationType {
+  BOOKING
+  OFFER
+  BLOCK
+}
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  EXPIRED
+  FINISHED
+  NO_SHOW
+}
+enum ResPaymentStatus {
+  UNPAID
+  PARTIAL
+  PAID
+}
+enum ReservationSource {
+  PHONE
+  EMAIL
+  WEBSITE
+  WALK_IN
+  BOOKING_COM
+  SOCIAL
+  FRONT
+  OTHER
+}
+
+model ReservationItem {
+  id                String              @id @default(cuid())
+  reservationId     String
+  resourceId        String
+  categoryType      ResourceCategoryType
+  startAt           DateTime
+  endAt             DateTime
+  quantity          Int                 @default(1)
+  pricePerUnit      Decimal             @default(0)  // LEGACY
+  totalPrice        Decimal             @default(0)  // LEGACY
+  pricePerUnitMinor Int                 @default(0)  // grosze — source of truth
+  totalPriceMinor   Int                 @default(0)  // grosze — source of truth
+  adults            Int                 @default(1)
+  children          Int                 @default(0)
+  capacityOverride  Boolean             @default(false)
+  priceSnapshot     Json?
+  sortOrder         Int                 @default(0)
+  createdAt         DateTime            @default(now())
+  reservation       Reservation         @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  resource          Resource            @relation(fields: [resourceId], references: [id])
+  timelineEntries   TimelineEntry[]
+  addons            ReservationAddon[]
+  @@index([reservationId])
+  @@index([resourceId])
+  @@index([categoryType])
+  @@map("reservation_items")
+}
+
+model OfferDetails {
+  id            String    @id @default(cuid())
+  reservationId String    @unique
+  token         String    @unique
+  pin           String?
+  expiresAt     DateTime?
+  expiryAction  ExpiryAction @default(CANCEL)
+  sentAt        DateTime?
+  viewedAt      DateTime?
+  acceptedAt    DateTime?
+  expiredAt     DateTime?
+  reservation   Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  @@map("offer_details")
+}
+
+enum ExpiryAction {
+  CANCEL
+  NOTHING
+}
+
+model BookingDetails {
+  id            String    @id @default(cuid())
+  reservationId String    @unique
+  paidAmount    Decimal   @default(0)  // LEGACY
+  balanceDue    Decimal   @default(0)  // LEGACY
+  paidAmountMinor Int     @default(0)  // grosze — source of truth
+  balanceDueMinor Int     @default(0)  // grosze — source of truth
+  overpaidAmountMinor Int @default(0)  // grosze — max(paidAmountMinor - totalMinor, 0)
+  confirmedAt   DateTime?
+  checkedInAt   DateTime?
+  checkedOutAt  DateTime?
+  token         String?   @unique
+  // E2: RODO consent log for public booking
+  consentAcceptedAt   DateTime?
+  consentTermsVersion String?
+  consentIpAddress    String?
+  consentUserAgent    String?
+  // E3: Payment reminder tracking (idempotency)
+  paymentReminderCount    Int       @default(0)
+  lastPaymentReminderAt   DateTime?
+  reservation   Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  @@map("booking_details")
+}
+
+// ── E3: Email audit trail ──
+
+enum EmailLogType {
+  BOOKING_CONFIRMATION
+  PAYMENT_REMINDER
+  STATUS_CONFIRMED
+  STATUS_CANCELLED
+  TEST
+}
+
+enum EmailDeliveryStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+model EmailLog {
+  id              String              @id @default(cuid())
+  type            EmailLogType
+  status          EmailDeliveryStatus @default(PENDING)
+  recipientEmail  String
+  recipientName   String?
+  subject         String
+  reservationId   String?
+  templateType    String?             // which template was used (for audit)
+  triggerSource   String              @default("SYSTEM") // SYSTEM | ADMIN_TEST | CRON
+  attempts        Int                 @default(0)
+  sentAt          DateTime?
+  lastAttemptAt   DateTime?
+  errorMessage    String?
+  createdAt       DateTime            @default(now())
+
+  reservation     Reservation?        @relation(fields: [reservationId], references: [id])
+
+  @@index([reservationId, type])
+  @@index([status, createdAt])
+  @@map("email_logs")
+}
+
+// ── E3b: Email templates (admin-editable) ──
+
+enum EmailTemplateType {
+  BOOKING_CONFIRMATION
+  PAYMENT_REMINDER
+  STATUS_CONFIRMED
+  STATUS_CANCELLED
+}
+
+model EmailTemplate {
+  id              String            @id @default(cuid())
+  type            EmailTemplateType @unique
+  subject         String
+  bodyHtml        String            @db.Text
+  updatedAt       DateTime          @updatedAt
+  updatedByUserId String?
+  updatedByUser   User?             @relation("EmailTemplateUpdatedBy", fields: [updatedByUserId], references: [id])
+  @@map("email_templates")
+}
+
+model ReservationAddon {
+  id                  String   @id @default(cuid())
+  reservationId       String
+  reservationItemId   String?
+  addonId             String
+  snapshotName        String
+  snapshotPrice       Decimal       // LEGACY
+  snapshotPricingType AddonPricingType
+  quantity            Int      @default(1)
+  unitPrice           Decimal       // LEGACY
+  calcPersons         Int      @default(1)
+  calcNights          Int      @default(1)
+  calcQuantity        Int      @default(1)
+  total               Decimal       // LEGACY
+  snapshotPriceMinor  Int      @default(0)  // grosze — source of truth
+  unitPriceMinor      Int      @default(0)  // grosze — source of truth
+  totalMinor          Int      @default(0)  // grosze — source of truth
+  isActive            Boolean  @default(true)
+  sortOrder           Int      @default(0)
+  createdAt           DateTime @default(now())
+  reservation     Reservation      @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  reservationItem ReservationItem? @relation(fields: [reservationItemId], references: [id], onDelete: Cascade)
+  addon           Addon            @relation(fields: [addonId], references: [id])
+  @@index([reservationId])
+  @@index([reservationItemId])
+  @@map("reservation_addons")
+}
+
+model ReservationStatusLog {
+  id            String             @id @default(cuid())
+  reservationId String
+  fromStatus    ReservationStatus?
+  toStatus      ReservationStatus
+  fromType      ReservationType?
+  toType        ReservationType?
+  action        String?
+  note          String?
+  changedBy     String?
+  metadata      Json?
+  createdAt     DateTime           @default(now())
+  reservation   Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  @@index([reservationId])
+  @@index([createdAt])
+  @@map("reservation_status_logs")
+}
+
+model ReservationNote {
+  id            String   @id @default(cuid())
+  reservationId String
+  userId        String
+  content       String
+  isPinned      Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  reservation Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id])
+  @@index([reservationId])
+  @@map("reservation_notes")
+}
+
+model ReservationGuest {
+  id            String    @id @default(cuid())
+  reservationId String
+  firstName     String
+  lastName      String
+  type          GuestType @default(ADULT)
+  age           Int?
+  documentType  String?
+  documentNumber String?
+  createdAt     DateTime  @default(now())
+  reservation Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  @@index([reservationId])
+  @@map("reservation_guests")
+}
+
+enum GuestType {
+  ADULT
+  CHILD
+  INFANT
+}
+
+model ReservationPriceSnapshot {
+  id              String   @id @default(cuid())
+  reservationId   String   @unique
+  ratePlanId      String?
+  ratePlanName    String?
+  basePrice       Decimal
+  nightPrices     Json
+  addonsBreakdown Json?
+  discountBreakdown Json?
+  taxBreakdown    Json?
+  subtotal        Decimal
+  discount        Decimal  @default(0)
+  taxTotal        Decimal  @default(0)
+  total           Decimal
+  currency        String   @default("PLN")
+  snapshotAt      DateTime @default(now())
+  reservation Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  @@map("reservation_price_snapshots")
+}
+
+model ReservationTax {
+  id            String   @id @default(cuid())
+  reservationId String
+  taxConfigId   String
+  taxName       String
+  taxRate       Decimal
+  taxType       TaxType
+  baseAmount    Decimal
+  taxAmount     Decimal
+  createdAt     DateTime @default(now())
+  reservation Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  taxConfig   TaxConfig   @relation(fields: [taxConfigId], references: [id])
+  @@index([reservationId])
+  @@map("reservation_taxes")
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Operational Tasks
+// ═══════════════════════════════════════════════════════════════════════
+
+model CleaningTask {
+  id            String            @id @default(cuid())
+  reservationId String?
+  resourceId    String?
+  assigneeId    String?
+  status        CleaningStatus    @default(PENDING)
+  priority      TaskPriority      @default(NORMAL)
+  scheduledAt   DateTime?
+  completedAt   DateTime?
+  notes         String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  reservation Reservation? @relation(fields: [reservationId], references: [id], onDelete: SetNull)
+  assignee    User?         @relation("CleaningAssignee", fields: [assigneeId], references: [id])
+  @@index([status])
+  @@index([scheduledAt])
+  @@map("cleaning_tasks")
+}
+
+enum CleaningStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  SKIPPED
+}
+
+model OperationalTask {
+  id          String        @id @default(cuid())
+  title       String
+  description String?
+  assigneeId  String?
+  status      TaskStatus    @default(TODO)
+  priority    TaskPriority  @default(NORMAL)
+  dueDate     DateTime?
+  completedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  assignee User? @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  @@index([status])
+  @@index([dueDate])
+  @@map("operational_tasks")
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+  CANCELLED
+}
+enum TaskPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// MODULE 6 — Clients / CRM
+// ═══════════════════════════════════════════════════════════════════════
+
+model Client {
+  id              String       @id @default(cuid())
+  clientNumber    String       @unique
+  type            ClientType   @default(INDIVIDUAL)
+  status          ClientStatus @default(ACTIVE)
+  firstName       String?
+  lastName        String?
+  email           String?
+  phone           String?
+  phoneSecondary  String?
+  emailSecondary  String?
+  address         String?
+  postalCode      String?
+  city            String?
+  country         String       @default("PL")
+  language        String       @default("pl")
+  companyName     String?
+  nip             String?
+  contactFirstName String?
+  contactLastName  String?
+  segment         ClientSegment  @default(STANDARD)
+  source          ClientSource   @default(MANUAL)
+  assignedUserId  String?
+  discountStandard Decimal?
+  discountPromo    Decimal?
+  currency        String         @default("PLN")
+  leadStatus      LeadStatus     @default(NONE)
+  blockReason     String?
+  blockedAt       DateTime?
+  blockedBy       String?
+  archivedAt      DateTime?
+  lastActivityAt  DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  assignedUser    User?          @relation("ClientAssignee", fields: [assignedUserId], references: [id], onDelete: SetNull)
+  account         ClientAccount?
+  stats           ClientStats?
+  guestProfile    ClientGuestProfile?
+  consent         ClientConsent?
+  billingProfiles ClientBillingProfile[]
+  notes           ClientNote[]
+  tags            ClientTag[]
+  activities      ClientActivity[]
+  reservations    Reservation[]
+  @@index([email])
+  @@index([phone])
+  @@index([status])
+  @@index([segment])
+  @@index([clientNumber])
+  @@index([assignedUserId])
+  @@index([source])
+  @@map("clients")
+}
+
+enum ClientType {
+  INDIVIDUAL
+  COMPANY
+  GROUP
+}
+enum ClientStatus {
+  ACTIVE
+  BLOCKED
+  ARCHIVED
+}
+enum ClientSegment {
+  STANDARD
+  VIP
+  PREMIUM
+  CORPORATE
+}
+enum ClientSource {
+  MANUAL
+  WEBSITE
+  BOOKING_COM
+  AIRBNB
+  PHONE
+  EMAIL
+  REFERRAL
+  SOCIAL
+  EVENT
+  OTHER
+}
+enum LeadStatus {
+  NONE
+  NEW_LEAD
+  CONTACTED
+  NEGOTIATING
+  WON
+  LOST
+}
+
+model ClientAccount {
+  id                 String    @id @default(cuid())
+  clientId           String    @unique
+  email              String    @unique
+  passwordHash       String
+  isActive           Boolean   @default(true)
+  lastLoginAt        DateTime?
+  emailVerifiedAt    DateTime?
+  resetPasswordToken String?
+  resetPasswordExpiresAt DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  @@map("client_accounts")
+}
+
+model ClientStats {
+  id             String   @id @default(cuid())
+  clientId       String   @unique
+  totalSpent     Decimal  @default(0)
+  totalBookings  Int      @default(0)
+  totalNights    Int      @default(0)
+  averageSpend   Decimal  @default(0)
+  firstBookingAt DateTime?
+  lastBookingAt  DateTime?
+  loyaltyPoints  Int      @default(0)
+  loyaltyTier    String   @default("BRONZE")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  @@map("client_stats")
+}
+
+model ClientBillingProfile {
+  id             String   @id @default(cuid())
+  clientId       String
+  label          String
+  isDefault      Boolean  @default(false)
+  companyName    String?
+  nip            String?
+  firstName      String?
+  lastName       String?
+  address        String?
+  postalCode     String?
+  city           String?
+  country        String   @default("PL")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  @@index([clientId])
+  @@map("client_billing_profiles")
+}
+
+model ClientGuestProfile {
+  id            String   @id @default(cuid())
+  clientId      String   @unique
+  sameAsClient  Boolean  @default(true)
+  firstName     String?
+  lastName      String?
+  email         String?
+  phone         String?
+  address       String?
+  postalCode    String?
+  city          String?
+  country       String   @default("PL")
+  language      String   @default("pl")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  @@map("client_guest_profiles")
+}
+
+model ClientConsent {
+  id              String   @id @default(cuid())
+  clientId        String   @unique
+  newsletter      Boolean  @default(false)
+  phoneContact    Boolean  @default(false)
+  marketing       Boolean  @default(false)
+  consentIp       String?
+  consentVersion  String?
+  consentSource   String?
+  consentDate     DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  @@map("client_consents")
+}
+
+model Tag {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  color     String?
+  createdAt DateTime @default(now())
+  clients ClientTag[]
+  @@map("tags")
+}
+
+model ClientTag {
+  id        String   @id @default(cuid())
+  clientId  String
+  tagId     String
+  createdAt DateTime @default(now())
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  @@unique([clientId, tagId])
+  @@index([clientId])
+  @@index([tagId])
+  @@map("client_tags")
+}
+
+model ClientActivity {
+  id          String             @id @default(cuid())
+  clientId    String
+  action      ClientActivityType
+  description String?
+  userId      String?
+  metadata    Json?
+  ipAddress   String?
+  userAgent   String?
+  activitySource String?
+  createdAt   DateTime           @default(now())
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  @@index([clientId])
+  @@index([createdAt])
+  @@index([action])
+  @@map("client_activities")
+}
+
+enum ClientActivityType {
+  CREATED
+  UPDATED
+  STATUS_CHANGED
+  NOTE_ADDED
+  TAG_ADDED
+  TAG_REMOVED
+  OFFER_CREATED
+  BOOKING_CREATED
+  MESSAGE_SENT
+  LOGIN
+  ARCHIVED
+}
+
+model ClientNote {
+  id        String   @id @default(cuid())
+  clientId  String
+  userId    String
+  content   String
+  isPinned  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id])
+  @@index([clientId])
+  @@map("client_notes")
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// MODULE 7 — Payments / Finance (immutable ledger + corrections only)
+// C1b: Full Payment model per Master Plan 9.2
+// ═══════════════════════════════════════════════════════════════════════
+
+model Payment {
+  id                String              @id @default(cuid())
+  reservationId     String
+
+  // ── C1b: New fields (source of truth) ──
+  kind              PaymentKind?        // CHARGE / REFUND / ADJUSTMENT
+  direction         PaymentDirection?   // IN (inflow) / OUT (outflow)
+  paymentStatus     PaymentStatus?      // PENDING / CONFIRMED / REJECTED / FAILED / CANCELLED
+
+  // ── C1b: Actor fields ──
+  createdByUserId   String?
+  createdSource     PaymentSource?      @default(ADMIN_MANUAL)
+  confirmedByUserId String?
+  confirmedAt       DateTime?
+  rejectedByUserId  String?
+  rejectedAt        DateTime?
+  rejectionReason   String?
+
+  // ── C1b: Financial ──
+  amountMinor       Int                 @default(0)  // grosze — source of truth
+  amount            Decimal             // LEGACY (read-only po C1a)
+  currency          String              @default("PLN")
+  method            PaymentMethod
+
+  // ── C1b: Dates & references ──
+  occurredAt        DateTime?           // kiedy operacja realnie zaszła
+  referenceNumber   String?             // nr przelewu / ID transakcji
+
+  // ── C1b: Linking & idempotency ──
+  linkedPaymentId   String?             // referencja do powiązanej płatności (refund → charge)
+  externalCorrelationId String?         // idempotency key / integracje
+
+  // ── C1b: Online payment provider (nullable, przyszłość) ──
+  provider          String?
+  providerPaymentId String?
+  webhookEventId    String?
+
+  // Legacy columns dropped in S2b (01.04.2026)
+
+  // ── Common ──
+  note              String?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  // ── Relations ──
+  reservation     Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  createdByUser   User?       @relation("PaymentCreatedBy", fields: [createdByUserId], references: [id])
+  confirmedByUser User?       @relation("PaymentConfirmedBy", fields: [confirmedByUserId], references: [id])
+  rejectedByUser  User?       @relation("PaymentRejectedBy", fields: [rejectedByUserId], references: [id])
+  linkedPayment   Payment?    @relation("PaymentLink", fields: [linkedPaymentId], references: [id])
+  linkedPayments  Payment[]   @relation("PaymentLink")
+  @@index([reservationId])
+  @@index([paymentStatus])
+  @@map("payments")
+}
+
+// ── C1b: New enums ──
+enum PaymentKind {
+  CHARGE
+  REFUND
+  ADJUSTMENT
+}
+enum PaymentDirection {
+  IN
+  OUT
+}
+enum PaymentStatus {
+  PENDING
+  CONFIRMED
+  REJECTED
+  FAILED
+  CANCELLED
+}
+enum PaymentSource {
+  ADMIN_MANUAL
+  SYSTEM
+  WEBHOOK
+  IMPORT
+}
+
+// Legacy enums PaymentType + PaymentConfirmStatus dropped in S2b (01.04.2026)
+enum PaymentMethod {
+  BANK_TRANSFER  // LEGACY — backfilled to TRANSFER
+  CASH
+  CARD
+  ONLINE
+  OTHER
+  TRANSFER
+  TERMINAL
+  BLIK
+}
+
+model PaymentSchedule {
+  id            String                @id @default(cuid())
+  reservationId String
+  amount        Decimal
+  dueDate       DateTime
+  status        PaymentScheduleStatus @default(PENDING)
+  paidAt        DateTime?
+  note          String?
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+  reservation Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  @@index([reservationId])
+  @@index([dueDate])
+  @@index([status])
+  @@map("payment_schedules")
+}
+
+enum PaymentScheduleStatus {
+  PENDING
+  PAID
+  OVERDUE
+}
+
+model Deposit {
+  id            String        @id @default(cuid())
+  reservationId String
+  amount        Decimal
+  currency      String        @default("PLN")
+  status        DepositStatus @default(HELD)
+  collectedAt   DateTime?
+  returnedAt    DateTime?
+  note          String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  reservation Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  @@index([reservationId])
+  @@map("deposits")
+}
+
+enum DepositStatus {
+  HELD
+  PARTIALLY_RETURNED
+  RETURNED
+  FORFEITED
+}
+
+// ── E1: Quote (price quote with expiry, single-use, anti-enumeration) ──
+model Quote {
+  id            String    @id @default(cuid())
+  secret        String    // 32-char hex, required for booking (anti-enumeration)
+  payload       Json      // canonical input: { checkIn, checkOut, items, addons, promoCode }
+  payloadHash   String    // sha256(canonicalJson(payload)) for verification
+  result        Json      // full quote result (exactly what client sees)
+  totalMinor    Int       // denormalized for quick lookups
+  expiresAt     DateTime  // quote validity window
+  usedAt        DateTime? // null = unused, set when booking created
+  reservationId String?   // FK to reservation created from this quote
+  createdAt     DateTime  @default(now())
+  reservation   Reservation? @relation(fields: [reservationId], references: [id])
+  @@index([expiresAt])
+  @@index([payloadHash])
+  @@map("quotes")
+}
+
+model Invoice {
+  id            String   @id @default(cuid())
+  reservationId String
+  invoiceNumber String   @unique
+  type          InvoiceType @default(INVOICE)
+  issueDate     DateTime @db.Date
+  dueDate       DateTime? @db.Date
+  netAmount     Decimal
+  taxAmount     Decimal
+  grossAmount   Decimal
+  currency      String   @default("PLN")
+  status        InvoiceStatus @default(DRAFT)
+  pdfUrl        String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  reservation Reservation @relation(fields: [reservationId], references: [id])
+  @@index([reservationId])
+  @@map("invoices")
+}
+
+enum InvoiceType {
+  INVOICE
+  PROFORMA
+  RECEIPT
+  CREDIT_NOTE
+}
+enum InvoiceStatus {
+  DRAFT
+  ISSUED
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// MODULE 8 — Communication / Messaging + Notifications
+// ═══════════════════════════════════════════════════════════════════════
+
+model MessageTemplate {
+  id          String          @id @default(cuid())
+  name        String
+  type        MessageType
+  trigger     MessageTrigger?
+  subject     String?
+  body        String
+  isActive    Boolean         @default(true)
+  isSystem    Boolean         @default(false)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  @@map("message_templates")
+}
+
+enum MessageType {
+  EMAIL
+  SMS
+}
+
+enum MessageTrigger {
+  BOOKING_CREATED
+  BOOKING_CONFIRMED
+  BOOKING_CANCELLED
+  PRE_ARRIVAL
+  CHECK_IN_DAY
+  POST_CHECKOUT
+  PAYMENT_RECEIVED
+  PAYMENT_REMINDER
+  OFFER_SENT
+  OFFER_EXPIRING
+}
+
+model MessageLog {
+  id            String          @id @default(cuid())
+  reservationId String?
+  clientEmail   String?
+  clientPhone   String?
+  type          MessageType
+  subject       String?
+  body          String
+  status        MessageStatus   @default(QUEUED)
+  sentAt        DateTime?
+  error         String?
+  createdAt     DateTime        @default(now())
+  reservation Reservation? @relation(fields: [reservationId], references: [id], onDelete: SetNull)
+  @@index([reservationId])
+  @@index([status])
+  @@map("message_logs")
+}
+
+enum MessageStatus {
+  QUEUED
+  SENT
+  DELIVERED
+  FAILED
+  BOUNCED
+}
+
+model Notification {
+  id            String             @id @default(cuid())
+  type          String
+  channel       NotificationChannel @default(IN_APP)
+  recipientType String
+  recipientId   String
+  status        NotificationStatus @default(PENDING)
+  scheduledAt   DateTime?
+  sentAt        DateTime?
+  payload       Json?
+  retriesCount  Int                @default(0)
+  templateId    String?
+  title         String?
+  message       String?
+  link          String?
+  isRead        Boolean            @default(false)
+  createdAt     DateTime           @default(now())
+  @@index([recipientType, recipientId])
+  @@index([status])
+  @@index([isRead])
+  @@map("notifications")
+}
+
+enum NotificationChannel {
+  EMAIL
+  SMS
+  IN_APP
+}
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+model NotificationEvent {
+  id          String   @id @default(cuid())
+  eventType   String
+  entityType  String
+  entityId    String
+  triggeredAt DateTime @default(now())
+  processed   Boolean  @default(false)
+  metadata    Json?
+  @@index([eventType])
+  @@index([entityType, entityId])
+  @@index([processed])
+  @@map("notification_events")
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// MODULE 10 — Widget Config
+// ═══════════════════════════════════════════════════════════════════════
+
+model WidgetConfig {
+  id              String  @id @default("default")
+  // ── Logo ──
+  logoUrl         String?   // SVG/PNG/WebP upload, storage jak avatary
+  logoHeight      Int       @default(40)  // px, 24-80
+  // ── Theme tokens (CSS variables) ──
+  primaryColor    String  @default("#2563EB")   // accent, buttons, links
+  primaryForeground String @default("#FFFFFF")   // text on primary
+  backgroundColor String  @default("#F8FAFC")   // page background
+  foregroundColor String  @default("#1E293B")   // main text
+  cardColor       String  @default("#FFFFFF")   // card background
+  mutedColor      String  @default("#64748B")   // muted text
+  borderColor     String  @default("#E2E8F0")   // borders
+  successColor    String  @default("#16A34A")   // success states
+  warningColor    String  @default("#D97706")   // warning states
+  dangerColor     String  @default("#DC2626")   // error states
+  // ── Font ──
+  fontFamily      String  @default("Plus Jakarta Sans")  // Google Fonts name
+  // ── Widget settings ──
+  showPrices      Boolean @default(true)
+  showAvailability Boolean @default(true)
+  maxGuestsFilter Int     @default(20)
+  enabledPaymentMethods String[] @default([])
+  customCss       String?
+  termsUrl        String?
+  privacyUrl      String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  @@map("widget_config")
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// MODULE 11 — Channel Manager
+// ═══════════════════════════════════════════════════════════════════════
+
+model Channel {
+  id          String        @id @default(cuid())
+  name        String
+  type        ChannelType
+  isActive    Boolean       @default(false)
+  apiKey      String?
+  apiSecret   String?
+  propertyId  String?
+  lastSyncAt  DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  mappings ChannelMapping[]
+  syncLogs ChannelSyncLog[]
+  @@map("channels")
+}
+
+enum ChannelType {
+  BOOKING_COM
+  AIRBNB
+  GOOGLE_HOTELS
+  ICAL
+  OTHER
+}
+
+model ChannelMapping {
+  id              String   @id @default(cuid())
+  channelId       String
+  resourceId      String
+  externalId      String
+  externalUrl     String?
+  syncPrices      Boolean  @default(true)
+  syncAvailability Boolean @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  channel  Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  resource Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  @@unique([channelId, resourceId])
+  @@map("channel_mappings")
+}
+
+model ChannelSyncLog {
+  id         String         @id @default(cuid())
+  channelId  String
+  direction  SyncDirection
+  type       String
+  status     SyncStatus
+  details    Json?
+  error      String?
+  createdAt  DateTime       @default(now())
+  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  @@index([channelId])
+  @@index([createdAt])
+  @@map("channel_sync_logs")
+}
+
+enum SyncDirection {
+  PUSH
+  PULL
+}
+enum SyncStatus {
+  SUCCESS
+  PARTIAL
+  FAILED
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// MODULE 12 — Webhook System
+// ═══════════════════════════════════════════════════════════════════════
+
+model Webhook {
+  id          String   @id @default(cuid())
+  name        String
+  url         String
+  secret      String?
+  events      String[]
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  logs WebhookLog[]
+  @@map("webhooks")
+}
+
+model WebhookLog {
+  id          String          @id @default(cuid())
+  webhookId   String
+  event       String
+  payload     Json
+  statusCode  Int?
+  response    String?
+  status      WebhookLogStatus @default(PENDING)
+  attempts    Int             @default(0)
+  nextRetryAt DateTime?
+  createdAt   DateTime        @default(now())
+  webhook Webhook @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+  @@index([webhookId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("webhook_logs")
+}
+
+enum WebhookLogStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  RETRYING
+}
