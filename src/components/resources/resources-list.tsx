@@ -9,10 +9,12 @@ import { useToast } from "@/components/ui/toast";
 import { BubbleSelect } from "@/components/ui/bubble-select";
 import { UnitBadge } from "@/components/ui/unit-badge";
 import { parseMoneyToMinor, fromMinor } from "@/lib/format";
+import { ImageUpload } from "@/components/resources/image-upload";
 
 interface Category { id: string; name: string; slug: string; unitNumber: string | null; type: string; icon: string | null; description: string | null; _count?: { resources: number }; }
 interface Variant { id: string; name: string; description: string | null; capacity: number; basePrice: number | null; basePriceMinor?: number | null; isDefault: boolean; isActive: boolean; }
-interface Resource { id: string; name: string; slug: string; unitNumber: string | null; categoryId: string; description: string | null; maxCapacity: number | null; totalUnits: number; location: string | null; status: string; sortOrder: number; visibleInWidget: boolean; category: Category; variants: Variant[]; _count?: { variants: number; images: number }; }
+interface ResourceImageData { id: string; alt: string | null; position: number; isCover: boolean; sizeBytes: number; width: number; height: number; urls: { original: string; medium: string; thumbnail: string }; }
+interface Resource { id: string; name: string; slug: string; unitNumber: string | null; categoryId: string; description: string | null; maxCapacity: number | null; totalUnits: number; location: string | null; status: string; sortOrder: number; visibleInWidget: boolean; category: Category; variants: Variant[]; images?: ResourceImageData[]; _count?: { variants: number; images: number }; }
 
 const statusConfig: Record<string, { label: string; color: string; dot: string }> = {
   ACTIVE: { label: "Aktywny", color: "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400", dot: "bg-emerald-500" },
@@ -89,10 +91,15 @@ export function ResourcesList() {
     setPanelOpen(true);
   }
 
-  function openView(r: Resource) {
+  async function openView(r: Resource) {
     setSelectedResource(r);
     setPanelMode("view");
     setPanelOpen(true);
+    // Fetch full detail (all images with URLs)
+    try {
+      const d = await apiFetch("/api/resources/" + r.id);
+      setSelectedResource(d.resource);
+    } catch (e) { console.error("Failed to load resource detail:", e); }
   }
 
   async function handleSave() {
@@ -525,6 +532,23 @@ export function ResourcesList() {
                 </p>
               </div>
             )}
+
+            {/* B1: Image management */}
+            <ImageUpload
+              resourceId={selectedResource.id}
+              images={selectedResource.images || []}
+              onImagesChange={(newImages) => {
+                setSelectedResource({
+                  ...selectedResource,
+                  images: newImages,
+                  _count: {
+                    ...selectedResource._count,
+                    variants: selectedResource._count?.variants || 0,
+                    images: newImages.length,
+                  },
+                });
+              }}
+            />
 
             <div>
               <div className="flex items-center justify-between mb-3">

@@ -288,14 +288,23 @@ model ResourceVariant {
 }
 
 model ResourceImage {
-  id         String   @id @default(cuid())
-  resourceId String
-  url        String
-  alt        String?
-  sortOrder  Int      @default(0)
-  isPrimary  Boolean  @default(false)
-  createdAt  DateTime @default(now())
-  resource Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  id           String   @id @default(cuid())
+  resourceId   String
+  storageKey   String   @unique   // properties/{propId}/resources/{resId}/original/{uuid}.webp
+  thumbnailKey String              // .../thumbnail/{uuid}.webp
+  mediumKey    String              // .../medium/{uuid}.webp
+  mimeType     String              // image/webp (po konwersji)
+  width        Int                 // original px
+  height       Int                 // original px
+  sizeBytes    Int                 // original file size
+  checksum     String              // SHA-256 of original upload
+  alt          String?             // alt text dla accessibility
+  position     Int                 // kolejność wyświetlania (0-based)
+  isCover      Boolean  @default(false)  // okładka zasobu — partial unique index w raw SQL
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  resource     Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  @@unique([resourceId, position])
   @@index([resourceId])
   @@map("resource_images")
 }

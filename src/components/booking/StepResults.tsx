@@ -22,7 +22,7 @@ interface CatalogResource {
   description: string | null;
   shortDesc: string | null;
   maxCapacity: number | null;
-  images: { url: string; alt: string | null }[];
+  images: { id: string; alt: string | null; position: number; isCover: boolean; urls: { original: string; medium: string; thumbnail: string } }[];
   amenities: { name: string; icon: string | null }[];
   variants: { id: string; name: string; capacity: number; isDefault: boolean }[];
 }
@@ -127,7 +127,7 @@ export function StepResults({ dates, selectedResources, onNext }: Props) {
           resourceName: resource.resourceName,
           variantName: defaultVariant.variantName,
           capacity: defaultVariant.capacity,
-          imageUrl: resource.catalog?.images?.[0]?.url,
+          imageUrl: resource.catalog?.images?.[0]?.urls?.thumbnail,
         });
       }
       return next;
@@ -210,7 +210,7 @@ export function StepResults({ dates, selectedResources, onNext }: Props) {
                 {/* Image */}
                 <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl bg-muted flex-shrink-0 overflow-hidden">
                   {image ? (
-                    <img src={image.url} alt={image.alt || resource.resourceName} className="w-full h-full object-cover" />
+                    <img src={image.urls.thumbnail} alt={image.alt || resource.resourceName} className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
                       <ImageOff className="h-6 w-6 text-muted-foreground/40" />

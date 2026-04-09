@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiNotFound, apiServerError } from "@/lib/api-response";
+import { enrichImagesWithUrls } from "@/lib/storage/image-urls";
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -9,12 +10,19 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       include: {
         category: true,
         variants: { orderBy: { sortOrder: "asc" } },
-        images: { orderBy: { sortOrder: "asc" } },
+        images: { orderBy: { position: "asc" } },
         amenities: true,
       },
     });
     if (!resource) return apiNotFound("Zasób nie znaleziony");
-    return apiSuccess({ resource });
+
+    // Enrich images with runtime URLs (ADR-11: URLs not persisted)
+    const enrichedResource = {
+      ...resource,
+      images: enrichImagesWithUrls(resource.images),
+    };
+
+    return apiSuccess({ resource: enrichedResource });
   } catch (error) {
     return apiServerError(error);
   }
@@ -43,10 +51,15 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     const resource = await prisma.resource.update({
       where: { id: params.id },
       data,
-      include: { category: true, variants: true, images: true, amenities: true },
+      include: { category: true, variants: true, images: { orderBy: { position: "asc" } }, amenities: true },
     });
 
-    return apiSuccess({ resource });
+    const enrichedResource = {
+      ...resource,
+      images: enrichImagesWithUrls(resource.images),
+    };
+
+    return apiSuccess({ resource: enrichedResource });
   } catch (error) {
     return apiServerError(error);
   }

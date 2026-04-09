@@ -12,6 +12,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiServerError } from "@/lib/api-response";
 import { catalogLimiter } from "@/lib/rate-limiter";
+import { getStorageProvider } from "@/lib/storage/media-storage";
 
 export async function GET(request: NextRequest) {
   try {
@@ -59,12 +60,15 @@ export async function GET(request: NextRequest) {
           },
         },
         images: {
-          orderBy: { sortOrder: "asc" },
+          orderBy: { position: "asc" },
           select: {
             id: true,
-            url: true,
+            storageKey: true,
+            thumbnailKey: true,
+            mediumKey: true,
             alt: true,
-            sortOrder: true,
+            position: true,
+            isCover: true,
           },
         },
         amenities: {
@@ -81,9 +85,26 @@ export async function GET(request: NextRequest) {
       ],
     });
 
+    // Enrich images with runtime public URLs (ADR-11, ADR-12)
+    const provider = getStorageProvider();
+    const enrichedResources = resources.map((r) => ({
+      ...r,
+      images: r.images.map((img) => ({
+        id: img.id,
+        alt: img.alt,
+        position: img.position,
+        isCover: img.isCover,
+        urls: {
+          original: provider.getPublicUrl(img.storageKey),
+          medium: provider.getPublicUrl(img.mediumKey),
+          thumbnail: provider.getPublicUrl(img.thumbnailKey),
+        },
+      })),
+    }));
+
     return apiSuccess({
-      resources,
-      count: resources.length,
+      resources: enrichedResources,
+      count: enrichedResources.length,
     });
   } catch (error) {
     return apiServerError(error);

@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiError, apiServerError } from "@/lib/api-response";
+import { enrichImagesWithUrls } from "@/lib/storage/image-urls";
 
 export async function GET(request: NextRequest) {
   try {
@@ -24,13 +25,20 @@ export async function GET(request: NextRequest) {
       include: {
         category: true,
         variants: { orderBy: { sortOrder: "asc" } },
-        images: { orderBy: { sortOrder: "asc" }, take: 1 },
+        images: { orderBy: { position: "asc" }, take: 1 },
         amenities: true,
         _count: { select: { variants: true, images: true, reservationItems: true } },
       },
       orderBy: [{ category: { sortOrder: "asc" } }, { sortOrder: "asc" }, { name: "asc" }],
     });
-    return apiSuccess({ resources });
+
+    // Enrich cover images with runtime URLs
+    const enrichedResources = resources.map((r) => ({
+      ...r,
+      images: enrichImagesWithUrls(r.images),
+    }));
+
+    return apiSuccess({ resources: enrichedResources });
   } catch (error) {
     return apiServerError(error);
   }
