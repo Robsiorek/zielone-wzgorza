@@ -171,6 +171,18 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // ── Write cron heartbeat for /api/health ──
+    try {
+      const fs = await import("fs/promises");
+      await fs.mkdir("/var/www/admin/data", { recursive: true });
+      await fs.writeFile(
+        "/var/www/admin/data/cron-heartbeat.json",
+        JSON.stringify({ lastReminderRunAt: new Date().toISOString(), sent, errors }),
+      );
+    } catch (heartbeatErr) {
+      console.error("[REMINDER] Heartbeat write failed:", heartbeatErr);
+    }
+
     return apiSuccess({
       sent,
       skipped,
