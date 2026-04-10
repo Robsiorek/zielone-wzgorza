@@ -1,6 +1,6 @@
 "use client";
-import React, { useEffect, useState, useCallback } from "react";
-import { Plus, Pencil, Trash2, Check, Home, Building2, UtensilsCrossed, Ship, Sparkles, Users, Loader2, Search, Layers, MapPin, Hash, Bike, ConciergeBell, Package, X, GripVertical, ArrowUpDown, ImageIcon, FileText, Ruler, BedDouble } from "lucide-react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
+import { Plus, Pencil, Trash2, Check, Home, Building2, UtensilsCrossed, Ship, Sparkles, Users, Loader2, Search, Layers, MapPin, Hash, Bike, ConciergeBell, Package, X, GripVertical, ArrowUpDown, ArrowLeft, ImageIcon, FileText, Ruler, BedDouble, ChevronDown, Maximize2, Bath, DoorOpen, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api-fetch";
 import { SlidePanel } from "@/components/ui/slide-panel";
@@ -23,6 +23,7 @@ interface Resource { id: string; name: string; slug: string; unitNumber: string 
 // ── B2: Inline editors for SectionCards ───────────────
 
 function ResourceContentEditor({ resource, onSave }: { resource: Resource; onSave: (data: Record<string, unknown>) => Promise<boolean> }) {
+  const { success: showSuccess } = useToast();
   const [short, setShort] = useState(resource.shortDescription || "");
   const [long, setLong] = useState(resource.longDescription || "");
   const [saving, setSaving] = useState(false);
@@ -34,12 +35,13 @@ function ResourceContentEditor({ resource, onSave }: { resource: Resource; onSav
 
   async function handleSave() {
     setSaving(true);
-    await onSave({ shortDescription: short, longDescription: long });
+    const ok = await onSave({ shortDescription: short, longDescription: long });
+    if (ok) showSuccess("Treści zapisane");
     setSaving(false);
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 max-w-lg">
       <div>
         <div className="flex items-center justify-between mb-1">
           <label className="text-[11px] font-semibold text-muted-foreground">Krótki opis</label>
@@ -76,6 +78,7 @@ function ResourceContentEditor({ resource, onSave }: { resource: Resource; onSav
 }
 
 function ResourceTechnicalEditor({ resource, onSave }: { resource: Resource; onSave: (data: Record<string, unknown>) => Promise<boolean> }) {
+  const { success: showSuccess } = useToast();
   const [areaSqm, setAreaSqm] = useState(resource.areaSqm?.toString() || "");
   const [bedrooms, setBedrooms] = useState(resource.bedroomCount?.toString() || "");
   const [bathrooms, setBathrooms] = useState(resource.bathroomCount?.toString() || "");
@@ -91,32 +94,33 @@ function ResourceTechnicalEditor({ resource, onSave }: { resource: Resource; onS
 
   async function handleSave() {
     setSaving(true);
-    await onSave({
+    const ok = await onSave({
       areaSqm: areaSqm || null,
       bedroomCount: bedrooms || null,
       bathroomCount: bathrooms || null,
       maxCapacity: capacity || null,
     });
+    if (ok) showSuccess("Dane techniczne zapisane");
     setSaving(false);
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 max-w-md">
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="text-[11px] font-semibold text-muted-foreground">Powierzchnia (m²)</label>
+          <label className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1"><Maximize2 className="h-3 w-3" /> Powierzchnia (m²)</label>
           <input type="number" value={areaSqm} onChange={(e) => setAreaSqm(e.target.value)} placeholder="np. 45" min="1" max="9999" className="input-bubble h-9 text-[13px] mt-1" />
         </div>
         <div>
-          <label className="text-[11px] font-semibold text-muted-foreground">Pojemność (osób)</label>
+          <label className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1"><Users className="h-3 w-3" /> Pojemność (osób)</label>
           <input type="number" value={capacity} onChange={(e) => setCapacity(e.target.value)} placeholder="np. 7" min="1" className="input-bubble h-9 text-[13px] mt-1" />
         </div>
         <div>
-          <label className="text-[11px] font-semibold text-muted-foreground">Sypialnie</label>
+          <label className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1"><DoorOpen className="h-3 w-3" /> Sypialnie</label>
           <input type="number" value={bedrooms} onChange={(e) => setBedrooms(e.target.value)} placeholder="np. 2" min="0" max="50" className="input-bubble h-9 text-[13px] mt-1" />
         </div>
         <div>
-          <label className="text-[11px] font-semibold text-muted-foreground">Łazienki</label>
+          <label className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1"><Bath className="h-3 w-3" /> Łazienki</label>
           <input type="number" value={bathrooms} onChange={(e) => setBathrooms(e.target.value)} placeholder="np. 1" min="0" max="50" className="input-bubble h-9 text-[13px] mt-1" />
         </div>
       </div>
@@ -131,12 +135,95 @@ function ResourceTechnicalEditor({ resource, onSave }: { resource: Resource; onS
   );
 }
 
+function ResourceSettingsEditor({ resource, categories, onSave }: { resource: Resource; categories: Category[]; onSave: (data: Record<string, unknown>) => Promise<boolean> }) {
+  const { success: showSuccess } = useToast();
+  const [name, setName] = useState(resource.name);
+  const [categoryId, setCategoryId] = useState(resource.categoryId);
+  const [unitNumber, setUnitNumber] = useState(resource.unitNumber || "");
+  const [totalUnits, setTotalUnits] = useState(resource.totalUnits.toString());
+  const [location, setLocation] = useState(resource.location || "");
+  const [status, setStatus] = useState(resource.status);
+  const [visible, setVisible] = useState(resource.visibleInWidget);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setName(resource.name);
+    setCategoryId(resource.categoryId);
+    setUnitNumber(resource.unitNumber || "");
+    setTotalUnits(resource.totalUnits.toString());
+    setLocation(resource.location || "");
+    setStatus(resource.status);
+    setVisible(resource.visibleInWidget);
+  }, [resource.id]);
+
+  const categoryOptions = categories.map((c) => ({ value: c.id, label: c.name }));
+  const statusOptions = [
+    { value: "ACTIVE", label: "Aktywny" },
+    { value: "INACTIVE", label: "Nieaktywny" },
+    { value: "MAINTENANCE", label: "W remoncie" },
+  ];
+
+  async function handleSave() {
+    if (!name.trim()) return;
+    setSaving(true);
+    const ok = await onSave({ name, categoryId, unitNumber: unitNumber || null, totalUnits: parseInt(totalUnits) || 1, location: location || null, status, visibleInWidget: visible });
+    if (ok) showSuccess("Ustawienia zapisane");
+    setSaving(false);
+  }
+
+  return (
+    <div className="space-y-3 max-w-md">
+      <div>
+        <label className="text-[11px] font-semibold text-muted-foreground">Nazwa *</label>
+        <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="input-bubble h-9 text-[13px] mt-1" />
+      </div>
+      <BubbleSelect label="Kategoria" options={categoryOptions} value={categoryId} onChange={setCategoryId} />
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="text-[11px] font-semibold text-muted-foreground">Numer</label>
+          <input type="text" value={unitNumber} onChange={(e) => setUnitNumber(e.target.value)} placeholder="np. 1, A3" className="input-bubble h-9 text-[13px] mt-1" />
+        </div>
+        <div>
+          <label className="text-[11px] font-semibold text-muted-foreground">Sztuk</label>
+          <input type="number" value={totalUnits} onChange={(e) => setTotalUnits(e.target.value)} min="1" className="input-bubble h-9 text-[13px] mt-1" />
+        </div>
+      </div>
+      <div>
+        <label className="text-[11px] font-semibold text-muted-foreground">Lokalizacja</label>
+        <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="np. Nad jeziorem" className="input-bubble h-9 text-[13px] mt-1" />
+      </div>
+      <BubbleSelect label="Status" options={statusOptions} value={status} onChange={setStatus} />
+      <button type="button" onClick={() => setVisible(!visible)} className="flex items-center gap-3 w-full text-left">
+        <span className={cn("relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0", visible ? "bg-primary" : "bg-muted-foreground/20")}>
+          <span className={cn("inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform", visible ? "translate-x-6" : "translate-x-1")} />
+        </span>
+        <span className="text-[12px] text-muted-foreground">Widoczny w widgecie rezerwacyjnym</span>
+      </button>
+      <button onClick={handleSave} disabled={saving || !name.trim()} className="btn-bubble btn-primary-bubble px-4 py-2 text-[12px] disabled:opacity-50">
+        {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />} Zapisz ustawienia
+      </button>
+    </div>
+  );
+}
+
 function ResourceBedsEditor({ resourceId, beds, onBedsChange }: { resourceId: string; beds: ResourceBedData[]; onBedsChange: (beds: ResourceBedData[]) => void }) {
   const { error: showError, success: showSuccess } = useToast();
   const [localBeds, setLocalBeds] = useState<ResourceBedData[]>(beds);
   const [saving, setSaving] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState<number | null>(null);
+  const bedsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { setLocalBeds(beds); }, [beds]);
+
+  // Click-outside to close dropdown
+  useEffect(() => {
+    if (openDropdown === null) return;
+    function handleClick(e: MouseEvent) {
+      if (bedsRef.current && !bedsRef.current.contains(e.target as Node)) setOpenDropdown(null);
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [openDropdown]);
 
   const usedTypes = new Set(localBeds.map((b) => b.bedType));
   const availableTypes = BED_TYPE_KEYS.filter((t) => !usedTypes.has(t));
@@ -173,23 +260,47 @@ function ResourceBedsEditor({ resourceId, beds, onBedsChange }: { resourceId: st
   }
 
   return (
-    <div className="space-y-3">
+    <div ref={bedsRef} className="space-y-3 max-w-md">
       {localBeds.length === 0 && (
         <p className="text-[12px] text-muted-foreground text-center py-2">Brak łóżek — dodaj konfigurację poniżej</p>
       )}
       {localBeds.map((bed, idx) => (
         <div key={idx} className="flex items-center gap-2">
-          <select
-            value={bed.bedType}
-            onChange={(e) => updateBed(idx, "bedType", e.target.value)}
-            className="input-bubble h-9 text-[13px] flex-1"
-          >
-            {BED_TYPE_KEYS.map((t) => (
-              <option key={t} value={t} disabled={usedTypes.has(t) && t !== bed.bedType}>
-                {getBedTypeLabel(t)}
-              </option>
-            ))}
-          </select>
+          <div className="flex-1 relative">
+            <div
+              className="input-bubble h-9 text-[13px] flex items-center justify-between cursor-pointer"
+              onClick={() => setOpenDropdown(openDropdown === idx ? null : idx)}
+            >
+              <span>{getBedTypeLabel(bed.bedType)}</span>
+              <ChevronDown className="h-3 w-3 text-muted-foreground" />
+            </div>
+            {openDropdown === idx && (
+              <div className="absolute top-10 left-0 right-0 z-50 bg-card border border-border rounded-xl shadow-lg py-1 max-h-[200px] overflow-y-auto">
+                {BED_TYPE_KEYS.map((t) => {
+                  const isUsed = usedTypes.has(t) && t !== bed.bedType;
+                  return (
+                    <button
+                      key={t}
+                      disabled={isUsed}
+                      onClick={() => {
+                        updateBed(idx, "bedType", t);
+                        setOpenDropdown(null);
+                      }}
+                      className={`w-full text-left px-3 py-2 text-[13px] transition-colors ${
+                        isUsed
+                          ? "text-muted-foreground/40 cursor-not-allowed"
+                          : t === bed.bedType
+                          ? "bg-primary/10 text-primary font-semibold"
+                          : "hover:bg-muted"
+                      }`}
+                    >
+                      {getBedTypeLabel(t)}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
           <input
             type="number"
             value={bed.quantity}
@@ -256,11 +367,11 @@ export function ResourcesList() {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
   const [panelOpen, setPanelOpen] = useState(false);
-  const [panelMode, setPanelMode] = useState<"create" | "edit" | "view">("create");
+  const [panelMode, setPanelMode] = useState<"create" | "view">("create");
   const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
-    name: "", categoryId: "", longDescription: "", maxCapacity: "", totalUnits: "1", location: "", status: "ACTIVE", unitNumber: "", visibleInWidget: false,
+    name: "", categoryId: "",
   });
   const [showVarForm, setShowVarForm] = useState(false);
   const [editingVariant, setEditingVariant] = useState<Variant | null>(null);
@@ -289,20 +400,9 @@ export function ResourcesList() {
   useEffect(() => { loadData(); }, [loadData]);
 
   function openCreate() {
-    setFormData({ name: "", categoryId: categories[0]?.id || "", longDescription: "", maxCapacity: "", totalUnits: "1", location: "", status: "ACTIVE", unitNumber: "", visibleInWidget: false });
+    setFormData({ name: "", categoryId: categories[0]?.id || "" });
     setSelectedResource(null);
     setPanelMode("create");
-    setPanelOpen(true);
-  }
-
-  function openEdit(r: Resource) {
-    setFormData({
-      name: r.name, categoryId: r.categoryId, longDescription: r.longDescription || "", unitNumber: r.unitNumber || "",
-      maxCapacity: r.maxCapacity?.toString() || "", totalUnits: r.totalUnits.toString(),
-      location: r.location || "", status: r.status, visibleInWidget: r.visibleInWidget ?? false,
-    });
-    setSelectedResource(r);
-    setPanelMode("edit");
     setPanelOpen(true);
   }
 
@@ -310,7 +410,6 @@ export function ResourcesList() {
     setSelectedResource(r);
     setPanelMode("view");
     setPanelOpen(true);
-    // Fetch full detail (all images with URLs)
     try {
       const d = await apiFetch("/api/resources/" + r.id);
       setSelectedResource(d.resource);
@@ -320,11 +419,7 @@ export function ResourcesList() {
   async function handleSave() {
     setSaving(true);
     try {
-      const url = panelMode === "edit" && selectedResource
-        ? "/api/resources/" + selectedResource.id
-        : "/api/resources";
-      const method = panelMode === "edit" ? "PATCH" : "POST";
-      await apiFetch(url, { method, body: formData });
+      await apiFetch("/api/resources", { method: "POST", body: formData });
       await loadData(); setPanelOpen(false);
     } catch (e) { console.error(e); }
     setSaving(false);
@@ -612,7 +707,7 @@ export function ResourcesList() {
                     onClick={(e) => e.stopPropagation()}
                   >
                     <button
-                      onClick={() => openEdit(resource)}
+                      onClick={() => openView(resource)}
                       className="h-8 w-8 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
                     >
                       <Pencil className="h-3.5 w-3.5" />
@@ -674,80 +769,61 @@ export function ResourcesList() {
           setShowVarForm(false);
           setEditingVariant(null);
         }}
-        width={panelMode === "view" ? "75vw" : 520}
+        width={panelMode === "view" ? 620 : 480}
         title={
           panelMode === "create"
             ? "Nowy zasób"
-            : panelMode === "edit"
-            ? "Edytuj zasób"
             : selectedResource?.name || "Zasób"
         }
       >
         {panelMode === "view" && selectedResource ? (
-          <div className="space-y-6">
-            <div className="flex gap-2">
-              <button
-                onClick={() => openEdit(selectedResource)}
-                className="btn-bubble btn-secondary-bubble px-4 py-2 text-[13px] flex-1"
-              >
-                <Pencil className="h-3.5 w-3.5" /> Edytuj
-              </button>
-              <button
-                onClick={() => handleDelete(selectedResource.id)}
-                className="btn-bubble btn-danger-bubble px-4 py-2 text-[13px]"
-              >
-                <Trash2 className="h-3.5 w-3.5" /> {"Usuń"}
-              </button>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bubble p-4">
-                <p className="text-[11px] font-medium text-muted-foreground mb-1">Kategoria</p>
-                <div className="flex items-center gap-2">
-                  {getIcon(selectedResource.category.slug)}
-                  <span className="text-[13px] font-semibold">{selectedResource.category.name}</span>
-                </div>
-              </div>
-              <div className="bubble p-4">
-                <p className="text-[11px] font-medium text-muted-foreground mb-1">Status</p>
-                <span
-                  className={cn(
-                    "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold",
-                    statusConfig[selectedResource.status]?.color
-                  )}
-                >
+          <div className="space-y-4">
+            {/* Compact header: status + category + delete */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold", statusConfig[selectedResource.status]?.color)}>
                   <span className={cn("h-1.5 w-1.5 rounded-full", statusConfig[selectedResource.status]?.dot)} />
                   {statusConfig[selectedResource.status]?.label}
                 </span>
-              </div>
-              {selectedResource.maxCapacity && (
-                <div className="bubble p-4">
-                  <p className="text-[11px] font-medium text-muted-foreground mb-1">{"Pojemność"}</p>
-                  <p className="text-[13px] font-semibold">{selectedResource.maxCapacity} {" osób"}</p>
-                </div>
-              )}
-              {selectedResource.unitNumber && (
-                <div className="bubble p-4">
-                  <p className="text-[11px] font-medium text-muted-foreground mb-1">Numer</p>
+                <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                  {getIcon(selectedResource.category.slug)} {selectedResource.category.name}
+                </span>
+                {selectedResource.maxCapacity && (
+                  <span className="text-[11px] text-muted-foreground">{selectedResource.maxCapacity} osób</span>
+                )}
+                {selectedResource.unitNumber && (
                   <UnitBadge number={selectedResource.unitNumber} />
-                </div>
-              )}
-              {selectedResource.totalUnits > 1 && (
-                <div className="bubble p-4">
-                  <p className="text-[11px] font-medium text-muted-foreground mb-1">Sztuk</p>
-                  <p className="text-[13px] font-semibold">{selectedResource.totalUnits}</p>
-                </div>
-              )}
+                )}
+              </div>
+              <button
+                onClick={() => handleDelete(selectedResource.id)}
+                className="h-8 w-8 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all shrink-0"
+                title="Usuń zasób"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
             </div>
 
-            {selectedResource.longDescription && (
-              <div>
-                <p className="text-[11px] font-semibold text-muted-foreground mb-1.5">Opis</p>
-                <p className="text-[13px] text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                  {selectedResource.longDescription}
-                </p>
-              </div>
-            )}
+            {/* SectionCard: Ustawienia zasobu */}
+            <SectionCard
+              title="Ustawienia zasobu"
+              description="Nazwa, kategoria, status, widoczność w widgecie."
+              icon={Settings}
+              defaultOpen={false}
+            >
+              <ResourceSettingsEditor
+                resource={selectedResource}
+                categories={categories}
+                onSave={async (data) => {
+                  try {
+                    const res = await apiFetch("/api/resources/" + selectedResource.id, { method: "PATCH", body: data });
+                    setSelectedResource(res.resource);
+                    await loadData();
+                    return true;
+                  } catch (e: any) { showError(e.message || "Błąd zapisu"); return false; }
+                }}
+              />
+            </SectionCard>
 
             {/* B2: Content & Technical data */}
             <SectionCard
@@ -976,7 +1052,7 @@ export function ResourcesList() {
             </div>
             </SectionCard>
           </div>
-        ) : (
+        ) : panelMode === "create" ? (
           <div className="space-y-5">
             <div>
               <label className="text-[12px] font-semibold text-muted-foreground">Nazwa *</label>
@@ -995,90 +1071,13 @@ export function ResourcesList() {
               value={formData.categoryId}
               onChange={(v) => setFormData({ ...formData, categoryId: v })}
             />
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-[12px] font-semibold text-muted-foreground">{"Pojemność"}</label>
-                <input
-                  type="number"
-                  placeholder="6"
-                  value={formData.maxCapacity}
-                  onChange={(e) => setFormData({ ...formData, maxCapacity: e.target.value })}
-                  className="input-bubble h-11 mt-1.5"
-                />
-              </div>
-              <div>
-                <label className="text-[12px] font-semibold text-muted-foreground">Sztuk</label>
-                <input
-                  type="number"
-                  placeholder="1"
-                  value={formData.totalUnits}
-                  onChange={(e) => setFormData({ ...formData, totalUnits: e.target.value })}
-                  className="input-bubble h-11 mt-1.5"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="text-[12px] font-semibold text-muted-foreground">Numer (domku/pokoju)</label>
-              <input
-                type="text"
-                placeholder="np. 1, 101, A3"
-                value={formData.unitNumber}
-                onChange={(e) => setFormData({ ...formData, unitNumber: e.target.value })}
-                className="input-bubble h-11 mt-1.5"
-              />
-            </div>
-            <div>
-              <label className="text-[12px] font-semibold text-muted-foreground">Lokalizacja</label>
-              <input
-                type="text"
-                placeholder="np. Nad jeziorem"
-                value={formData.location}
-                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                className="input-bubble h-11 mt-1.5"
-              />
-            </div>
-            <BubbleSelect
-              label="Status"
-              options={statusOptions}
-              value={formData.status}
-              onChange={(v) => setFormData({ ...formData, status: v })}
-            />
-            <div>
-              <button
-                type="button"
-                onClick={() => setFormData({ ...formData, visibleInWidget: !formData.visibleInWidget })}
-                className="flex items-center gap-3 w-full text-left"
-              >
-                <span className={cn(
-                  "relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0",
-                  formData.visibleInWidget ? "bg-primary" : "bg-muted-foreground/20"
-                )}>
-                  <span className={cn(
-                    "inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform",
-                    formData.visibleInWidget ? "translate-x-6" : "translate-x-1"
-                  )} />
-                </span>
-                <span className="text-[12px] text-muted-foreground">Widoczny w widgecie rezerwacyjnym</span>
-              </button>
-            </div>
-            <div>
-              <label className="text-[12px] font-semibold text-muted-foreground">Opis</label>
-              <textarea
-                rows={3}
-                placeholder="Opis zasobu..."
-                value={formData.longDescription}
-                onChange={(e) => setFormData({ ...formData, longDescription: e.target.value })}
-                className="input-bubble mt-1.5 py-3 resize-none"
-              />
-            </div>
             <div className="flex gap-2 pt-2">
               <button
                 onClick={handleSave}
                 disabled={saving || !formData.name || !formData.categoryId}
                 className="btn-bubble btn-primary-bubble px-5 py-2.5 text-[13px] flex-1 disabled:opacity-50"
               >
-                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}{" "}
-                {panelMode === "edit" ? "Zapisz" : "Dodaj"}
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />} Dodaj
               </button>
               <button
                 onClick={() => setPanelOpen(false)}
@@ -1088,7 +1087,7 @@ export function ResourcesList() {
               </button>
             </div>
           </div>
-        )}
+        ) : null}
       </SlidePanel>
     </div>
   );
