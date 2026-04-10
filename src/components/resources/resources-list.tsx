@@ -1,9 +1,10 @@
 "use client";
 import React, { useEffect, useState, useCallback } from "react";
-import { Plus, Pencil, Trash2, Check, Home, Building2, UtensilsCrossed, Ship, Sparkles, Users, Loader2, Search, Layers, MapPin, Hash, Bike, ConciergeBell, Package, X, GripVertical, ArrowUpDown } from "lucide-react";
+import { Plus, Pencil, Trash2, Check, Home, Building2, UtensilsCrossed, Ship, Sparkles, Users, Loader2, Search, Layers, MapPin, Hash, Bike, ConciergeBell, Package, X, GripVertical, ArrowUpDown, ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api-fetch";
 import { SlidePanel } from "@/components/ui/slide-panel";
+import { SectionCard } from "@/components/ui/section-card";
 import { ResourcesSkeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
 import { BubbleSelect } from "@/components/ui/bubble-select";
@@ -268,7 +269,7 @@ export function ResourcesList() {
         <div>
           <h2 className="text-xl font-bold tracking-tight">Zasoby</h2>
           <p className="text-[13px] text-muted-foreground mt-1">
-            {resources.length} {" zasob\u00f3w w "} {categories.length} {" kategoriach"}
+            {resources.length} {" zasobów w "} {categories.length} {" kategoriach"}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -459,12 +460,13 @@ export function ResourcesList() {
           setShowVarForm(false);
           setEditingVariant(null);
         }}
+        
         title={
           panelMode === "create"
-            ? "Nowy zas\u00f3b"
+            ? "Nowy zasób"
             : panelMode === "edit"
-            ? "Edytuj zas\u00f3b"
-            : selectedResource?.name || "Zas\u00f3b"
+            ? "Edytuj zasób"
+            : selectedResource?.name || "Zasób"
         }
       >
         {panelMode === "view" && selectedResource ? (
@@ -480,7 +482,7 @@ export function ResourcesList() {
                 onClick={() => handleDelete(selectedResource.id)}
                 className="btn-bubble btn-danger-bubble px-4 py-2 text-[13px]"
               >
-                <Trash2 className="h-3.5 w-3.5" /> {"Usu\u0144"}
+                <Trash2 className="h-3.5 w-3.5" /> {"Usuń"}
               </button>
             </div>
 
@@ -506,8 +508,8 @@ export function ResourcesList() {
               </div>
               {selectedResource.maxCapacity && (
                 <div className="bubble p-4">
-                  <p className="text-[11px] font-medium text-muted-foreground mb-1">{"\u0050ojemno\u015b\u0107"}</p>
-                  <p className="text-[13px] font-semibold">{selectedResource.maxCapacity} {" os\u00f3b"}</p>
+                  <p className="text-[11px] font-medium text-muted-foreground mb-1">{"Pojemność"}</p>
+                  <p className="text-[13px] font-semibold">{selectedResource.maxCapacity} {" osób"}</p>
                 </div>
               )}
               {selectedResource.unitNumber && (
@@ -534,34 +536,44 @@ export function ResourcesList() {
             )}
 
             {/* B1: Image management */}
-            <ImageUpload
-              resourceId={selectedResource.id}
-              images={selectedResource.images || []}
-              onImagesChange={(newImages) => {
-                setSelectedResource({
-                  ...selectedResource,
-                  images: newImages,
-                  _count: {
-                    ...selectedResource._count,
-                    variants: selectedResource._count?.variants || 0,
-                    images: newImages.length,
-                  },
-                });
-              }}
-            />
+            <SectionCard
+              title="Zdjęcia"
+              description="Galeria zdjęć zasobu. Pierwsze zdjęcie jest okładką."
+              icon={ImageIcon}
+              defaultOpen={true}
+            >
+              <ImageUpload
+                resourceId={selectedResource.id}
+                images={selectedResource.images || []}
+                onImagesChange={(newImages) => {
+                  setSelectedResource({
+                    ...selectedResource,
+                    images: newImages,
+                    _count: {
+                      ...selectedResource._count,
+                      variants: selectedResource._count?.variants || 0,
+                      images: newImages.length,
+                    },
+                  });
+                }}
+              />
+            </SectionCard>
 
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="text-[13px] font-semibold flex items-center gap-2">
-                  <Layers className="h-4 w-4 text-primary" /> {"Warianty sprzeda\u017cowe"}
-                </h4>
+            <SectionCard
+              title="Warianty sprzedażowe"
+              description="Opcje cenowe i konfiguracje pojemności zasobu."
+              icon={Layers}
+              defaultOpen={true}
+              action={
                 <button
                   onClick={openVarCreate}
                   className="text-[12px] text-primary font-semibold hover:underline inline-flex items-center gap-1"
                 >
                   <Plus className="h-3 w-3" /> Dodaj
                 </button>
-              </div>
+              }
+            >
+              <div>
 
               {showVarForm && (
                 <div className="bubble p-4 mb-3 space-y-3">
@@ -580,7 +592,7 @@ export function ResourcesList() {
                       />
                     </div>
                     <div>
-                      <label className="text-[11px] font-semibold text-muted-foreground">{"\u0050ojemno\u015b\u0107"}</label>
+                      <label className="text-[11px] font-semibold text-muted-foreground">{"Pojemność"}</label>
                       <input
                         type="number"
                         placeholder="4"
@@ -618,7 +630,7 @@ export function ResourcesList() {
                             )}
                           />
                         </div>
-                        <span className="text-[12px] font-medium">{"\u0044omy\u015blny"}</span>
+                        <span className="text-[12px] font-medium">{"Domyślny"}</span>
                       </button>
                     </div>
                   </div>
@@ -651,7 +663,7 @@ export function ResourcesList() {
               {selectedResource.variants.length === 0 ? (
                 <div className="bubble p-6 text-center">
                   <Layers className="h-6 w-6 text-muted-foreground/30 mx-auto mb-2" />
-                  <p className="text-[12px] text-muted-foreground">{"Brak wariant\u00f3w"}</p>
+                  <p className="text-[12px] text-muted-foreground">{"Brak wariantów"}</p>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -662,7 +674,7 @@ export function ResourcesList() {
                           <span className="text-[13px] font-semibold">{v.name}</span>
                           {v.isDefault && (
                             <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">
-                              {"\u0044OMY\u015aLNY"}
+                              {"DOMYŚLNY"}
                             </span>
                           )}
                         </div>
@@ -696,6 +708,7 @@ export function ResourcesList() {
                 </div>
               )}
             </div>
+            </SectionCard>
           </div>
         ) : (
           <div className="space-y-5">
@@ -718,7 +731,7 @@ export function ResourcesList() {
             />
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-[12px] font-semibold text-muted-foreground">{"\u0050ojemno\u015b\u0107"}</label>
+                <label className="text-[12px] font-semibold text-muted-foreground">{"Pojemność"}</label>
                 <input
                   type="number"
                   placeholder="6"

@@ -9,7 +9,7 @@ interface SlidePanelProps {
   onClose: () => void;
   title: React.ReactNode;
   children: React.ReactNode;
-  width?: number;
+  width?: number | string;
 }
 
 function SlidePanelContent({ open, onClose, title, children, width = 520 }: SlidePanelProps) {
