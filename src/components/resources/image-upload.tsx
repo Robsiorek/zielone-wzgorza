@@ -357,16 +357,16 @@ export function ImageUpload({ resourceId, images, onImagesChange }: Props) {
               </div>
 
               {/* Drag handle — top left */}
-              <div className="absolute top-1 left-1 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing">
-                <div className="bg-white/90 dark:bg-black/70 rounded-md p-0.5">
+              <div className="absolute top-2.5 left-2.5 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing">
+                <div className="bg-white/90 dark:bg-black/70 rounded-lg p-1">
                   <GripVertical className="h-3 w-3 text-gray-600 dark:text-gray-300" />
                 </div>
               </div>
 
               {/* Cover badge — top right */}
               {img.isCover && (
-                <div className="absolute top-1 right-1 bg-amber-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-md flex items-center gap-0.5">
-                  <Star className="h-2 w-2 fill-current" />
+                <div className="absolute top-2.5 right-2.5 bg-amber-500 text-white text-[8px] font-bold px-2 py-1 rounded-lg flex items-center gap-0.5">
+                  <Star className="h-2.5 w-2.5 fill-current" />
                 </div>
               )}
             </div>
@@ -376,7 +376,7 @@ export function ImageUpload({ resourceId, images, onImagesChange }: Props) {
 
       {/* Detail section — shown when image selected */}
       {selectedImage && (
-        <div className="bubble p-4 space-y-3">
+        <div className="bubble p-5 space-y-4">
           <div className="flex items-start gap-4">
             {/* Preview */}
             <div className="w-28 h-20 rounded-xl overflow-hidden bg-muted shrink-0">
@@ -428,7 +428,7 @@ export function ImageUpload({ resourceId, images, onImagesChange }: Props) {
           </div>
 
           {/* Action buttons */}
-          <div className="flex gap-2 pt-1 border-t border-border/50">
+          <div className="flex gap-2 pt-4 mt-1 border-t border-border/50">
             {!selectedImage.isCover ? (
               <button
                 onClick={() => handleSetCover(selectedImage.id)}

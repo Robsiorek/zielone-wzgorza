@@ -6,9 +6,12 @@
  * DS §25: Accordion with bubble border + icon in rounded square bg-primary/10.
  * Uses CSS Grid animation (section-collapse / section-open) from globals.css.
  * Always renders children in DOM — never conditional {open && ...}.
+ *
+ * Overflow fix: delayed overflow:visible after open animation (300ms),
+ * so dropdowns inside sections are not clipped.
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 
 interface SectionCardProps {
@@ -17,7 +20,6 @@ interface SectionCardProps {
   icon: React.ElementType;
   children: React.ReactNode;
   defaultOpen?: boolean;
-  /** Optional action button in header (e.g. "Dodaj") */
   action?: React.ReactNode;
 }
 
@@ -30,12 +32,24 @@ export function SectionCard({
   action,
 }: SectionCardProps) {
   const [open, setOpen] = useState(defaultOpen);
+  const [overflowVisible, setOverflowVisible] = useState(defaultOpen);
+
+  useEffect(() => {
+    if (open) {
+      // After animation completes (300ms), allow overflow for dropdowns
+      const timer = setTimeout(() => setOverflowVisible(true), 320);
+      return () => clearTimeout(timer);
+    } else {
+      // Immediately hide overflow when closing
+      setOverflowVisible(false);
+    }
+  }, [open]);
 
   return (
     <div className="bubble" style={{ overflow: "visible" }}>
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center gap-3 px-5 py-4 hover:bg-muted/20 transition-colors"
+        className="w-full flex items-center gap-3 px-5 py-4 hover:bg-muted/20 transition-colors rounded-2xl"
       >
         <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
           <Icon className="h-4 w-4 text-primary" />
@@ -57,8 +71,11 @@ export function SectionCard({
           <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
         )}
       </button>
-      <div className={`section-collapse ${open ? "section-open" : ""}`}>
-        <div className="section-collapse-inner">
+      <div className={`section-collapse ${open ? "section-open" : ""}`} style={{ overflow: overflowVisible ? "visible" : undefined }}>
+        <div
+          className="section-collapse-inner"
+          style={{ overflow: overflowVisible ? "visible" : "hidden" }}
+        >
           <div className="px-5 pb-5 border-t border-border/50 pt-4">
             {children}
           </div>

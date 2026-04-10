@@ -41,11 +41,11 @@ function ResourceContentEditor({ resource, onSave }: { resource: Resource; onSav
   }
 
   return (
-    <div className="space-y-3 max-w-lg">
+    <div className="space-y-4">
       <div>
-        <div className="flex items-center justify-between mb-1">
+        <div className="flex items-center justify-between mb-1.5">
           <label className="text-[11px] font-semibold text-muted-foreground">Krótki opis</label>
-          <span className="text-[10px] text-muted-foreground">{short.length}/200</span>
+          <span className="text-[10px] text-muted-foreground tabular-nums">{short.length}/200</span>
         </div>
         <input
           type="text"
@@ -64,7 +64,10 @@ function ResourceContentEditor({ resource, onSave }: { resource: Resource; onSav
           rows={5}
           className="input-bubble text-[13px] py-3 resize-y min-h-[120px]"
         />
-        <p className="text-[10px] text-muted-foreground mt-1">{long.length}/10000 znaków • Markdown: **pogrubienie**, *kursywa*, - lista</p>
+        <div className="flex items-center justify-between mt-1.5">
+          <span className="text-[10px] text-muted-foreground/50">Obsługuje format Markdown</span>
+          <span className="text-[10px] text-muted-foreground tabular-nums">{long.length}/10000</span>
+        </div>
       </div>
       <button
         onClick={handleSave}
@@ -105,7 +108,7 @@ function ResourceTechnicalEditor({ resource, onSave }: { resource: Resource; onS
   }
 
   return (
-    <div className="space-y-3 max-w-md">
+    <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1"><Maximize2 className="h-3 w-3" /> Powierzchnia (m²)</label>
@@ -172,7 +175,7 @@ function ResourceSettingsEditor({ resource, categories, onSave }: { resource: Re
   }
 
   return (
-    <div className="space-y-3 max-w-md">
+    <div className="space-y-4">
       <div>
         <label className="text-[11px] font-semibold text-muted-foreground">Nazwa *</label>
         <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="input-bubble h-9 text-[13px] mt-1" />
@@ -260,7 +263,7 @@ function ResourceBedsEditor({ resourceId, beds, onBedsChange }: { resourceId: st
   }
 
   return (
-    <div ref={bedsRef} className="space-y-3 max-w-md">
+    <div ref={bedsRef} className="space-y-3">
       {localBeds.length === 0 && (
         <p className="text-[12px] text-muted-foreground text-center py-2">Brak łóżek — dodaj konfigurację poniżej</p>
       )}
@@ -307,7 +310,8 @@ function ResourceBedsEditor({ resourceId, beds, onBedsChange }: { resourceId: st
             onChange={(e) => updateBed(idx, "quantity", e.target.value)}
             min="1"
             max="20"
-            className="input-bubble h-9 text-[13px] w-16 text-center"
+            style={{ width: 64, minWidth: 64, maxWidth: 64 }}
+            className="input-bubble h-9 text-[13px] text-center shrink-0"
           />
           <button
             onClick={() => removeBed(idx)}
@@ -778,30 +782,64 @@ export function ResourcesList() {
       >
         {panelMode === "view" && selectedResource ? (
           <div className="space-y-4">
-            {/* Compact header: status + category + delete */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold", statusConfig[selectedResource.status]?.color)}>
-                  <span className={cn("h-1.5 w-1.5 rounded-full", statusConfig[selectedResource.status]?.dot)} />
-                  {statusConfig[selectedResource.status]?.label}
-                </span>
-                <span className="text-[11px] text-muted-foreground flex items-center gap-1">
-                  {getIcon(selectedResource.category.slug)} {selectedResource.category.name}
-                </span>
+            {/* Hero card — key resource info at a glance */}
+            <div className="bubble p-5">
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                    {getIcon(selectedResource.category.slug)}
+                  </div>
+                  <div>
+                    <p className="text-[12px] text-muted-foreground">{selectedResource.category.name}</p>
+                    <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold mt-1", statusConfig[selectedResource.status]?.color)}>
+                      <span className={cn("h-1.5 w-1.5 rounded-full", statusConfig[selectedResource.status]?.dot)} />
+                      {statusConfig[selectedResource.status]?.label}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleDelete(selectedResource.id)}
+                  className="h-8 w-8 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all shrink-0"
+                  title="Usuń zasób"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+              {/* Stats grid */}
+              <div className="grid grid-cols-3 gap-3">
                 {selectedResource.maxCapacity && (
-                  <span className="text-[11px] text-muted-foreground">{selectedResource.maxCapacity} osób</span>
+                  <div className="rounded-xl bg-muted/50 px-3 py-2.5 text-center">
+                    <Users className="h-4 w-4 text-muted-foreground mx-auto mb-1" />
+                    <p className="text-[14px] font-bold">{selectedResource.maxCapacity}</p>
+                    <p className="text-[10px] text-muted-foreground">osób</p>
+                  </div>
                 )}
+                {selectedResource.areaSqm && (
+                  <div className="rounded-xl bg-muted/50 px-3 py-2.5 text-center">
+                    <Maximize2 className="h-4 w-4 text-muted-foreground mx-auto mb-1" />
+                    <p className="text-[14px] font-bold">{selectedResource.areaSqm}</p>
+                    <p className="text-[10px] text-muted-foreground">m²</p>
+                  </div>
+                )}
+                {selectedResource.bedroomCount != null && (
+                  <div className="rounded-xl bg-muted/50 px-3 py-2.5 text-center">
+                    <DoorOpen className="h-4 w-4 text-muted-foreground mx-auto mb-1" />
+                    <p className="text-[14px] font-bold">{selectedResource.bedroomCount}</p>
+                    <p className="text-[10px] text-muted-foreground">sypialni</p>
+                  </div>
+                )}
+              </div>
+              {/* Meta row */}
+              <div className="flex items-center gap-2 flex-wrap mt-3">
                 {selectedResource.unitNumber && (
                   <UnitBadge number={selectedResource.unitNumber} />
                 )}
+                {selectedResource.visibleInWidget && (
+                  <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-medium bg-primary/10 text-primary">
+                    Widoczny w widgecie
+                  </span>
+                )}
               </div>
-              <button
-                onClick={() => handleDelete(selectedResource.id)}
-                className="h-8 w-8 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all shrink-0"
-                title="Usuń zasób"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </button>
             </div>
 
             {/* SectionCard: Ustawienia zasobu */}
