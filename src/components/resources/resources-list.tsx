@@ -20,7 +20,7 @@ interface ResourceImageData { id: string; alt: string | null; position: number; 
 interface ResourceBedData { bedType: string; quantity: number; }
 interface Resource { id: string; name: string; slug: string; unitNumber: string | null; categoryId: string; longDescription: string | null; shortDescription: string | null; maxCapacity: number | null; totalUnits: number; areaSqm: number | null; bedroomCount: number | null; bathroomCount: number | null; location: string | null; status: string; sortOrder: number; visibleInWidget: boolean; category: Category; variants: Variant[]; images?: ResourceImageData[]; beds?: ResourceBedData[]; _count?: { variants: number; images: number; beds?: number }; }
 
-// ── B2: Inline editors for SectionCards ───────────────
+// ── B2: Inline editors for SectionCards (DS-compliant) ──
 
 function ResourceContentEditor({ resource, onSave }: { resource: Resource; onSave: (data: Record<string, unknown>) => Promise<boolean> }) {
   const { success: showSuccess } = useToast();
@@ -41,41 +41,44 @@ function ResourceContentEditor({ resource, onSave }: { resource: Resource; onSav
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <div>
         <div className="flex items-center justify-between mb-1.5">
-          <label className="text-[11px] font-semibold text-muted-foreground">Krótki opis</label>
-          <span className="text-[10px] text-muted-foreground tabular-nums">{short.length}/200</span>
+          <label className="text-[12px] font-semibold text-muted-foreground">Krótki opis</label>
+          <span className="text-[11px] text-muted-foreground/60 tabular-nums">{short.length}/200</span>
         </div>
         <input
           type="text"
           value={short}
           onChange={(e) => { if (e.target.value.length <= 200) setShort(e.target.value); }}
-          placeholder="Krótki opis na karty widgetu..."
-          className="input-bubble h-9 text-[13px]"
+          placeholder="Krótki opis wyświetlany na kartach widgetu..."
+          className="input-bubble h-11"
         />
       </div>
       <div>
-        <label className="text-[11px] font-semibold text-muted-foreground mb-1 block">Pełny opis (Markdown)</label>
+        <div className="flex items-center justify-between mb-1.5">
+          <label className="text-[12px] font-semibold text-muted-foreground">Pełny opis</label>
+          <span className="text-[11px] text-muted-foreground/60 tabular-nums">{long.length}/10000</span>
+        </div>
         <textarea
           value={long}
           onChange={(e) => { if (e.target.value.length <= 10000) setLong(e.target.value); }}
-          placeholder="Pełny opis zasobu w formacie Markdown..."
+          placeholder="Pełny opis zasobu wyświetlany na stronie szczegółów..."
           rows={5}
-          className="input-bubble text-[13px] py-3 resize-y min-h-[120px]"
+          className="input-bubble min-h-[80px] resize-y"
         />
-        <div className="flex items-center justify-between mt-1.5">
-          <span className="text-[10px] text-muted-foreground/50">Obsługuje format Markdown</span>
-          <span className="text-[10px] text-muted-foreground tabular-nums">{long.length}/10000</span>
-        </div>
+        <p className="text-[11px] text-muted-foreground/60 mt-1">Obsługuje format Markdown</p>
       </div>
-      <button
-        onClick={handleSave}
-        disabled={saving}
-        className="btn-bubble btn-primary-bubble px-4 py-2 text-[12px] disabled:opacity-50"
-      >
-        {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />} Zapisz treści
-      </button>
+      <div className="flex gap-3 pt-2">
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="btn-bubble btn-primary-bubble px-5 py-2.5 text-[13px] disabled:opacity-50"
+        >
+          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+          {saving ? "Zapisywanie..." : "Zapisz treści"}
+        </button>
+      </div>
     </div>
   );
 }
@@ -108,32 +111,35 @@ function ResourceTechnicalEditor({ resource, onSave }: { resource: Resource; onS
   }
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3">
+    <div className="space-y-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1"><Maximize2 className="h-3 w-3" /> Powierzchnia (m²)</label>
-          <input type="number" value={areaSqm} onChange={(e) => setAreaSqm(e.target.value)} placeholder="np. 45" min="1" max="9999" className="input-bubble h-9 text-[13px] mt-1" />
+          <label className="text-[12px] font-semibold text-muted-foreground mb-1.5 flex items-center gap-1.5"><Maximize2 className="h-3.5 w-3.5" /> Powierzchnia (m²)</label>
+          <input type="number" value={areaSqm} onChange={(e) => setAreaSqm(e.target.value)} placeholder="np. 45" min="1" max="9999" className="input-bubble h-11" />
         </div>
         <div>
-          <label className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1"><Users className="h-3 w-3" /> Pojemność (osób)</label>
-          <input type="number" value={capacity} onChange={(e) => setCapacity(e.target.value)} placeholder="np. 7" min="1" className="input-bubble h-9 text-[13px] mt-1" />
+          <label className="text-[12px] font-semibold text-muted-foreground mb-1.5 flex items-center gap-1.5"><Users className="h-3.5 w-3.5" /> Pojemność (osób)</label>
+          <input type="number" value={capacity} onChange={(e) => setCapacity(e.target.value)} placeholder="np. 7" min="1" className="input-bubble h-11" />
         </div>
         <div>
-          <label className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1"><DoorOpen className="h-3 w-3" /> Sypialnie</label>
-          <input type="number" value={bedrooms} onChange={(e) => setBedrooms(e.target.value)} placeholder="np. 2" min="0" max="50" className="input-bubble h-9 text-[13px] mt-1" />
+          <label className="text-[12px] font-semibold text-muted-foreground mb-1.5 flex items-center gap-1.5"><DoorOpen className="h-3.5 w-3.5" /> Sypialnie</label>
+          <input type="number" value={bedrooms} onChange={(e) => setBedrooms(e.target.value)} placeholder="np. 2" min="0" max="50" className="input-bubble h-11" />
         </div>
         <div>
-          <label className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1"><Bath className="h-3 w-3" /> Łazienki</label>
-          <input type="number" value={bathrooms} onChange={(e) => setBathrooms(e.target.value)} placeholder="np. 1" min="0" max="50" className="input-bubble h-9 text-[13px] mt-1" />
+          <label className="text-[12px] font-semibold text-muted-foreground mb-1.5 flex items-center gap-1.5"><Bath className="h-3.5 w-3.5" /> Łazienki</label>
+          <input type="number" value={bathrooms} onChange={(e) => setBathrooms(e.target.value)} placeholder="np. 1" min="0" max="50" className="input-bubble h-11" />
         </div>
       </div>
-      <button
-        onClick={handleSave}
-        disabled={saving}
-        className="btn-bubble btn-primary-bubble px-4 py-2 text-[12px] disabled:opacity-50"
-      >
-        {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />} Zapisz dane techniczne
-      </button>
+      <div className="flex gap-3 pt-2">
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="btn-bubble btn-primary-bubble px-5 py-2.5 text-[13px] disabled:opacity-50"
+        >
+          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+          {saving ? "Zapisywanie..." : "Zapisz dane techniczne"}
+        </button>
+      </div>
     </div>
   );
 }
@@ -175,25 +181,25 @@ function ResourceSettingsEditor({ resource, categories, onSave }: { resource: Re
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <div>
-        <label className="text-[11px] font-semibold text-muted-foreground">Nazwa *</label>
-        <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="input-bubble h-9 text-[13px] mt-1" />
+        <label className="text-[12px] font-semibold text-muted-foreground mb-1.5 flex items-center gap-1.5"><Pencil className="h-3.5 w-3.5" /> Nazwa zasobu *</label>
+        <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="input-bubble h-11" />
       </div>
       <BubbleSelect label="Kategoria" options={categoryOptions} value={categoryId} onChange={setCategoryId} />
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="text-[11px] font-semibold text-muted-foreground">Numer</label>
-          <input type="text" value={unitNumber} onChange={(e) => setUnitNumber(e.target.value)} placeholder="np. 1, A3" className="input-bubble h-9 text-[13px] mt-1" />
+          <label className="text-[12px] font-semibold text-muted-foreground mb-1.5 flex items-center gap-1.5"><Hash className="h-3.5 w-3.5" /> Numer</label>
+          <input type="text" value={unitNumber} onChange={(e) => setUnitNumber(e.target.value)} placeholder="np. 1, A3" className="input-bubble h-11" />
         </div>
         <div>
-          <label className="text-[11px] font-semibold text-muted-foreground">Sztuk</label>
-          <input type="number" value={totalUnits} onChange={(e) => setTotalUnits(e.target.value)} min="1" className="input-bubble h-9 text-[13px] mt-1" />
+          <label className="text-[12px] font-semibold text-muted-foreground mb-1.5 flex items-center gap-1.5"><Layers className="h-3.5 w-3.5" /> Ilość sztuk</label>
+          <input type="number" value={totalUnits} onChange={(e) => setTotalUnits(e.target.value)} min="1" className="input-bubble h-11" />
         </div>
       </div>
       <div>
-        <label className="text-[11px] font-semibold text-muted-foreground">Lokalizacja</label>
-        <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="np. Nad jeziorem" className="input-bubble h-9 text-[13px] mt-1" />
+        <label className="text-[12px] font-semibold text-muted-foreground mb-1.5 flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" /> Lokalizacja</label>
+        <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="np. Nad jeziorem" className="input-bubble h-11" />
       </div>
       <BubbleSelect label="Status" options={statusOptions} value={status} onChange={setStatus} />
       <button type="button" onClick={() => setVisible(!visible)} className="flex items-center gap-3 w-full text-left">
@@ -202,9 +208,12 @@ function ResourceSettingsEditor({ resource, categories, onSave }: { resource: Re
         </span>
         <span className="text-[12px] text-muted-foreground">Widoczny w widgecie rezerwacyjnym</span>
       </button>
-      <button onClick={handleSave} disabled={saving || !name.trim()} className="btn-bubble btn-primary-bubble px-4 py-2 text-[12px] disabled:opacity-50">
-        {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />} Zapisz ustawienia
-      </button>
+      <div className="flex gap-3 pt-2">
+        <button onClick={handleSave} disabled={saving || !name.trim()} className="btn-bubble btn-primary-bubble px-5 py-2.5 text-[13px] disabled:opacity-50">
+          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+          {saving ? "Zapisywanie..." : "Zapisz ustawienia"}
+        </button>
+      </div>
     </div>
   );
 }
@@ -213,20 +222,8 @@ function ResourceBedsEditor({ resourceId, beds, onBedsChange }: { resourceId: st
   const { error: showError, success: showSuccess } = useToast();
   const [localBeds, setLocalBeds] = useState<ResourceBedData[]>(beds);
   const [saving, setSaving] = useState(false);
-  const [openDropdown, setOpenDropdown] = useState<number | null>(null);
-  const bedsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { setLocalBeds(beds); }, [beds]);
-
-  // Click-outside to close dropdown
-  useEffect(() => {
-    if (openDropdown === null) return;
-    function handleClick(e: MouseEvent) {
-      if (bedsRef.current && !bedsRef.current.contains(e.target as Node)) setOpenDropdown(null);
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, [openDropdown]);
 
   const usedTypes = new Set(localBeds.map((b) => b.bedType));
   const availableTypes = BED_TYPE_KEYS.filter((t) => !usedTypes.has(t));
@@ -262,81 +259,72 @@ function ResourceBedsEditor({ resourceId, beds, onBedsChange }: { resourceId: st
     setSaving(false);
   }
 
+  const bedTypeOptions = BED_TYPE_KEYS.map((t) => ({
+    value: t,
+    label: getBedTypeLabel(t),
+  }));
+
   return (
-    <div ref={bedsRef} className="space-y-3">
+    <div className="space-y-5">
       {localBeds.length === 0 && (
-        <p className="text-[12px] text-muted-foreground text-center py-2">Brak łóżek — dodaj konfigurację poniżej</p>
+        <div className="py-8 text-center">
+          <BedDouble className="h-8 w-8 text-muted-foreground/30 mx-auto mb-3" />
+          <p className="text-[13px] text-muted-foreground">Brak łóżek</p>
+          <p className="text-[12px] text-muted-foreground/60 mt-1">Dodaj konfigurację miejsc sypialnych</p>
+        </div>
       )}
       {localBeds.map((bed, idx) => (
-        <div key={idx} className="flex items-center gap-2">
-          <div className="flex-1 relative">
-            <div
-              className="input-bubble h-9 text-[13px] flex items-center justify-between cursor-pointer"
-              onClick={() => setOpenDropdown(openDropdown === idx ? null : idx)}
-            >
-              <span>{getBedTypeLabel(bed.bedType)}</span>
-              <ChevronDown className="h-3 w-3 text-muted-foreground" />
-            </div>
-            {openDropdown === idx && (
-              <div className="absolute top-10 left-0 right-0 z-50 bg-card border border-border rounded-xl shadow-lg py-1 max-h-[200px] overflow-y-auto">
-                {BED_TYPE_KEYS.map((t) => {
-                  const isUsed = usedTypes.has(t) && t !== bed.bedType;
-                  return (
-                    <button
-                      key={t}
-                      disabled={isUsed}
-                      onClick={() => {
-                        updateBed(idx, "bedType", t);
-                        setOpenDropdown(null);
-                      }}
-                      className={`w-full text-left px-3 py-2 text-[13px] transition-colors ${
-                        isUsed
-                          ? "text-muted-foreground/40 cursor-not-allowed"
-                          : t === bed.bedType
-                          ? "bg-primary/10 text-primary font-semibold"
-                          : "hover:bg-muted"
-                      }`}
-                    >
-                      {getBedTypeLabel(t)}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+        <div key={idx} className="flex items-end gap-3">
+          <div className="flex-1">
+            <BubbleSelect
+              label={idx === 0 ? "Typ łóżka" : undefined}
+              options={bedTypeOptions.map((o) => ({
+                ...o,
+                label: usedTypes.has(o.value) && o.value !== bed.bedType ? `${o.label} (użyty)` : o.label,
+              }))}
+              value={bed.bedType}
+              onChange={(v) => updateBed(idx, "bedType", v)}
+            />
           </div>
-          <input
-            type="number"
-            value={bed.quantity}
-            onChange={(e) => updateBed(idx, "quantity", e.target.value)}
-            min="1"
-            max="20"
-            style={{ width: 64, minWidth: 64, maxWidth: 64 }}
-            className="input-bubble h-9 text-[13px] text-center shrink-0"
-          />
-          <button
-            onClick={() => removeBed(idx)}
-            className="h-9 w-9 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all shrink-0"
-          >
-            <X className="h-3.5 w-3.5" />
-          </button>
+          <div className="w-[100px] shrink-0">
+            {idx === 0 && <label className="text-[12px] font-semibold text-muted-foreground mb-1.5 block">Ilość</label>}
+            <input
+              type="number"
+              value={bed.quantity}
+              onChange={(e) => updateBed(idx, "quantity", e.target.value)}
+              min="1"
+              max="20"
+              className="input-bubble h-11 text-center"
+            />
+          </div>
+          <div className="h-11 flex items-center shrink-0">
+            <button
+              onClick={() => removeBed(idx)}
+              className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all"
+              title="Usuń"
+            >
+              <Trash2 className="h-3 w-3" />
+            </button>
+          </div>
         </div>
       ))}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3 pt-2">
         {availableTypes.length > 0 && (
           <button
             onClick={addBed}
-            className="text-[12px] text-primary font-semibold hover:underline inline-flex items-center gap-1"
+            className="btn-bubble btn-secondary-bubble px-5 py-2.5 text-[13px]"
           >
-            <Plus className="h-3 w-3" /> Dodaj łóżko
+            <Plus className="h-4 w-4" /> Dodaj łóżko
           </button>
         )}
         {localBeds.length > 0 && (
           <button
             onClick={handleSave}
             disabled={saving}
-            className="btn-bubble btn-primary-bubble px-4 py-2 text-[12px] disabled:opacity-50 ml-auto"
+            className="btn-bubble btn-primary-bubble px-5 py-2.5 text-[13px] disabled:opacity-50 ml-auto"
           >
-            {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />} Zapisz łóżka
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+            {saving ? "Zapisywanie..." : "Zapisz łóżka"}
           </button>
         )}
       </div>
@@ -777,67 +765,92 @@ export function ResourcesList() {
         title={
           panelMode === "create"
             ? "Nowy zasób"
-            : selectedResource?.name || "Zasób"
+            : "Właściwości zasobu"
         }
       >
         {panelMode === "view" && selectedResource ? (
           <div className="space-y-4">
-            {/* Hero card — key resource info at a glance */}
-            <div className="bubble p-5">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                    {getIcon(selectedResource.category.slug)}
-                  </div>
-                  <div>
-                    <p className="text-[12px] text-muted-foreground">{selectedResource.category.name}</p>
-                    <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold mt-1", statusConfig[selectedResource.status]?.color)}>
-                      <span className={cn("h-1.5 w-1.5 rounded-full", statusConfig[selectedResource.status]?.dot)} />
-                      {statusConfig[selectedResource.status]?.label}
-                    </span>
-                  </div>
+            {/* Hero — title, badges, full-width stats grid */}
+            <div className="pb-4">
+              {/* Title row */}
+              <div className="flex items-start justify-between mb-2">
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <h2 className="text-xl font-bold tracking-tight">{selectedResource.name}</h2>
+                  {selectedResource.unitNumber && (
+                    <UnitBadge number={selectedResource.unitNumber} size="md" />
+                  )}
                 </div>
                 <button
                   onClick={() => handleDelete(selectedResource.id)}
-                  className="h-8 w-8 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all shrink-0"
+                  className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all shrink-0 mt-1"
                   title="Usuń zasób"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>
               </div>
-              {/* Stats grid */}
-              <div className="grid grid-cols-3 gap-3">
+
+              {/* Status badges */}
+              <div className="flex items-center gap-2 flex-wrap mb-5">
+                <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold", statusConfig[selectedResource.status]?.color)}>
+                  <span className={cn("h-1.5 w-1.5 rounded-full", statusConfig[selectedResource.status]?.dot)} />
+                  {statusConfig[selectedResource.status]?.label}
+                </span>
+                {selectedResource.visibleInWidget ? (
+                  <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold bg-primary/10 text-primary">
+                    Widoczny w widgecie
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold bg-destructive/10 text-destructive">
+                    Niewidoczny w widgecie
+                  </span>
+                )}
+              </div>
+
+              {/* Stats 2×2 grid — full width, inline number + label */}
+              <div className="grid grid-cols-2 gap-3">
                 {selectedResource.maxCapacity && (
-                  <div className="rounded-xl bg-muted/50 px-3 py-2.5 text-center">
-                    <Users className="h-4 w-4 text-muted-foreground mx-auto mb-1" />
-                    <p className="text-[14px] font-bold">{selectedResource.maxCapacity}</p>
-                    <p className="text-[10px] text-muted-foreground">osób</p>
+                  <div className="rounded-xl bg-muted/40 px-4 py-3.5 flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-xl bg-background flex items-center justify-center shrink-0">
+                      <Users className="h-4 w-4 text-primary" />
+                    </div>
+                    <p className="flex items-baseline gap-1.5">
+                      <span className="text-[18px] font-bold">{selectedResource.maxCapacity}</span>
+                      <span className="text-[12px] text-muted-foreground">osób</span>
+                    </p>
                   </div>
                 )}
                 {selectedResource.areaSqm && (
-                  <div className="rounded-xl bg-muted/50 px-3 py-2.5 text-center">
-                    <Maximize2 className="h-4 w-4 text-muted-foreground mx-auto mb-1" />
-                    <p className="text-[14px] font-bold">{selectedResource.areaSqm}</p>
-                    <p className="text-[10px] text-muted-foreground">m²</p>
+                  <div className="rounded-xl bg-muted/40 px-4 py-3.5 flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-xl bg-background flex items-center justify-center shrink-0">
+                      <Maximize2 className="h-4 w-4 text-primary" />
+                    </div>
+                    <p className="flex items-baseline gap-1.5">
+                      <span className="text-[18px] font-bold">{selectedResource.areaSqm}</span>
+                      <span className="text-[12px] text-muted-foreground">m²</span>
+                    </p>
                   </div>
                 )}
-                {selectedResource.bedroomCount != null && (
-                  <div className="rounded-xl bg-muted/50 px-3 py-2.5 text-center">
-                    <DoorOpen className="h-4 w-4 text-muted-foreground mx-auto mb-1" />
-                    <p className="text-[14px] font-bold">{selectedResource.bedroomCount}</p>
-                    <p className="text-[10px] text-muted-foreground">sypialni</p>
+                {selectedResource.bedroomCount != null && selectedResource.bedroomCount > 0 && (
+                  <div className="rounded-xl bg-muted/40 px-4 py-3.5 flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-xl bg-background flex items-center justify-center shrink-0">
+                      <DoorOpen className="h-4 w-4 text-primary" />
+                    </div>
+                    <p className="flex items-baseline gap-1.5">
+                      <span className="text-[18px] font-bold">{selectedResource.bedroomCount}</span>
+                      <span className="text-[12px] text-muted-foreground">{selectedResource.bedroomCount === 1 ? "sypialnia" : selectedResource.bedroomCount < 5 ? "sypialnie" : "sypialni"}</span>
+                    </p>
                   </div>
                 )}
-              </div>
-              {/* Meta row */}
-              <div className="flex items-center gap-2 flex-wrap mt-3">
-                {selectedResource.unitNumber && (
-                  <UnitBadge number={selectedResource.unitNumber} />
-                )}
-                {selectedResource.visibleInWidget && (
-                  <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-medium bg-primary/10 text-primary">
-                    Widoczny w widgecie
-                  </span>
+                {selectedResource.bathroomCount != null && selectedResource.bathroomCount > 0 && (
+                  <div className="rounded-xl bg-muted/40 px-4 py-3.5 flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-xl bg-background flex items-center justify-center shrink-0">
+                      <Bath className="h-4 w-4 text-primary" />
+                    </div>
+                    <p className="flex items-baseline gap-1.5">
+                      <span className="text-[18px] font-bold">{selectedResource.bathroomCount}</span>
+                      <span className="text-[12px] text-muted-foreground">{selectedResource.bathroomCount === 1 ? "łazienka" : selectedResource.bathroomCount < 5 ? "łazienki" : "łazienek"}</span>
+                    </p>
+                  </div>
                 )}
               </div>
             </div>
@@ -920,7 +933,7 @@ export function ResourcesList() {
               title="Zdjęcia"
               description="Galeria zdjęć zasobu. Pierwsze zdjęcie jest okładką."
               icon={ImageIcon}
-              defaultOpen={true}
+              defaultOpen={false}
             >
               <ImageUpload
                 resourceId={selectedResource.id}
@@ -943,15 +956,7 @@ export function ResourcesList() {
               title="Warianty sprzedażowe"
               description="Opcje cenowe i konfiguracje pojemności zasobu."
               icon={Layers}
-              defaultOpen={true}
-              action={
-                <button
-                  onClick={openVarCreate}
-                  className="text-[12px] text-primary font-semibold hover:underline inline-flex items-center gap-1"
-                >
-                  <Plus className="h-3 w-3" /> Dodaj
-                </button>
-              }
+              defaultOpen={false}
             >
               <div>
 
@@ -1047,7 +1052,7 @@ export function ResourcesList() {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {selectedResource.variants.map((v) => (
+                  {selectedResource.variants.filter((v) => editingVariant?.id !== v.id).map((v) => (
                     <div key={v.id} className="bubble p-4 flex items-center justify-between group/v">
                       <div>
                         <div className="flex items-center gap-2">
@@ -1085,6 +1090,17 @@ export function ResourcesList() {
                       </div>
                     </div>
                   ))}
+                </div>
+              )}
+              {/* Dodaj wariant — inside content, not on header */}
+              {!showVarForm && (
+                <div className="pt-3">
+                  <button
+                    onClick={openVarCreate}
+                    className="btn-bubble btn-secondary-bubble px-5 py-2.5 text-[13px]"
+                  >
+                    <Plus className="h-4 w-4" /> Dodaj wariant
+                  </button>
                 </div>
               )}
             </div>

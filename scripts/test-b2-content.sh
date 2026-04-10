@@ -233,10 +233,10 @@ if len(resources) == 0:
 else:
     r = resources[0]
     has_short = 'shortDescription' in r
-    has_long = 'longDescription' in r
     has_area = 'areaSqm' in r
     has_beds = 'beds' in r
-    print('OK' if all([has_short, has_long, has_area, has_beds]) else 'FAIL')
+    no_long = 'longDescription' not in r
+    print('OK' if all([has_short, has_area, has_beds, no_long]) else 'FAIL')
 " 2>/dev/null || echo "FAIL")
 
 if [ "$CATALOG_OK" = "OK" ]; then

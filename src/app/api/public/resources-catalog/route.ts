@@ -38,7 +38,6 @@ export async function GET(request: NextRequest) {
         slug: true,
         unitNumber: true,
         shortDescription: true,
-        longDescription: true,
         maxCapacity: true,
         areaSqm: true,
         bedroomCount: true,
