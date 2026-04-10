@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState, useCallback } from "react";
-import { Plus, Pencil, Trash2, Check, Home, Building2, UtensilsCrossed, Ship, Sparkles, Users, Loader2, Search, Layers, MapPin, Hash, Bike, ConciergeBell, Package, X, GripVertical, ArrowUpDown, ImageIcon } from "lucide-react";
+import { Plus, Pencil, Trash2, Check, Home, Building2, UtensilsCrossed, Ship, Sparkles, Users, Loader2, Search, Layers, MapPin, Hash, Bike, ConciergeBell, Package, X, GripVertical, ArrowUpDown, ImageIcon, FileText, Ruler, BedDouble } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api-fetch";
 import { SlidePanel } from "@/components/ui/slide-panel";
@@ -11,11 +11,225 @@ import { BubbleSelect } from "@/components/ui/bubble-select";
 import { UnitBadge } from "@/components/ui/unit-badge";
 import { parseMoneyToMinor, fromMinor } from "@/lib/format";
 import { ImageUpload } from "@/components/resources/image-upload";
+import { BED_TYPES, BED_TYPE_KEYS, isValidBedType, getBedTypeLabel } from "@/lib/bed-types";
+import type { BedType } from "@/lib/bed-types";
 
 interface Category { id: string; name: string; slug: string; unitNumber: string | null; type: string; icon: string | null; description: string | null; _count?: { resources: number }; }
 interface Variant { id: string; name: string; description: string | null; capacity: number; basePrice: number | null; basePriceMinor?: number | null; isDefault: boolean; isActive: boolean; }
 interface ResourceImageData { id: string; alt: string | null; position: number; isCover: boolean; sizeBytes: number; width: number; height: number; urls: { original: string; medium: string; thumbnail: string }; }
-interface Resource { id: string; name: string; slug: string; unitNumber: string | null; categoryId: string; description: string | null; maxCapacity: number | null; totalUnits: number; location: string | null; status: string; sortOrder: number; visibleInWidget: boolean; category: Category; variants: Variant[]; images?: ResourceImageData[]; _count?: { variants: number; images: number }; }
+interface ResourceBedData { bedType: string; quantity: number; }
+interface Resource { id: string; name: string; slug: string; unitNumber: string | null; categoryId: string; longDescription: string | null; shortDescription: string | null; maxCapacity: number | null; totalUnits: number; areaSqm: number | null; bedroomCount: number | null; bathroomCount: number | null; location: string | null; status: string; sortOrder: number; visibleInWidget: boolean; category: Category; variants: Variant[]; images?: ResourceImageData[]; beds?: ResourceBedData[]; _count?: { variants: number; images: number; beds?: number }; }
+
+// ── B2: Inline editors for SectionCards ───────────────
+
+function ResourceContentEditor({ resource, onSave }: { resource: Resource; onSave: (data: Record<string, unknown>) => Promise<boolean> }) {
+  const [short, setShort] = useState(resource.shortDescription || "");
+  const [long, setLong] = useState(resource.longDescription || "");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setShort(resource.shortDescription || "");
+    setLong(resource.longDescription || "");
+  }, [resource.id, resource.shortDescription, resource.longDescription]);
+
+  async function handleSave() {
+    setSaving(true);
+    await onSave({ shortDescription: short, longDescription: long });
+    setSaving(false);
+  }
+
+  return (
+    <div className="space-y-3">
+      <div>
+        <div className="flex items-center justify-between mb-1">
+          <label className="text-[11px] font-semibold text-muted-foreground">Krótki opis</label>
+          <span className="text-[10px] text-muted-foreground">{short.length}/200</span>
+        </div>
+        <input
+          type="text"
+          value={short}
+          onChange={(e) => { if (e.target.value.length <= 200) setShort(e.target.value); }}
+          placeholder="Krótki opis na karty widgetu..."
+          className="input-bubble h-9 text-[13px]"
+        />
+      </div>
+      <div>
+        <label className="text-[11px] font-semibold text-muted-foreground mb-1 block">Pełny opis (Markdown)</label>
+        <textarea
+          value={long}
+          onChange={(e) => { if (e.target.value.length <= 10000) setLong(e.target.value); }}
+          placeholder="Pełny opis zasobu w formacie Markdown..."
+          rows={5}
+          className="input-bubble text-[13px] py-3 resize-y min-h-[120px]"
+        />
+        <p className="text-[10px] text-muted-foreground mt-1">{long.length}/10000 znaków • Markdown: **pogrubienie**, *kursywa*, - lista</p>
+      </div>
+      <button
+        onClick={handleSave}
+        disabled={saving}
+        className="btn-bubble btn-primary-bubble px-4 py-2 text-[12px] disabled:opacity-50"
+      >
+        {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />} Zapisz treści
+      </button>
+    </div>
+  );
+}
+
+function ResourceTechnicalEditor({ resource, onSave }: { resource: Resource; onSave: (data: Record<string, unknown>) => Promise<boolean> }) {
+  const [areaSqm, setAreaSqm] = useState(resource.areaSqm?.toString() || "");
+  const [bedrooms, setBedrooms] = useState(resource.bedroomCount?.toString() || "");
+  const [bathrooms, setBathrooms] = useState(resource.bathroomCount?.toString() || "");
+  const [capacity, setCapacity] = useState(resource.maxCapacity?.toString() || "");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setAreaSqm(resource.areaSqm?.toString() || "");
+    setBedrooms(resource.bedroomCount?.toString() || "");
+    setBathrooms(resource.bathroomCount?.toString() || "");
+    setCapacity(resource.maxCapacity?.toString() || "");
+  }, [resource.id, resource.areaSqm, resource.bedroomCount, resource.bathroomCount, resource.maxCapacity]);
+
+  async function handleSave() {
+    setSaving(true);
+    await onSave({
+      areaSqm: areaSqm || null,
+      bedroomCount: bedrooms || null,
+      bathroomCount: bathrooms || null,
+      maxCapacity: capacity || null,
+    });
+    setSaving(false);
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="text-[11px] font-semibold text-muted-foreground">Powierzchnia (m²)</label>
+          <input type="number" value={areaSqm} onChange={(e) => setAreaSqm(e.target.value)} placeholder="np. 45" min="1" max="9999" className="input-bubble h-9 text-[13px] mt-1" />
+        </div>
+        <div>
+          <label className="text-[11px] font-semibold text-muted-foreground">Pojemność (osób)</label>
+          <input type="number" value={capacity} onChange={(e) => setCapacity(e.target.value)} placeholder="np. 7" min="1" className="input-bubble h-9 text-[13px] mt-1" />
+        </div>
+        <div>
+          <label className="text-[11px] font-semibold text-muted-foreground">Sypialnie</label>
+          <input type="number" value={bedrooms} onChange={(e) => setBedrooms(e.target.value)} placeholder="np. 2" min="0" max="50" className="input-bubble h-9 text-[13px] mt-1" />
+        </div>
+        <div>
+          <label className="text-[11px] font-semibold text-muted-foreground">Łazienki</label>
+          <input type="number" value={bathrooms} onChange={(e) => setBathrooms(e.target.value)} placeholder="np. 1" min="0" max="50" className="input-bubble h-9 text-[13px] mt-1" />
+        </div>
+      </div>
+      <button
+        onClick={handleSave}
+        disabled={saving}
+        className="btn-bubble btn-primary-bubble px-4 py-2 text-[12px] disabled:opacity-50"
+      >
+        {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />} Zapisz dane techniczne
+      </button>
+    </div>
+  );
+}
+
+function ResourceBedsEditor({ resourceId, beds, onBedsChange }: { resourceId: string; beds: ResourceBedData[]; onBedsChange: (beds: ResourceBedData[]) => void }) {
+  const { error: showError, success: showSuccess } = useToast();
+  const [localBeds, setLocalBeds] = useState<ResourceBedData[]>(beds);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => { setLocalBeds(beds); }, [beds]);
+
+  const usedTypes = new Set(localBeds.map((b) => b.bedType));
+  const availableTypes = BED_TYPE_KEYS.filter((t) => !usedTypes.has(t));
+
+  function addBed() {
+    if (availableTypes.length === 0) return;
+    setLocalBeds([...localBeds, { bedType: availableTypes[0], quantity: 1 }]);
+  }
+
+  function removeBed(index: number) {
+    setLocalBeds(localBeds.filter((_, i) => i !== index));
+  }
+
+  function updateBed(index: number, field: "bedType" | "quantity", value: string | number) {
+    const updated = [...localBeds];
+    if (field === "bedType") updated[index] = { ...updated[index], bedType: value as string };
+    if (field === "quantity") updated[index] = { ...updated[index], quantity: Math.max(1, Math.min(20, Number(value))) };
+    setLocalBeds(updated);
+  }
+
+  async function handleSave() {
+    setSaving(true);
+    try {
+      const res = await apiFetch("/api/resources/" + resourceId + "/beds", {
+        method: "PUT",
+        body: { beds: localBeds },
+      });
+      onBedsChange(res.beds || []);
+      showSuccess("Łóżka zapisane");
+    } catch (e: any) {
+      showError(e.message || "Błąd zapisu łóżek");
+    }
+    setSaving(false);
+  }
+
+  return (
+    <div className="space-y-3">
+      {localBeds.length === 0 && (
+        <p className="text-[12px] text-muted-foreground text-center py-2">Brak łóżek — dodaj konfigurację poniżej</p>
+      )}
+      {localBeds.map((bed, idx) => (
+        <div key={idx} className="flex items-center gap-2">
+          <select
+            value={bed.bedType}
+            onChange={(e) => updateBed(idx, "bedType", e.target.value)}
+            className="input-bubble h-9 text-[13px] flex-1"
+          >
+            {BED_TYPE_KEYS.map((t) => (
+              <option key={t} value={t} disabled={usedTypes.has(t) && t !== bed.bedType}>
+                {getBedTypeLabel(t)}
+              </option>
+            ))}
+          </select>
+          <input
+            type="number"
+            value={bed.quantity}
+            onChange={(e) => updateBed(idx, "quantity", e.target.value)}
+            min="1"
+            max="20"
+            className="input-bubble h-9 text-[13px] w-16 text-center"
+          />
+          <button
+            onClick={() => removeBed(idx)}
+            className="h-9 w-9 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all shrink-0"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      ))}
+      <div className="flex items-center gap-2">
+        {availableTypes.length > 0 && (
+          <button
+            onClick={addBed}
+            className="text-[12px] text-primary font-semibold hover:underline inline-flex items-center gap-1"
+          >
+            <Plus className="h-3 w-3" /> Dodaj łóżko
+          </button>
+        )}
+        {localBeds.length > 0 && (
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="btn-bubble btn-primary-bubble px-4 py-2 text-[12px] disabled:opacity-50 ml-auto"
+          >
+            {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />} Zapisz łóżka
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── End B2 inline editors ─────────────────────────────
 
 const statusConfig: Record<string, { label: string; color: string; dot: string }> = {
   ACTIVE: { label: "Aktywny", color: "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400", dot: "bg-emerald-500" },
@@ -46,7 +260,7 @@ export function ResourcesList() {
   const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
-    name: "", categoryId: "", description: "", maxCapacity: "", totalUnits: "1", location: "", status: "ACTIVE", unitNumber: "", visibleInWidget: false,
+    name: "", categoryId: "", longDescription: "", maxCapacity: "", totalUnits: "1", location: "", status: "ACTIVE", unitNumber: "", visibleInWidget: false,
   });
   const [showVarForm, setShowVarForm] = useState(false);
   const [editingVariant, setEditingVariant] = useState<Variant | null>(null);
@@ -75,7 +289,7 @@ export function ResourcesList() {
   useEffect(() => { loadData(); }, [loadData]);
 
   function openCreate() {
-    setFormData({ name: "", categoryId: categories[0]?.id || "", description: "", maxCapacity: "", totalUnits: "1", location: "", status: "ACTIVE", unitNumber: "", visibleInWidget: false });
+    setFormData({ name: "", categoryId: categories[0]?.id || "", longDescription: "", maxCapacity: "", totalUnits: "1", location: "", status: "ACTIVE", unitNumber: "", visibleInWidget: false });
     setSelectedResource(null);
     setPanelMode("create");
     setPanelOpen(true);
@@ -83,7 +297,7 @@ export function ResourcesList() {
 
   function openEdit(r: Resource) {
     setFormData({
-      name: r.name, categoryId: r.categoryId, description: r.description || "", unitNumber: r.unitNumber || "",
+      name: r.name, categoryId: r.categoryId, longDescription: r.longDescription || "", unitNumber: r.unitNumber || "",
       maxCapacity: r.maxCapacity?.toString() || "", totalUnits: r.totalUnits.toString(),
       location: r.location || "", status: r.status, visibleInWidget: r.visibleInWidget ?? false,
     });
@@ -109,7 +323,7 @@ export function ResourcesList() {
       const url = panelMode === "edit" && selectedResource
         ? "/api/resources/" + selectedResource.id
         : "/api/resources";
-      const method = panelMode === "edit" ? "PUT" : "POST";
+      const method = panelMode === "edit" ? "PATCH" : "POST";
       await apiFetch(url, { method, body: formData });
       await loadData(); setPanelOpen(false);
     } catch (e) { console.error(e); }
@@ -243,7 +457,7 @@ export function ResourcesList() {
     if (activeCategory !== "all" && r.categoryId !== activeCategory) return false;
     if (search) {
       const s = search.toLowerCase();
-      return r.name.toLowerCase().includes(s) || r.description?.toLowerCase().includes(s) || r.category.name.toLowerCase().includes(s);
+      return r.name.toLowerCase().includes(s) || r.longDescription?.toLowerCase().includes(s) || r.category.name.toLowerCase().includes(s);
     }
     return true;
   });
@@ -411,9 +625,9 @@ export function ResourcesList() {
                     </button>
                   </div>
                 </div>
-                {resource.description && (
+                {resource.longDescription && (
                   <p className="text-[12px] text-muted-foreground line-clamp-2 mb-3">
-                    {resource.description}
+                    {resource.longDescription}
                   </p>
                 )}
                 <div className="flex items-center gap-3 flex-wrap">
@@ -460,7 +674,7 @@ export function ResourcesList() {
           setShowVarForm(false);
           setEditingVariant(null);
         }}
-        
+        width={panelMode === "view" ? "75vw" : 520}
         title={
           panelMode === "create"
             ? "Nowy zasób"
@@ -526,14 +740,66 @@ export function ResourcesList() {
               )}
             </div>
 
-            {selectedResource.description && (
+            {selectedResource.longDescription && (
               <div>
                 <p className="text-[11px] font-semibold text-muted-foreground mb-1.5">Opis</p>
-                <p className="text-[13px] text-muted-foreground leading-relaxed">
-                  {selectedResource.description}
+                <p className="text-[13px] text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                  {selectedResource.longDescription}
                 </p>
               </div>
             )}
+
+            {/* B2: Content & Technical data */}
+            <SectionCard
+              title="Treści"
+              description="Opisy zasobu. Krótki opis na kartach, pełny na stronie szczegółów."
+              icon={FileText}
+              defaultOpen={false}
+            >
+              <ResourceContentEditor
+                resource={selectedResource}
+                onSave={async (data) => {
+                  try {
+                    const res = await apiFetch("/api/resources/" + selectedResource.id, { method: "PATCH", body: data });
+                    setSelectedResource(res.resource);
+                    return true;
+                  } catch (e: any) { showError(e.message || "Błąd zapisu"); return false; }
+                }}
+              />
+            </SectionCard>
+
+            <SectionCard
+              title="Dane techniczne"
+              description="Metraż, sypialnie, łazienki i pojemność zasobu."
+              icon={Ruler}
+              defaultOpen={false}
+            >
+              <ResourceTechnicalEditor
+                resource={selectedResource}
+                onSave={async (data) => {
+                  try {
+                    const res = await apiFetch("/api/resources/" + selectedResource.id, { method: "PATCH", body: data });
+                    setSelectedResource(res.resource);
+                    return true;
+                  } catch (e: any) { showError(e.message || "Błąd zapisu"); return false; }
+                }}
+              />
+            </SectionCard>
+
+            <SectionCard
+              title="Łóżka"
+              description="Konfiguracja łóżek i miejsc sypialnych w zasobie."
+              icon={BedDouble}
+              defaultOpen={false}
+            >
+              <ResourceBedsEditor
+                resourceId={selectedResource.id}
+                beds={selectedResource.beds || []}
+                onBedsChange={(newBeds) => {
+                  setSelectedResource({ ...selectedResource, beds: newBeds });
+                }}
+              />
+            </SectionCard>
 
             {/* B1: Image management */}
             <SectionCard
@@ -800,8 +1066,8 @@ export function ResourcesList() {
               <textarea
                 rows={3}
                 placeholder="Opis zasobu..."
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                value={formData.longDescription}
+                onChange={(e) => setFormData({ ...formData, longDescription: e.target.value })}
                 className="input-bubble mt-1.5 py-3 resize-none"
               />
             </div>

@@ -223,13 +223,15 @@ model Resource {
   name         String
   slug         String   @unique
   unitNumber   String?
-  description  String?
-  shortDesc    String?
+  // B2: renamed for MP consistency (ADR-14)
+  shortDescription String?   // Krótki opis na karty (plain text, max 200)
+  longDescription  String?   // Pełny opis (Markdown, max 10000)
   status       ResourceStatus @default(ACTIVE)
   sortOrder    Int      @default(0)
   maxCapacity    Int?
   totalUnits     Int      @default(1)
-  area           Decimal?
+  // B2: renamed area → areaSqm (ADR-14), changed Decimal → Int
+  areaSqm        Int?
   floor          Int?
   location       String?
   unitDuration   Int?
@@ -239,6 +241,9 @@ model Resource {
   isSeasonal     Boolean  @default(false)
   seasonStart    Int?
   seasonEnd      Int?
+  // B2: new content fields
+  bedroomCount   Int?
+  bathroomCount  Int?
   // E2: widget visibility — only ACTIVE + visibleInWidget + ACCOMMODATION shown in public booking
   visibleInWidget Boolean @default(false)
   createdAt    DateTime @default(now())
@@ -248,6 +253,7 @@ model Resource {
   variants            ResourceVariant[]
   images              ResourceImage[]
   amenities           ResourceAmenity[]
+  beds                ResourceBed[]
   blockedPeriods      BlockedPeriod[]
   reservationItems    ReservationItem[]
   channelMappings     ChannelMapping[]
@@ -318,6 +324,19 @@ model ResourceAmenity {
   resource Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
   @@index([resourceId])
   @@map("resource_amenities")
+}
+
+// B2: Bed configuration per resource
+model ResourceBed {
+  id         String   @id @default(cuid())
+  resourceId String
+  bedType    String   // Typed vocabulary: SINGLE, DOUBLE, QUEEN, KING, BUNK, SOFA_BED, BABY_COT
+  quantity   Int      // >= 1
+  createdAt  DateTime @default(now())
+  resource   Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  @@unique([resourceId, bedType])
+  @@index([resourceId])
+  @@map("resource_beds")
 }
 
 model Addon {

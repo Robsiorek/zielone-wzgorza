@@ -19,8 +19,8 @@ interface AvailableResource {
 interface CatalogResource {
   id: string;
   name: string;
-  description: string | null;
-  shortDesc: string | null;
+  longDescription: string | null;
+  shortDescription: string | null;
   maxCapacity: number | null;
   images: { id: string; alt: string | null; position: number; isCover: boolean; urls: { original: string; medium: string; thumbnail: string } }[];
   amenities: { name: string; icon: string | null }[];
@@ -194,7 +194,7 @@ export function StepResults({ dates, selectedResources, onNext }: Props) {
           const defaultVariant = resource.variants.find(v => v.isDefault) || resource.variants[0];
           const isSelected = defaultVariant ? selected.has(defaultVariant.variantId) : false;
           const image = resource.catalog?.images?.[0];
-          const desc = resource.catalog?.shortDesc || resource.catalog?.description;
+          const desc = resource.catalog?.shortDescription || resource.catalog?.longDescription;
 
           return (
             <button

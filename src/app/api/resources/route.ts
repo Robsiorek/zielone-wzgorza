@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     if (search) {
       where.OR = [
         { name: { contains: search, mode: "insensitive" } },
-        { description: { contains: search, mode: "insensitive" } },
+        { longDescription: { contains: search, mode: "insensitive" } },
       ];
     }
 
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
         variants: { orderBy: { sortOrder: "asc" } },
         images: { orderBy: { position: "asc" }, take: 1 },
         amenities: true,
-        _count: { select: { variants: true, images: true, reservationItems: true } },
+        _count: { select: { variants: true, images: true, beds: true, reservationItems: true } },
       },
       orderBy: [{ category: { sortOrder: "asc" } }, { sortOrder: "asc" }, { name: "asc" }],
     });
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, categoryId, description, shortDesc, maxCapacity, status, totalUnits, location, unitNumber } = body;
+    const { name, categoryId, longDescription, shortDescription, maxCapacity, status, totalUnits, location, unitNumber } = body;
 
     if (!name || !categoryId) {
       return apiError("Nazwa i kategoria są wymagane");
@@ -66,8 +66,8 @@ export async function POST(request: NextRequest) {
         name,
         slug,
         categoryId,
-        description: description || null,
-        shortDesc: shortDesc || null,
+        longDescription: longDescription || null,
+        shortDescription: shortDescription || null,
         maxCapacity: maxCapacity ? parseInt(maxCapacity) : null,
         totalUnits: totalUnits ? parseInt(totalUnits) : 1,
         location: location || null,
