@@ -1,6 +1,7 @@
 # PROJEKT: Edycja Rezerwacji — Flow Architektoniczny
 # Wersja 2.0 | Marzec 2026
-# STATUS: Zatwierdzony przez ChatGPT (z poprawkami v2)
+# STATUS: ✅ ZREALIZOWANE — PATCH /api/reservations/[id] obsługuje zmianę dat,
+#   zasobów i danych klienta z atomowym update timeline entries.
 
 ---
 

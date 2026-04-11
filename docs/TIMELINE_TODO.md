@@ -13,6 +13,12 @@ Constraint no_resource_overlap na timeline_entries (btree_gist).
 Test T18 w test-critical.sh weryfikuje 0 overlapów.
 api-response.ts rozpoznaje unique_violation i zwraca 409.
 
+### 2. Edycja rezerwacji ✅
+PATCH /api/reservations/[id] obsługuje zmianę dat, zasobów i danych
+klienta. Timeline entries przebudowywane atomowo w transakcji.
+Soft lock na CONFIRMED (wymaga force: true). DST-safe (date-fns-tz).
+Frontend: UnifiedPanel (patrz UNIFIED_PANEL_SPEC.md).
+
 ### 3. Source of truth ✅
 TimelineEntry = source of truth dla dostępności.
 Reservation = dane biznesowe. Synchronizacja w transakcji.
@@ -22,19 +28,11 @@ Naprawione (loaded: false przy błędzie, retry działa).
 
 ---
 
-## P0 — OTWARTE
-
-### 2. Edycja rezerwacji — pełny flow
-PATCH /api/reservations/[id] z edycją dat/zasobu.
-Wymaga: update Reservation + update TimelineEntry w transakcji.
-Status: zaplanowane, nie zaimplementowane.
-
----
-
 ## P1 — OTWARTE (do zamknięcia przy rozbudowie)
 
 ### 4. Invalidacja cache — stary + nowy zakres
-Czeka na punkt 2 (edycja rezerwacji).
+Edycja rezerwacji (punkt 2) działa, ale frontend timeline może nie
+odświeżać starych miesięcy po zmianie dat. Do weryfikacji przy polish.
 
 ### 5. Error handling — rozróżnienie typów
 409 → toast o konflikcie, 400 → field-level, 500 → generic.

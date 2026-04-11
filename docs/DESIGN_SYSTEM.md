@@ -1,5 +1,5 @@
 # DESIGN SYSTEM — Zielone Wzgórza Admin Panel
-# Wersja 1.2 | Marzec 2026
+# Wersja 1.3 | Kwiecień 2026
 # Ten plik jest JEDYNYM źródłem prawdy dla stylu wizualnego panelu.
 # Czytaj go na starcie KAŻDEGO czatu przed generowaniem kodu.
 
@@ -475,23 +475,24 @@ Wyjątek: jeśli sed mógłby uszkodzić znaki — wtedy dostarcz plik jako peł
 ### Priorytet wysoki (następne sesje):
 - [x] Skeleton loader — shimmer na listach (ResourcesSkeleton, PricingSkeleton, ClientsSkeleton)
 - [ ] **MUST** Status system — globalny plik statusów (NEW/CONFIRMED/PAID/CANCELLED itp.) dla wszystkich modułów
-- [ ] **MUST** Permissions — role (admin/staff) z kontrolą widoczności w UI
-- [ ] **MUST** Global error/loading handling — spójny wzorzec error state + toast notifications
-- [~] Error state formularzy — hook `useFormSubmit` gotowy, brakuje `input-bubble-error` CSS class + field-level mapping
+- [x] Permissions — RBAC (OWNER/MANAGER/RECEPTION) wdrożone w D0. Brakuje: UI hide per role.
 - [x] Toast/notification system — `useToast()` hook + `<ToastProvider>` (success/error/info/warning)
+- [~] Error state formularzy — hook `useFormSubmit` gotowy, brakuje `input-bubble-error` CSS class + field-level mapping
+- [x] SectionCard — rozwijalne sekcje z animacją, overflow fix (§26)
 
 ### Priorytet średni (refactor):
 - [ ] Komponenty React: `<Button variant="primary">`, `<Input label="">`, `<FormField>`
 - [ ] Tokeny spacingu w tailwind.config.ts
-- [ ] Mapowanie text-[13px] na Tailwind text-sm (custom config)
+- [ ] Zod request DTO na API routes (type safety)
 
 ### Priorytet niski (monitoring):
 - [ ] Test border 1.5px na Windows — ewentualnie zmiana na 1px/2px
 - [ ] Accessibility audit (focus states, aria labels)
+- [ ] ESLint config w repo (.eslintrc) dla deterministycznego CI
 
 ---
 
-## 12. NOWE WZORCE (Marzec 2026 — Kalendarz + Blokady)
+## 16.1. WZORCE DODANE W MARCU 2026 (Kalendarz + Blokady)
 
 ### Dropdown menu (3 kropki / MoreVertical)
 ```
@@ -777,3 +778,86 @@ Response 429 + `Retry-After` + `X-RateLimit-*` headers.
 **Reguła cenowa:** Brak ceny dla ACCOMMODATION/TIME_SLOT = error. Brak ceny dla QUANTITY_TIME = warning. Zero-price tylko jeśli świadomie w danych (PriceEntry z priceMinor=0).
 
 **Quote anti-enumeration:** `quoteId` (cuid) + `quoteSecret` (32 hex) — oba wymagane. Brak PII w response.
+
+
+## 26. SECTIONCARD — WZORZEC ROZWIJALNYCH SEKCJI (B2)
+
+Komponent: `<SectionCard>` (`src/components/ui/section-card.tsx`).
+Rozwijalna belka z ikoną, tytułem, opisem i treścią.
+
+```
+<SectionCard
+  title="Tytuł sekcji"
+  description="Opcjonalny opis."
+  icon={IconComponent}
+  defaultOpen={false}
+>
+  {/* zawartość sekcji */}
+</SectionCard>
+```
+
+**Zasady:**
+- Wrapper: `.bubble` z `overflow: visible` (dla dropdownów)
+- Trigger: `w-full flex items-center gap-3 px-5 py-4 hover:bg-muted/20`
+- Ikona: `h-8 w-8 rounded-xl bg-primary/10` z `h-4 w-4 text-primary`
+  (jedyny wzorzec gdzie ikona ma tło — bo to klikalna karta accordion)
+- Tytuł: `text-[14px] font-semibold`
+- Opis: `text-[11px] text-muted-foreground`
+- Chevron: `ChevronDown` (open) / `ChevronRight` (closed)
+- Animacja: CSS Grid (`section-collapse` / `section-open` w globals.css)
+- Overflow fix: delayed `overflow: visible` po 320ms od otwarcia
+  (pozwala BubbleSelect/dropdown nie być ucinanym)
+- **ZAWSZE** renderuj children w DOM (nigdy `{open && ...}`)
+- Props opcjonalny `action` — element renderowany na belce obok chevron
+
+**Kiedy używać:**
+- Panel zasobu (6 sekcji)
+- Formularz klienta (accordion sekcje)
+- Każde miejsce gdzie formularz ma logiczne grupy pól
+
+**Czym SectionCard NIE jest:**
+- Nie jest nagłówkiem sekcji (§17) — to jest klikalna karta z borderem
+- Nie jest zwykłym `.bubble` — ma animację open/close
+
+
+## 27. PANEL ZASOBU — DOCELOWY WZORZEC INLINE EDYCJI (B2)
+
+Panel zasobu (SlidePanel "Właściwości zasobu") to wzorzec dla
+enterprise inline editing. Brak osobnego trybu edycji.
+
+**panelMode: `"create" | "view"`** — dwa tryby, nie trzy.
+- Create: prosty formularz (nazwa + kategoria), POST, zamknij.
+- View: hero + 6 SectionCards, każda edytowalna inline.
+
+**Hero zasobu:**
+- Bez bordera (`.bubble`) — wyróżnia się brakiem ramki
+- Tytuł: `text-xl font-bold tracking-tight` (DS §3 h2) + UnitBadge
+- Badges: status (kolorowy) + widoczność w widgecie (niebieski/czerwony)
+- Stats grid 2×2: ikona w `bg-background` boxie + liczba `text-[18px] font-bold`
+  + etykieta w jednej linii (`flex items-baseline`)
+
+**6 sekcji SectionCard (wszystkie `defaultOpen={false}`):**
+1. Ustawienia zasobu → PATCH /resources/[id]
+2. Treści → PATCH /resources/[id]
+3. Dane techniczne → PATCH /resources/[id]
+4. Łóżka → PUT /resources/[id]/beds
+5. Zdjęcia → images endpoints (B1)
+6. Warianty sprzedażowe → variants endpoints
+
+**Izolacja stref zapisu:**
+- Każda sekcja: własny useState, własny save button, własny toast
+- Żadna sekcja nie nadpisuje pól innej sekcji
+- formData w create zawiera TYLKO name + categoryId
+
+**Zasady formularzy w sekcjach:**
+- Input: `input-bubble h-11` (§5)
+- Textarea: `input-bubble min-h-[80px] resize-y` (§5)
+- Spacing: `space-y-5` (§4)
+- Label: `text-[12px] font-semibold text-muted-foreground mb-1.5`
+  z ikoną `h-3.5 w-3.5` (§3)
+- Grid: `grid grid-cols-1 sm:grid-cols-2 gap-4` (§8)
+- Button: `btn-bubble btn-primary-bubble px-5 py-2.5 text-[13px]` (§5)
+- Submit text: `saving ? "Zapisywanie..." : "Zapisz ..."` (§12.1)
+- Dropdown: BubbleSelect (portal, §5) — NIGDY natywny `<select>`
+- Toggle: wzorzec z §20 — NIGDY checkbox
+- Inline row delete: `h-7 w-7 rounded-lg` + `hover:bg-destructive/10`
