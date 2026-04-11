@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState, useCallback, useRef } from "react";
-import { Plus, Pencil, Trash2, Check, Home, Building2, UtensilsCrossed, Ship, Sparkles, Users, Loader2, Search, Layers, MapPin, Hash, Bike, ConciergeBell, Package, X, GripVertical, ArrowUpDown, ArrowLeft, ImageIcon, FileText, Ruler, BedDouble, ChevronDown, Maximize2, Bath, DoorOpen, Settings, FolderOpen } from "lucide-react";
+import { Plus, Pencil, Trash2, Check, Home, Building2, UtensilsCrossed, Ship, Sparkles, Users, Loader2, Search, Layers, MapPin, Hash, Bike, ConciergeBell, Package, X, GripVertical, ArrowLeft, ImageIcon, FileText, Ruler, BedDouble, ChevronDown, Maximize2, Bath, DoorOpen, Settings, FolderOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api-fetch";
 import { SlidePanel } from "@/components/ui/slide-panel";
@@ -528,7 +528,6 @@ export function ResourcesList() {
   const [savingVar, setSavingVar] = useState(false);
 
   // Drag & drop sorting
-  const [sortMode, setSortMode] = useState(false);
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
   const [savingSort, setSavingSort] = useState(false);
@@ -631,23 +630,7 @@ export function ResourcesList() {
     } catch (e: any) { showError(e.message || "Błąd usuwania wariantu"); }
   }
 
-  // ── Drag & drop sorting ──
-  const handleDragStart = (e: React.DragEvent, id: string) => {
-    setDraggedId(id);
-    e.dataTransfer.effectAllowed = "move";
-    // Make the drag image slightly transparent
-    if (e.currentTarget instanceof HTMLElement) {
-      e.dataTransfer.setDragImage(e.currentTarget, 20, 20);
-    }
-  };
-
-  const handleDragOver = (e: React.DragEvent, id: string) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-    if (draggedId && draggedId !== id) {
-      setDragOverId(id);
-    }
-  };
+  // ── Drag & drop sorting (always-on, grip handle only) ──
 
   const handleDragEnd = () => {
     setDraggedId(null);
@@ -731,19 +714,6 @@ export function ResourcesList() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setSortMode(!sortMode)}
-            className={cn(
-              "btn-bubble px-5 py-2.5 text-[13px] flex items-center gap-1.5 transition-all",
-              sortMode
-                ? "btn-primary-bubble"
-                : "btn-secondary-bubble"
-            )}
-          >
-            <ArrowUpDown className="h-4 w-4" />
-            {sortMode ? "Zapisuję kolejność" : "Sortuj"}
-            {savingSort && <Loader2 className="h-3.5 w-3.5 animate-spin ml-1" />}
-          </button>
           <button onClick={openCreate} className="btn-bubble btn-primary-bubble px-5 py-2.5 text-[13px]">
             <Plus className="h-4 w-4" /> Dodaj zasób
           </button>
@@ -816,26 +786,35 @@ export function ResourcesList() {
             return (
               <div
                 key={resource.id}
-                draggable={sortMode}
-                onDragStart={sortMode ? (e) => handleDragStart(e, resource.id) : undefined}
-                onDragOver={sortMode ? (e) => handleDragOver(e, resource.id) : undefined}
-                onDrop={sortMode ? (e) => handleDrop(e, resource.id) : undefined}
-                onDragEnd={sortMode ? handleDragEnd : undefined}
+                data-resource-card={resource.id}
+                onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; if (draggedId && draggedId !== resource.id) setDragOverId(resource.id); }}
+                onDrop={(e) => handleDrop(e, resource.id)}
+                onDragEnd={handleDragEnd}
                 className={cn(
                   "bubble-interactive p-5 group transition-all",
-                  sortMode && "cursor-grab active:cursor-grabbing",
-                  isDragging && "opacity-30 scale-95",
                   isDragOver && "ring-2 ring-primary ring-offset-2",
                 )}
-                onClick={sortMode ? undefined : () => openView(resource)}
+                onClick={() => openView(resource)}
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">
-                    {sortMode && (
-                      <div className="text-muted-foreground/40 shrink-0">
-                        <GripVertical className="h-5 w-5" />
-                      </div>
-                    )}
+                    {/* Drag handle — always visible, only draggable element */}
+                    {/* Drag handle */}
+                    <div
+                      draggable
+                      onDragStart={(e) => {
+                        e.stopPropagation();
+                        const card = e.currentTarget.closest("[data-resource-card]") as HTMLElement | null;
+                        if (card) e.dataTransfer.setDragImage(card, 20, 20);
+                        e.dataTransfer.effectAllowed = "move";
+                        setDraggedId(resource.id);
+                      }}
+                      onDragEnd={handleDragEnd}
+                      onClick={(e) => e.stopPropagation()}
+                      className="cursor-grab active:cursor-grabbing text-muted-foreground/30 hover:text-muted-foreground shrink-0 p-0.5 -m-0.5"
+                    >
+                      <GripVertical className="h-4 w-4" />
+                    </div>
                     <div className="h-10 w-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
                       {getIcon(resource.category.slug)}
                     </div>

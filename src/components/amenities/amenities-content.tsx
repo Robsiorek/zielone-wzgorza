@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
-  Plus, Search, X, Loader2, Pencil, Trash2,
+  Plus, Search, X, Loader2, Trash2,
   Check, Sparkles, FolderOpen, ChevronDown, ChevronRight,
-  GripVertical,
+  GripVertical, Info,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api-fetch";
@@ -58,6 +58,9 @@ export function AmenitiesContent() {
   const [search, setSearch] = useState("");
   const [filterCatId, setFilterCatId] = useState("");
 
+  // Collapsible category sections (open by default)
+  const [openSections, setOpenSections] = useState<Set<string>>(new Set());
+
   // Panels
   const [amenityPanelOpen, setAmenityPanelOpen] = useState(false);
   const [editingAmenity, setEditingAmenity] = useState<AmenityRow | null>(null);
@@ -76,6 +79,10 @@ export function AmenitiesContent() {
   // Icon picker
   const [iconSearch, setIconSearch] = useState("");
 
+  // Drag & drop
+  const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
+
   const searchRef = useRef<HTMLInputElement>(null);
 
   // ── Load data ──
@@ -87,6 +94,10 @@ export function AmenitiesContent() {
       ]);
       setCategories(catData.categories);
       setAmenities(amenData.amenities);
+      // Open all sections by default on first load
+      if (openSections.size === 0) {
+        setOpenSections(new Set(catData.categories.map((c) => c.id)));
+      }
     } catch (e: any) {
       toastError("Błąd", e.message);
     } finally {
@@ -106,15 +117,30 @@ export function AmenitiesContent() {
     return true;
   });
 
-  // Group by category
-  const grouped = new Map<string, { category: { id: string; name: string }; items: AmenityRow[] }>();
+  // Group by category (preserve category order)
+  const grouped: { category: { id: string; name: string }; items: AmenityRow[] }[] = [];
+  const catOrder = categories.map((c) => c.id);
+  const groupMap = new Map<string, AmenityRow[]>();
   for (const a of filtered) {
-    const key = a.category.id;
-    if (!grouped.has(key)) grouped.set(key, { category: a.category, items: [] });
-    grouped.get(key)!.items.push(a);
+    if (!groupMap.has(a.category.id)) groupMap.set(a.category.id, []);
+    groupMap.get(a.category.id)!.push(a);
+  }
+  for (const catId of catOrder) {
+    if (groupMap.has(catId)) {
+      const cat = categories.find((c) => c.id === catId)!;
+      grouped.push({ category: { id: cat.id, name: cat.name }, items: groupMap.get(catId)! });
+    }
   }
 
-  // ── Category filter options ──
+  // Toggle section
+  const toggleSection = (catId: string) => {
+    const next = new Set(openSections);
+    if (next.has(catId)) next.delete(catId);
+    else next.add(catId);
+    setOpenSections(next);
+  };
+
+  // Category filter options
   const catOptions = [
     { value: "", label: "Wszystkie kategorie" },
     ...categories.map((c) => ({ value: c.id, label: c.name })),
@@ -222,7 +248,8 @@ export function AmenitiesContent() {
   };
 
   // ── Toggle active ──
-  const toggleAmenityActive = async (a: AmenityRow) => {
+  const toggleAmenityActive = async (e: React.MouseEvent, a: AmenityRow) => {
+    e.stopPropagation();
     try {
       await apiFetch(`/api/amenities/${a.id}`, {
         method: "PATCH",
@@ -231,11 +258,12 @@ export function AmenitiesContent() {
       success(a.isActive ? "Dezaktywowano" : "Aktywowano");
       loadData();
     } catch (e: any) {
-      toastError("Błąd", e.message);
+      toastError("Błąd", (e as Error).message);
     }
   };
 
-  const toggleCatActive = async (c: CategoryRow) => {
+  const toggleCatActive = async (e: React.MouseEvent, c: CategoryRow) => {
+    e.stopPropagation();
     try {
       await apiFetch(`/api/amenity-categories/${c.id}`, {
         method: "PATCH",
@@ -244,7 +272,99 @@ export function AmenitiesContent() {
       success(c.isActive ? "Dezaktywowano" : "Aktywowano");
       loadData();
     } catch (e: any) {
-      toastError("Błąd", e.message);
+      toastError("Błąd", (e as Error).message);
+    }
+  };
+
+  // ── DRAG & DROP (categories) ──
+  const handleCatDragStart = (e: React.DragEvent, id: string) => {
+    setDraggedId(id);
+    e.dataTransfer.effectAllowed = "move";
+    if (e.currentTarget instanceof HTMLElement) {
+      e.dataTransfer.setDragImage(e.currentTarget, 20, 20);
+    }
+  };
+
+  const handleCatDragOver = (e: React.DragEvent, id: string) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    if (draggedId && draggedId !== id) setDragOverId(id);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedId(null);
+    setDragOverId(null);
+  };
+
+  const handleCatDrop = async (e: React.DragEvent, targetId: string) => {
+    e.preventDefault();
+    if (!draggedId || draggedId === targetId) { handleDragEnd(); return; }
+
+    const list = [...categories];
+    const fromIdx = list.findIndex((c) => c.id === draggedId);
+    const toIdx = list.findIndex((c) => c.id === targetId);
+    if (fromIdx === -1 || toIdx === -1) { handleDragEnd(); return; }
+
+    const [moved] = list.splice(fromIdx, 1);
+    list.splice(toIdx, 0, moved);
+
+    const order = list.map((c, i) => ({ id: c.id, position: i }));
+    setCategories(list.map((c, i) => ({ ...c, position: i })));
+    handleDragEnd();
+
+    try {
+      await apiFetch("/api/amenity-categories/reorder", { method: "PATCH", body: { order } });
+    } catch (err: any) {
+      toastError("Błąd", err.message);
+      loadData();
+    }
+  };
+
+  // ── DRAG & DROP (amenities within category) ──
+  const handleAmenityDragStart = (e: React.DragEvent, id: string) => {
+    setDraggedId(id);
+    e.dataTransfer.effectAllowed = "move";
+    if (e.currentTarget instanceof HTMLElement) {
+      e.dataTransfer.setDragImage(e.currentTarget, 20, 20);
+    }
+  };
+
+  const handleAmenityDragOver = (e: React.DragEvent, id: string) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    if (draggedId && draggedId !== id) setDragOverId(id);
+  };
+
+  const handleAmenityDrop = async (e: React.DragEvent, targetId: string, categoryItems: AmenityRow[]) => {
+    e.preventDefault();
+    if (!draggedId || draggedId === targetId) { handleDragEnd(); return; }
+
+    const list = [...categoryItems];
+    const fromIdx = list.findIndex((a) => a.id === draggedId);
+    const toIdx = list.findIndex((a) => a.id === targetId);
+    if (fromIdx === -1 || toIdx === -1) { handleDragEnd(); return; }
+
+    const [moved] = list.splice(fromIdx, 1);
+    list.splice(toIdx, 0, moved);
+
+    const order = list.map((a, i) => ({ id: a.id, position: i }));
+
+    // Optimistic update
+    setAmenities((prev) => {
+      const updated = [...prev];
+      for (const o of order) {
+        const idx = updated.findIndex((a) => a.id === o.id);
+        if (idx !== -1) updated[idx] = { ...updated[idx], position: o.position };
+      }
+      return updated.sort((a, b) => a.position - b.position);
+    });
+    handleDragEnd();
+
+    try {
+      await apiFetch("/api/amenities/reorder", { method: "PATCH", body: { order } });
+    } catch (err: any) {
+      toastError("Błąd", err.message);
+      loadData();
     }
   };
 
@@ -258,7 +378,7 @@ export function AmenitiesContent() {
         <div>
           <h2 className="text-xl font-bold tracking-tight">Udogodnienia</h2>
           <p className="text-[13px] text-muted-foreground mt-1">
-            Katalog udogodnień zasobów — przypisywane w panelu zasobu.
+            Katalog udogodnień zasobów. Przypisuj je w panelu każdego zasobu.
           </p>
         </div>
         <button
@@ -321,78 +441,137 @@ export function AmenitiesContent() {
             />
           </div>
 
-          {/* Grouped amenities */}
-          {grouped.size === 0 ? (
+          {/* Hint */}
+          <p className="text-[11px] text-muted-foreground/60 flex items-center gap-1.5">
+            <Info className="h-3 w-3 shrink-0" />
+            Kliknij udogodnienie, aby je edytować. Przeciągnij za uchwyt, aby zmienić kolejność.
+          </p>
+
+          {/* Grouped amenities in collapsible sections */}
+          {grouped.length === 0 ? (
             <div className="py-16 text-center">
               <Sparkles className="h-8 w-8 text-muted-foreground/30 mx-auto mb-3" />
               <p className="text-[14px] font-medium text-muted-foreground">
                 {search || filterCatId ? "Brak wyników" : "Brak udogodnień"}
               </p>
               <p className="text-[12px] text-muted-foreground/60 mt-1">
-                {search || filterCatId ? "Zmień filtr lub wyszukiwanie" : "Dodaj pierwsze udogodnienie"}
+                {search || filterCatId ? "Zmień filtr lub wyszukiwanie" : "Dodaj pierwsze udogodnienie przyciskiem powyżej"}
               </p>
             </div>
           ) : (
-            <div className="space-y-5">
-              {[...grouped.entries()].map(([catId, { category, items }]) => (
-                <div key={catId}>
-                  <h3 className="flex items-center gap-2 text-[12px] font-semibold text-muted-foreground mb-2">
-                    <FolderOpen className="h-3.5 w-3.5" />
-                    {category.name}
-                    <span className="text-[11px] font-normal">({items.length})</span>
-                  </h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                    {items.map((a) => (
-                      <div
-                        key={a.id}
-                        className={cn(
-                          "bubble-interactive px-4 py-3 flex items-center gap-3 group/a transition-all duration-200",
-                          !a.isActive && "opacity-50"
+            <div className="space-y-3">
+              {grouped.map(({ category, items }) => {
+                const isOpen = openSections.has(category.id);
+                const catRow = categories.find((c) => c.id === category.id);
+                return (
+                  <div key={category.id} className="bubble" style={{ overflow: "visible" }}>
+                    {/* Collapsible header */}
+                    <button
+                      onClick={() => toggleSection(category.id)}
+                      className="w-full flex items-center gap-3 px-5 py-3.5 hover:bg-muted/20 transition-colors rounded-2xl"
+                    >
+                      <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                        {catRow?.iconKey ? (
+                          <DynamicIcon iconKey={catRow.iconKey} className="h-4 w-4 text-primary" />
+                        ) : (
+                          <FolderOpen className="h-4 w-4 text-primary" />
                         )}
-                      >
-                        <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                          <DynamicIcon iconKey={a.iconKey} className="h-4 w-4 text-primary" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[13px] font-semibold truncate">{a.name}</p>
-                          <p className="text-[11px] text-muted-foreground">
-                            {a._count.resources} {a._count.resources === 1 ? "zasób" : "zasobów"}
-                          </p>
-                        </div>
-                        <div className="flex gap-1 opacity-0 group-hover/a:opacity-100 transition-opacity shrink-0">
-                          <button
-                            onClick={() => toggleAmenityActive(a)}
-                            className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
-                            title={a.isActive ? "Dezaktywuj" : "Aktywuj"}
-                          >
-                            <div className={cn(
-                              "relative inline-flex h-4 w-7 items-center rounded-full transition-colors",
-                              a.isActive ? "bg-primary" : "bg-muted-foreground/20"
-                            )}>
-                              <span className={cn(
-                                "inline-block h-3 w-3 transform rounded-full bg-white shadow-sm transition-transform",
-                                a.isActive ? "translate-x-3.5" : "translate-x-0.5"
-                              )} />
-                            </div>
-                          </button>
-                          <button
-                            onClick={() => openAmenityEdit(a)}
-                            className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
-                          >
-                            <Pencil className="h-3 w-3" />
-                          </button>
-                          <button
-                            onClick={() => setDeleteTarget({ type: "amenity", id: a.id, name: a.name })}
-                            className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </button>
+                      </div>
+                      <div className="flex-1 text-left min-w-0">
+                        <h3 className="text-[14px] font-semibold">{category.name}</h3>
+                        <p className="text-[11px] text-muted-foreground">{items.length} udogodnień w tej kategorii</p>
+                      </div>
+                      {isOpen ? (
+                        <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                      )}
+                    </button>
+
+                    {/* Collapsible content — section-collapse animation */}
+                    <div className={`section-collapse ${isOpen ? "section-open" : ""}`}>
+                      <div className="section-collapse-inner">
+                        <div className="px-4 pb-4 pt-1 border-t border-border/50 space-y-1">
+                          {items.map((a) => {
+                            const isDragging = draggedId === a.id;
+                            const isDragOver = dragOverId === a.id;
+                            return (
+                              <div
+                                key={a.id}
+                                data-amenity-card={a.id}
+                                onDragOver={(e) => handleAmenityDragOver(e, a.id)}
+                                onDrop={(e) => handleAmenityDrop(e, a.id, items)}
+                                onDragEnd={handleDragEnd}
+                                onClick={() => openAmenityEdit(a)}
+                                className={cn(
+                                  "flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer group/a transition-all duration-200",
+                                  "hover:bg-muted/30",
+                                  !a.isActive && "opacity-50",
+                                  isDragging && "opacity-30 scale-95",
+                                  isDragOver && "ring-2 ring-primary ring-offset-2",
+                                )}
+                              >
+                                {/* Drag handle — ONLY this element is draggable */}
+                                <div
+                                  draggable
+                                  onDragStart={(e) => {
+                                    e.stopPropagation();
+                                    const card = e.currentTarget.closest("[data-amenity-card]");
+                                    if (card instanceof HTMLElement) e.dataTransfer.setDragImage(card, 20, 20);
+                                    handleAmenityDragStart(e, a.id);
+                                  }}
+                                  onDragEnd={handleDragEnd}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground shrink-0 p-1 -m-1"
+                                >
+                                  <GripVertical className="h-4 w-4" />
+                                </div>
+                                {/* Icon */}
+                                <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                                  <DynamicIcon iconKey={a.iconKey} className="h-4 w-4 text-primary" />
+                                </div>
+                                {/* Content */}
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-[13px] font-semibold truncate">{a.name}</p>
+                                  <p className="text-[11px] text-muted-foreground">
+                                    Przypisane do {a._count.resources} {a._count.resources === 1 ? "zasobu" : "zasobów"}
+                                  </p>
+                                </div>
+                                {/* Actions */}
+                                <div className="flex gap-1 opacity-0 group-hover/a:opacity-100 transition-opacity shrink-0"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <button
+                                    onClick={(e) => toggleAmenityActive(e, a)}
+                                    className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
+                                    title={a.isActive ? "Dezaktywuj" : "Aktywuj"}
+                                  >
+                                    <div className={cn(
+                                      "relative inline-flex h-4 w-7 items-center rounded-full transition-colors",
+                                      a.isActive ? "bg-primary" : "bg-muted-foreground/20"
+                                    )}>
+                                      <span className={cn(
+                                        "inline-block h-3 w-3 transform rounded-full bg-white shadow-sm transition-transform",
+                                        a.isActive ? "translate-x-3.5" : "translate-x-0.5"
+                                      )} />
+                                    </div>
+                                  </button>
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); setDeleteTarget({ type: "amenity", id: a.id, name: a.name }); }}
+                                    className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all"
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
-                    ))}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </>
@@ -401,66 +580,94 @@ export function AmenitiesContent() {
       {/* ═══ TAB: CATEGORIES ═══ */}
       {tab === "categories" && (
         <>
+          {/* Hint */}
+          <p className="text-[11px] text-muted-foreground/60 flex items-center gap-1.5">
+            <Info className="h-3 w-3 shrink-0" />
+            Kategorie grupują udogodnienia. Kliknij, aby edytować. Przeciągnij za uchwyt, aby zmienić kolejność wyświetlania.
+          </p>
+
           {categories.length === 0 ? (
             <div className="py-16 text-center">
               <FolderOpen className="h-8 w-8 text-muted-foreground/30 mx-auto mb-3" />
               <p className="text-[14px] font-medium text-muted-foreground">Brak kategorii</p>
-              <p className="text-[12px] text-muted-foreground/60 mt-1">Dodaj pierwszą kategorię</p>
+              <p className="text-[12px] text-muted-foreground/60 mt-1">Dodaj pierwszą kategorię przyciskiem powyżej</p>
             </div>
           ) : (
             <div className="space-y-2">
-              {categories.map((c) => (
-                <div
-                  key={c.id}
-                  className={cn(
-                    "bubble-interactive px-5 py-4 flex items-center gap-3 group/c transition-all duration-200",
-                    !c.isActive && "opacity-50"
-                  )}
-                >
-                  <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                    {c.iconKey ? (
-                      <DynamicIcon iconKey={c.iconKey} className="h-5 w-5 text-primary" />
-                    ) : (
-                      <FolderOpen className="h-5 w-5 text-primary" />
+              {categories.map((c) => {
+                const isDragging = draggedId === c.id;
+                const isDragOver = dragOverId === c.id;
+                return (
+                  <div
+                    key={c.id}
+                    data-category-card={c.id}
+                    onDragOver={(e) => handleCatDragOver(e, c.id)}
+                    onDrop={(e) => handleCatDrop(e, c.id)}
+                    onDragEnd={handleDragEnd}
+                    onClick={() => openCatEdit(c)}
+                    className={cn(
+                      "bubble-interactive px-5 py-4 flex items-center gap-3 cursor-pointer group/c transition-all duration-200",
+                      !c.isActive && "opacity-50",
+                      isDragging && "opacity-30 scale-95",
+                      isDragOver && "ring-2 ring-primary ring-offset-2",
                     )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[14px] font-semibold">{c.name}</p>
-                    <p className="text-[12px] text-muted-foreground">
-                      {c._count.amenities} udogodnień · Pozycja {c.position}
-                    </p>
-                  </div>
-                  <div className="flex gap-1 opacity-0 group-hover/c:opacity-100 transition-opacity shrink-0">
-                    <button
-                      onClick={() => toggleCatActive(c)}
-                      className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
-                      title={c.isActive ? "Dezaktywuj" : "Aktywuj"}
+                  >
+                    {/* Drag handle — ONLY this element is draggable */}
+                    <div
+                      draggable
+                      onDragStart={(e) => {
+                        e.stopPropagation();
+                        const card = e.currentTarget.closest("[data-category-card]");
+                        if (card instanceof HTMLElement) e.dataTransfer.setDragImage(card, 20, 20);
+                        handleCatDragStart(e, c.id);
+                      }}
+                      onDragEnd={handleDragEnd}
+                      onClick={(e) => e.stopPropagation()}
+                      className="cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground shrink-0 p-1 -m-1"
                     >
-                      <div className={cn(
-                        "relative inline-flex h-4 w-7 items-center rounded-full transition-colors",
-                        c.isActive ? "bg-primary" : "bg-muted-foreground/20"
-                      )}>
-                        <span className={cn(
-                          "inline-block h-3 w-3 transform rounded-full bg-white shadow-sm transition-transform",
-                          c.isActive ? "translate-x-3.5" : "translate-x-0.5"
-                        )} />
-                      </div>
-                    </button>
-                    <button
-                      onClick={() => openCatEdit(c)}
-                      className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
+                      <GripVertical className="h-4 w-4" />
+                    </div>
+                    <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                      {c.iconKey ? (
+                        <DynamicIcon iconKey={c.iconKey} className="h-5 w-5 text-primary" />
+                      ) : (
+                        <FolderOpen className="h-5 w-5 text-primary" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[14px] font-semibold">{c.name}</p>
+                      <p className="text-[12px] text-muted-foreground">
+                        Zawiera {c._count.amenities} {c._count.amenities === 1 ? "udogodnienie" : "udogodnień"}
+                      </p>
+                    </div>
+                    <div className="flex gap-1 opacity-0 group-hover/c:opacity-100 transition-opacity shrink-0"
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      <Pencil className="h-3 w-3" />
-                    </button>
-                    <button
-                      onClick={() => setDeleteTarget({ type: "category", id: c.id, name: c.name })}
-                      className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </button>
+                      <button
+                        onClick={(e) => toggleCatActive(e, c)}
+                        className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
+                        title={c.isActive ? "Dezaktywuj" : "Aktywuj"}
+                      >
+                        <div className={cn(
+                          "relative inline-flex h-4 w-7 items-center rounded-full transition-colors",
+                          c.isActive ? "bg-primary" : "bg-muted-foreground/20"
+                        )}>
+                          <span className={cn(
+                            "inline-block h-3 w-3 transform rounded-full bg-white shadow-sm transition-transform",
+                            c.isActive ? "translate-x-3.5" : "translate-x-0.5"
+                          )} />
+                        </div>
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setDeleteTarget({ type: "category", id: c.id, name: c.name }); }}
+                        className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </>
@@ -473,11 +680,8 @@ export function AmenitiesContent() {
         title={editingAmenity ? "Edytuj udogodnienie" : "Nowe udogodnienie"}
       >
         <div className="space-y-5">
-          {/* Name */}
           <div>
-            <label className="text-[12px] font-semibold text-muted-foreground mb-1.5 block">
-              Nazwa *
-            </label>
+            <label className="text-[12px] font-semibold text-muted-foreground mb-1.5 block">Nazwa *</label>
             <input
               type="text"
               value={amenityForm.name}
@@ -488,7 +692,6 @@ export function AmenitiesContent() {
             />
           </div>
 
-          {/* Category */}
           <div>
             <BubbleSelect
               label="Kategoria *"
@@ -500,11 +703,7 @@ export function AmenitiesContent() {
 
           {/* Icon picker */}
           <div>
-            <label className="text-[12px] font-semibold text-muted-foreground mb-1.5 block">
-              Ikona *
-            </label>
-
-            {/* Selected icon preview */}
+            <label className="text-[12px] font-semibold text-muted-foreground mb-1.5 block">Ikona *</label>
             {amenityForm.iconKey && (
               <div className="flex items-center gap-2 mb-3 p-3 rounded-xl bg-primary/5 border border-primary/20">
                 <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -518,21 +717,11 @@ export function AmenitiesContent() {
                 </div>
               </div>
             )}
-
-            {/* Icon search */}
             <div className="relative mb-2">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-              <input
-                type="text"
-                value={iconSearch}
-                onChange={(e) => setIconSearch(e.target.value)}
-                placeholder="Szukaj ikony..."
-                className="input-bubble h-9 w-full text-[12px]"
-                style={{ paddingLeft: 32 }}
-              />
+              <input type="text" value={iconSearch} onChange={(e) => setIconSearch(e.target.value)}
+                placeholder="Szukaj ikony..." className="input-bubble h-9 w-full text-[12px]" style={{ paddingLeft: 32 }} />
             </div>
-
-            {/* Icon grid */}
             <div className="max-h-[280px] overflow-y-auto rounded-xl border border-border p-2">
               {AMENITY_ICON_GROUPS.map((group) => {
                 const icons = AMENITY_ICON_KEYS.filter((key) => {
@@ -545,23 +734,15 @@ export function AmenitiesContent() {
                   return true;
                 });
                 if (icons.length === 0) return null;
-
                 return (
                   <div key={group} className="mb-2">
-                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1 mb-1">
-                      {group}
-                    </p>
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1 mb-1">{group}</p>
                     <div className="grid grid-cols-8 gap-1">
                       {icons.map((key) => (
-                        <button
-                          key={key}
-                          type="button"
+                        <button key={key} type="button"
                           onClick={() => setAmenityForm({ ...amenityForm, iconKey: key })}
-                          className={cn(
-                            "h-9 w-9 rounded-lg flex items-center justify-center transition-all",
-                            amenityForm.iconKey === key
-                              ? "bg-primary text-white shadow-sm"
-                              : "hover:bg-muted text-muted-foreground hover:text-foreground"
+                          className={cn("h-9 w-9 rounded-lg flex items-center justify-center transition-all",
+                            amenityForm.iconKey === key ? "bg-primary text-white shadow-sm" : "hover:bg-muted text-muted-foreground hover:text-foreground"
                           )}
                           title={`${key} — ${(AMENITY_ICONS as Record<string, AmenityIconDef>)[key]?.label}`}
                         >
@@ -575,22 +756,15 @@ export function AmenitiesContent() {
             </div>
           </div>
 
-          {/* Save */}
           <div className="flex gap-3 pt-2 pb-8">
-            <button
-              onClick={handleSaveAmenity}
+            <button onClick={handleSaveAmenity}
               disabled={saving || !amenityForm.name.trim() || !amenityForm.categoryId || !amenityForm.iconKey}
-              className="btn-bubble btn-primary-bubble px-6 py-3 text-[13px] disabled:opacity-50"
-            >
+              className="btn-bubble btn-primary-bubble px-6 py-3 text-[13px] disabled:opacity-50">
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
               {saving ? "Zapisywanie..." : editingAmenity ? "Zapisz" : "Dodaj"}
             </button>
-            <button
-              onClick={() => setAmenityPanelOpen(false)}
-              className="btn-bubble btn-secondary-bubble px-6 py-3 text-[13px]"
-            >
-              Anuluj
-            </button>
+            <button onClick={() => setAmenityPanelOpen(false)}
+              className="btn-bubble btn-secondary-bubble px-6 py-3 text-[13px]">Anuluj</button>
           </div>
         </div>
       </SlidePanel>
@@ -602,56 +776,30 @@ export function AmenitiesContent() {
         title={editingCat ? "Edytuj kategorię" : "Nowa kategoria"}
       >
         <div className="space-y-5">
-          {/* Name */}
           <div>
-            <label className="text-[12px] font-semibold text-muted-foreground mb-1.5 block">
-              Nazwa *
-            </label>
-            <input
-              type="text"
-              value={catForm.name}
-              onChange={(e) => setCatForm({ ...catForm, name: e.target.value })}
-              placeholder="np. Pokój"
-              className="input-bubble h-11 w-full"
-              maxLength={100}
-            />
+            <label className="text-[12px] font-semibold text-muted-foreground mb-1.5 block">Nazwa *</label>
+            <input type="text" value={catForm.name} onChange={(e) => setCatForm({ ...catForm, name: e.target.value })}
+              placeholder="np. Pokój" className="input-bubble h-11 w-full" maxLength={100} />
           </div>
-
-          {/* Optional icon */}
           <div>
-            <label className="text-[12px] font-semibold text-muted-foreground mb-1.5 block">
-              Ikona (opcjonalna)
-            </label>
-
+            <label className="text-[12px] font-semibold text-muted-foreground mb-1.5 block">Ikona (opcjonalna)</label>
             {catForm.iconKey && (
               <div className="flex items-center gap-2 mb-3 p-3 rounded-xl bg-primary/5 border border-primary/20">
                 <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
                   <DynamicIcon iconKey={catForm.iconKey} className="h-5 w-5 text-primary" />
                 </div>
-                <div className="flex-1">
-                  <p className="text-[13px] font-semibold">{catForm.iconKey}</p>
-                </div>
-                <button
-                  onClick={() => setCatForm({ ...catForm, iconKey: "" })}
-                  className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all"
-                >
+                <div className="flex-1"><p className="text-[13px] font-semibold">{catForm.iconKey}</p></div>
+                <button onClick={() => setCatForm({ ...catForm, iconKey: "" })}
+                  className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all">
                   <X className="h-3 w-3" />
                 </button>
               </div>
             )}
-
             <div className="relative mb-2">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-              <input
-                type="text"
-                value={iconSearch}
-                onChange={(e) => setIconSearch(e.target.value)}
-                placeholder="Szukaj ikony..."
-                className="input-bubble h-9 w-full text-[12px]"
-                style={{ paddingLeft: 32 }}
-              />
+              <input type="text" value={iconSearch} onChange={(e) => setIconSearch(e.target.value)}
+                placeholder="Szukaj ikony..." className="input-bubble h-9 w-full text-[12px]" style={{ paddingLeft: 32 }} />
             </div>
-
             <div className="max-h-[200px] overflow-y-auto rounded-xl border border-border p-2">
               <div className="grid grid-cols-8 gap-1">
                 {AMENITY_ICON_KEYS.filter((key) => {
@@ -660,41 +808,26 @@ export function AmenitiesContent() {
                   const def = (AMENITY_ICONS as Record<string, AmenityIconDef>)[key];
                   return key.includes(q) || def.label.toLowerCase().includes(q) || def.group.toLowerCase().includes(q);
                 }).map((key) => (
-                  <button
-                    key={key}
-                    type="button"
+                  <button key={key} type="button"
                     onClick={() => setCatForm({ ...catForm, iconKey: key })}
-                    className={cn(
-                      "h-9 w-9 rounded-lg flex items-center justify-center transition-all",
-                      catForm.iconKey === key
-                        ? "bg-primary text-white shadow-sm"
-                        : "hover:bg-muted text-muted-foreground hover:text-foreground"
+                    className={cn("h-9 w-9 rounded-lg flex items-center justify-center transition-all",
+                      catForm.iconKey === key ? "bg-primary text-white shadow-sm" : "hover:bg-muted text-muted-foreground hover:text-foreground"
                     )}
-                    title={key}
-                  >
+                    title={key}>
                     <DynamicIcon iconKey={key} className="h-4 w-4" />
                   </button>
                 ))}
               </div>
             </div>
           </div>
-
-          {/* Save */}
           <div className="flex gap-3 pt-2 pb-8">
-            <button
-              onClick={handleSaveCat}
-              disabled={saving || !catForm.name.trim()}
-              className="btn-bubble btn-primary-bubble px-6 py-3 text-[13px] disabled:opacity-50"
-            >
+            <button onClick={handleSaveCat} disabled={saving || !catForm.name.trim()}
+              className="btn-bubble btn-primary-bubble px-6 py-3 text-[13px] disabled:opacity-50">
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
               {saving ? "Zapisywanie..." : editingCat ? "Zapisz" : "Dodaj"}
             </button>
-            <button
-              onClick={() => setCatPanelOpen(false)}
-              className="btn-bubble btn-secondary-bubble px-6 py-3 text-[13px]"
-            >
-              Anuluj
-            </button>
+            <button onClick={() => setCatPanelOpen(false)}
+              className="btn-bubble btn-secondary-bubble px-6 py-3 text-[13px]">Anuluj</button>
           </div>
         </div>
       </SlidePanel>
