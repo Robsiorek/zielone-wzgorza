@@ -33,6 +33,7 @@ export function BubbleSelect({ options, value, onChange, placeholder = "Wybierz.
     open,
     onOpenChange: setOpen,
     placement: "bottom-start",
+    strategy: "fixed",
     middleware: [
       offset(6),
       flip({ padding: 8 }),

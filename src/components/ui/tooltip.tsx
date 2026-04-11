@@ -34,6 +34,7 @@ export function Tooltip({ content, children, side = "top", delay = 180, disabled
 
   const { refs, floatingStyles, context } = useFloating({
     open, onOpenChange: setOpen, placement: side,
+    strategy: 'fixed',
     middleware: [offset(8), flip({ padding: 8 }), shift({ padding: 8 }), arrow({ element: arrowRef })],
     whileElementsMounted: autoUpdate,
   });

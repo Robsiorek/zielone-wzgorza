@@ -40,6 +40,7 @@ export function SearchableSelect({ options, value, onChange, placeholder = "Wybi
     open,
     onOpenChange: (v) => { setOpen(v); if (!v) setSearch(""); },
     placement: "bottom-start",
+    strategy: "fixed",
     middleware: [
       offset(6),
       flip({ padding: 8 }),
