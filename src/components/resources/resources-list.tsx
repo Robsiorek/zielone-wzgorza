@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState, useCallback, useRef } from "react";
-import { Plus, Pencil, Trash2, Check, Home, Building2, UtensilsCrossed, Ship, Sparkles, Users, Loader2, Search, Layers, MapPin, Hash, Bike, ConciergeBell, Package, X, GripVertical, ArrowUpDown, ArrowLeft, ImageIcon, FileText, Ruler, BedDouble, ChevronDown, Maximize2, Bath, DoorOpen, Settings } from "lucide-react";
+import { Plus, Pencil, Trash2, Check, Home, Building2, UtensilsCrossed, Ship, Sparkles, Users, Loader2, Search, Layers, MapPin, Hash, Bike, ConciergeBell, Package, X, GripVertical, ArrowUpDown, ArrowLeft, ImageIcon, FileText, Ruler, BedDouble, ChevronDown, Maximize2, Bath, DoorOpen, Settings, FolderOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api-fetch";
 import { SlidePanel } from "@/components/ui/slide-panel";
@@ -12,13 +12,15 @@ import { UnitBadge } from "@/components/ui/unit-badge";
 import { parseMoneyToMinor, fromMinor } from "@/lib/format";
 import { ImageUpload } from "@/components/resources/image-upload";
 import { BED_TYPES, BED_TYPE_KEYS, isValidBedType, getBedTypeLabel } from "@/lib/bed-types";
+import { DynamicIcon } from "@/components/ui/dynamic-icon";
 import type { BedType } from "@/lib/bed-types";
 
 interface Category { id: string; name: string; slug: string; unitNumber: string | null; type: string; icon: string | null; description: string | null; _count?: { resources: number }; }
 interface Variant { id: string; name: string; description: string | null; capacity: number; basePrice: number | null; basePriceMinor?: number | null; isDefault: boolean; isActive: boolean; }
 interface ResourceImageData { id: string; alt: string | null; position: number; isCover: boolean; sizeBytes: number; width: number; height: number; urls: { original: string; medium: string; thumbnail: string }; }
 interface ResourceBedData { bedType: string; quantity: number; }
-interface Resource { id: string; name: string; slug: string; unitNumber: string | null; categoryId: string; longDescription: string | null; shortDescription: string | null; maxCapacity: number | null; totalUnits: number; areaSqm: number | null; bedroomCount: number | null; bathroomCount: number | null; location: string | null; status: string; sortOrder: number; visibleInWidget: boolean; category: Category; variants: Variant[]; images?: ResourceImageData[]; beds?: ResourceBedData[]; _count?: { variants: number; images: number; beds?: number }; }
+interface ResourceAmenityData { amenity: { id: string; name: string; slug: string; iconKey: string; category: { id: string; name: string; slug: string } } }
+interface Resource { id: string; name: string; slug: string; unitNumber: string | null; categoryId: string; longDescription: string | null; shortDescription: string | null; maxCapacity: number | null; totalUnits: number; areaSqm: number | null; bedroomCount: number | null; bathroomCount: number | null; location: string | null; status: string; sortOrder: number; visibleInWidget: boolean; category: Category; variants: Variant[]; images?: ResourceImageData[]; beds?: ResourceBedData[]; amenities?: ResourceAmenityData[]; _count?: { variants: number; images: number; beds?: number }; }
 
 // ── B2: Inline editors for SectionCards (DS-compliant) ──
 
@@ -333,6 +335,161 @@ function ResourceBedsEditor({ resourceId, beds, onBedsChange }: { resourceId: st
 }
 
 // ── End B2 inline editors ─────────────────────────────
+
+// ── B3: Amenities editor for SectionCard #7 ──
+
+interface AllAmenityRow { id: string; name: string; iconKey: string; category: { id: string; name: string } }
+
+function ResourceAmenitiesEditor({ resourceId, currentAmenities, onAmenitiesChange }: {
+  resourceId: string;
+  currentAmenities: ResourceAmenityData[];
+  onAmenitiesChange: (amenities: ResourceAmenityData[]) => void;
+}) {
+  const { success: showSuccess, error: showError } = useToast();
+  const [allAmenities, setAllAmenities] = useState<AllAmenityRow[]>([]);
+  const [loadingAll, setLoadingAll] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  // Selected amenity IDs (local state for toggling)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [dirty, setDirty] = useState(false);
+
+  // Load all amenities catalog
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await apiFetch<{ amenities: AllAmenityRow[] }>("/api/amenities");
+        setAllAmenities(data.amenities.filter((a: any) => a.isActive));
+      } catch (e: any) {
+        showError("Błąd", e.message);
+      } finally {
+        setLoadingAll(false);
+      }
+    })();
+  }, [showError]);
+
+  // Sync selectedIds from resource data
+  useEffect(() => {
+    const ids = new Set(currentAmenities.map((ra) => ra.amenity.id));
+    setSelectedIds(ids);
+    setDirty(false);
+  }, [currentAmenities]);
+
+  // Group all amenities by category
+  const grouped = new Map<string, { catName: string; items: AllAmenityRow[] }>();
+  for (const a of allAmenities) {
+    const key = a.category.id;
+    if (!grouped.has(key)) grouped.set(key, { catName: a.category.name, items: [] });
+    grouped.get(key)!.items.push(a);
+  }
+
+  const toggle = (amenityId: string) => {
+    const next = new Set(selectedIds);
+    if (next.has(amenityId)) next.delete(amenityId);
+    else next.add(amenityId);
+    setSelectedIds(next);
+    setDirty(true);
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const result = await apiFetch<{ amenities: any[] }>(`/api/resources/${resourceId}/amenities`, {
+        method: "PUT",
+        body: { amenityIds: [...selectedIds] },
+      });
+      // Update parent state — map to ResourceAmenityData shape
+      const newAmenities: ResourceAmenityData[] = result.amenities.map((a: any) => ({
+        amenity: {
+          id: a.id,
+          name: a.name,
+          slug: a.slug,
+          iconKey: a.iconKey,
+          category: { id: a.categoryId, name: a.categoryName, slug: a.categorySlug },
+        },
+      }));
+      onAmenitiesChange(newAmenities);
+      setDirty(false);
+      showSuccess("Udogodnienia zapisane");
+    } catch (e: any) {
+      showError("Błąd", e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loadingAll) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (allAmenities.length === 0) {
+    return (
+      <div className="py-8 text-center">
+        <Sparkles className="h-6 w-6 text-muted-foreground/30 mx-auto mb-2" />
+        <p className="text-[12px] text-muted-foreground">Brak udogodnień w katalogu</p>
+        <p className="text-[11px] text-muted-foreground/60 mt-1">
+          Dodaj udogodnienia w zakładce Udogodnienia
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {[...grouped.entries()].map(([catId, { catName, items }]) => (
+        <div key={catId}>
+          <p className="text-[12px] font-semibold text-muted-foreground mb-2 flex items-center gap-1.5">
+            <FolderOpen className="h-3 w-3" />
+            {catName}
+          </p>
+          <div className="space-y-1">
+            {items.map((a) => {
+              const checked = selectedIds.has(a.id);
+              return (
+                <button
+                  key={a.id}
+                  type="button"
+                  onClick={() => toggle(a.id)}
+                  className="flex items-center gap-3 w-full text-left px-3 py-2 rounded-xl hover:bg-muted/30 transition-colors"
+                >
+                  <span className={cn(
+                    "relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0",
+                    checked ? "bg-primary" : "bg-muted-foreground/20"
+                  )}>
+                    <span className={cn(
+                      "inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform",
+                      checked ? "translate-x-6" : "translate-x-1"
+                    )} />
+                  </span>
+                  <DynamicIcon iconKey={a.iconKey} className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <span className="text-[13px]">{a.name}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+      {dirty && (
+        <div className="pt-2">
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="btn-bubble btn-primary-bubble px-5 py-2.5 text-[13px] disabled:opacity-50"
+          >
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+            {saving ? "Zapisywanie..." : `Zapisz udogodnienia (${selectedIds.size})`}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── End B3 inline editor ─────────────────────────────
 
 const statusConfig: Record<string, { label: string; color: string; dot: string }> = {
   ACTIVE: { label: "Aktywny", color: "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400", dot: "bg-emerald-500" },
@@ -1104,6 +1261,25 @@ export function ResourcesList() {
                 </div>
               )}
             </div>
+            </SectionCard>
+
+            {/* B3: Amenities management */}
+            <SectionCard
+              title="Udogodnienia"
+              description="Przypisz udogodnienia do zasobu."
+              icon={Sparkles}
+              defaultOpen={false}
+            >
+              <ResourceAmenitiesEditor
+                resourceId={selectedResource.id}
+                currentAmenities={selectedResource.amenities || []}
+                onAmenitiesChange={(newAmenities) => {
+                  setSelectedResource({
+                    ...selectedResource,
+                    amenities: newAmenities,
+                  });
+                }}
+              />
             </SectionCard>
           </div>
         ) : panelMode === "create" ? (

@@ -315,14 +315,50 @@ model ResourceImage {
   @@map("resource_images")
 }
 
+// B3: Amenity system — categories + amenities + resource assignment
+model AmenityCategory {
+  id         String   @id @default(cuid())
+  propertyId String
+  name       String
+  slug       String
+  iconKey    String?
+  position   Int      @default(0)
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  amenities  Amenity[]
+  @@unique([propertyId, slug])
+  @@index([propertyId, position])
+  @@map("amenity_categories")
+}
+
+model Amenity {
+  id         String   @id @default(cuid())
+  propertyId String
+  categoryId String
+  name       String
+  slug       String
+  iconKey    String
+  position   Int      @default(0)
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  category   AmenityCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  resources  ResourceAmenity[]
+  @@unique([propertyId, slug])
+  @@index([propertyId, categoryId, position])
+  @@map("amenities")
+}
+
 model ResourceAmenity {
   id         String   @id @default(cuid())
   resourceId String
-  name       String
-  icon       String?
+  amenityId  String
   createdAt  DateTime @default(now())
-  resource Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
-  @@index([resourceId])
+  resource   Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  amenity    Amenity  @relation(fields: [amenityId], references: [id], onDelete: Restrict)
+  @@unique([resourceId, amenityId])
+  @@index([amenityId])
   @@map("resource_amenities")
 }
 

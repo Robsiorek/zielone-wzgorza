@@ -11,7 +11,16 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         category: true,
         variants: { orderBy: { sortOrder: "asc" } },
         images: { orderBy: { position: "asc" } },
-        amenities: true,
+        amenities: {
+          include: {
+            amenity: {
+              select: {
+                id: true, name: true, slug: true, iconKey: true,
+                category: { select: { id: true, name: true, slug: true } },
+              },
+            },
+          },
+        },
         beds: { orderBy: { bedType: "asc" } },
       },
     });
@@ -89,7 +98,16 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
         category: true,
         variants: true,
         images: { orderBy: { position: "asc" } },
-        amenities: true,
+        amenities: {
+          include: {
+            amenity: {
+              select: {
+                id: true, name: true, slug: true, iconKey: true,
+                category: { select: { id: true, name: true, slug: true } },
+              },
+            },
+          },
+        },
         beds: { orderBy: { bedType: "asc" } },
       },
     });

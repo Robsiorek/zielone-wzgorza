@@ -26,7 +26,16 @@ export async function GET(request: NextRequest) {
         category: true,
         variants: { orderBy: { sortOrder: "asc" } },
         images: { orderBy: { position: "asc" }, take: 1 },
-        amenities: true,
+        amenities: {
+          include: {
+            amenity: {
+              select: {
+                id: true, name: true, slug: true, iconKey: true,
+                category: { select: { id: true, name: true, slug: true } },
+              },
+            },
+          },
+        },
         _count: { select: { variants: true, images: true, beds: true, reservationItems: true } },
       },
       orderBy: [{ category: { sortOrder: "asc" } }, { sortOrder: "asc" }, { name: "asc" }],

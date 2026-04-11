@@ -82,10 +82,17 @@ export async function GET(request: NextRequest) {
           },
         },
         amenities: {
+          where: { amenity: { isActive: true } },
           select: {
-            id: true,
-            name: true,
-            icon: true,
+            amenity: {
+              select: {
+                id: true,
+                slug: true,
+                name: true,
+                iconKey: true,
+                category: { select: { slug: true } },
+              },
+            },
           },
         },
       },
@@ -114,6 +121,14 @@ export async function GET(request: NextRequest) {
         bedType: bed.bedType,
         quantity: bed.quantity,
         label: getBedTypeLabel(bed.bedType),
+      })),
+      // B3: Flatten ResourceAmenity → frozen public shape
+      amenities: r.amenities.map((ra) => ({
+        id: ra.amenity.id,
+        slug: ra.amenity.slug,
+        name: ra.amenity.name,
+        icon: ra.amenity.iconKey,
+        categorySlug: ra.amenity.category.slug,
       })),
     }));
 

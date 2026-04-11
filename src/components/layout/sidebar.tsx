@@ -11,7 +11,7 @@ import {
   ListOrdered, ShieldX, Receipt, BarChart3,
   Globe, Megaphone, MailOpen, ClipboardList,
   DollarSign, TicketPercent, Layers, ArrowLeft, ChevronDown, Package, Palette,
-  FileCode, ListChecks,
+  FileCode, ListChecks, Sparkles,
 } from "lucide-react";
 
 /* ═══ Menu definition ═══ */
@@ -46,6 +46,7 @@ const menu: MenuGroup[] = [
         ],
       },
       { title: "Zasoby", href: "/admin/resources", icon: Warehouse },
+      { title: "Udogodnienia", href: "/admin/amenities", icon: Sparkles },
       { title: "Dodatki", href: "/admin/addons", icon: Package },
       {
         title: "System cenowy", icon: DollarSign,

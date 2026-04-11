@@ -43,6 +43,8 @@ function getBreadcrumbs(pathname: string): Crumb[] {
     crumbs.push({ label: "Klienci" });
   } else if (pathname.startsWith("/admin/resources")) {
     crumbs.push({ label: "Zasoby" });
+  } else if (pathname.startsWith("/admin/amenities")) {
+    crumbs.push({ label: "Udogodnienia" });
   } else if (pathname.startsWith("/admin/pricing")) {
     crumbs.push({ label: "System cenowy" });
   } else if (pathname.startsWith("/admin/payments")) {
