@@ -531,12 +531,96 @@ Rezerwacja/oferta obejmująca wiele zasobów:
 - Każdy kontakt: ikonka (8x8 rounded-lg bg-muted) + label (text-[11px]) + wartość (text-[13px] text-primary)
 - Hover na kontakcie: ikonka zmienia bg na `primary/10`, tekst na `primary`
 
-### Drag & drop sortowanie (Zasoby)
-- Toggle "Sortuj" w nagłówku strony
-- W trybie sortowania: karty mają `cursor-grab`, grip handle (`GripVertical`)
-- Podczas przeciągania: źródło `opacity-30 scale-95`, cel `ring-2 ring-primary ring-offset-2`
-- Po upuszczeniu: optimistic update + batch PATCH do `/api/resources/reorder`
-- Sortowanie zapisywane w polu `sortOrder` — jedno źródło prawdy dla całego panelu
+### Drag & drop reorder — WZORZEC GLOBALNY (ADR-17)
+
+Uniwersalny wzorzec przeciągania elementów w panelu. Stosowany w: Zasoby (karty),
+Amenities (lista + kategorie), i każdy przyszły moduł z sortowaniem.
+
+**Zasada: zawsze aktywny, tylko za uchwyt.**
+
+Bez przycisku "Sortuj". Użytkownik widzi uchwyt `GripVertical`, chwyta, przeciąga.
+Klik na kartę/wiersz = otwiera panel edycji (SlidePanel). Zero konfliktu gestów.
+
+**Separacja gestów:**
+
+```
+// Karta (NIE jest draggable — jest drop target + clickable)
+<div
+  data-item-card={item.id}
+  onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move";
+    if (draggedId && draggedId !== item.id) setDragOverId(item.id); }}
+  onDrop={(e) => handleDrop(e, item.id)}
+  onClick={() => openEdit(item)}
+  className={cn("bubble-interactive ...",
+    isDragOver && "ring-2 ring-primary ring-offset-2"
+  )}
+>
+  {/* Uchwyt — JEDYNY draggable element */}
+  <div
+    draggable
+    onDragStart={(e) => {
+      e.stopPropagation();
+      const card = e.currentTarget.closest("[data-item-card]");
+      if (card instanceof HTMLElement) e.dataTransfer.setDragImage(card, 20, 20);
+      e.dataTransfer.effectAllowed = "move";
+      setDraggedId(item.id);
+    }}
+    onDragEnd={handleDragEnd}
+    onClick={(e) => e.stopPropagation()}
+    className="cursor-grab active:cursor-grabbing text-muted-foreground/30
+      hover:text-muted-foreground shrink-0 p-0.5 -m-0.5"
+  >
+    <GripVertical className="h-4 w-4" />
+  </div>
+  {/* ...reszta karty... */}
+</div>
+```
+
+**Wizualne feedback:**
+
+| Element | Klasa | Uwagi |
+|---------|-------|-------|
+| Uchwyt idle | `text-muted-foreground/30` | Subtelny, widoczny na hover |
+| Uchwyt hover | `hover:text-muted-foreground` | Ciemniejszy — sygnał "mogę chwycić" |
+| Uchwyt drag | `active:cursor-grabbing` | Kursor zmienia się |
+| Drop target | `ring-2 ring-primary ring-offset-2` | Niebieski ring — "tu upuść" |
+| Drag image | `setDragImage(card, 20, 20)` | Ghost = cała karta, nie grip |
+| Źródło (lista) | `opacity-30 scale-95` | Efekt "odeszło" — działa w flexbox/lista |
+| Źródło (grid) | brak efektu | CSS Grid nie reaguje na scale-95 (known limitation) |
+
+**Backend pattern (reorder endpoint):**
+
+```
+PATCH /api/{module}/reorder
+Body: { order: [{ id: "...", position: 0 }, ...] }
+```
+
+Walidacja (7 kroków): auth MANAGER+, array niepusty, no duplicate IDs,
+id+position format, all exist in DB, same scope (propertyId / categoryId),
+**completeness check** (payload count === DB count). Transakcja all-or-nothing.
+Payload = pełny stan kolejności, nadpisuje poprzedni porządek (ADR-18).
+
+**Optimistic update + rollback:**
+1. Splice local array → natychmiastowy update UI
+2. `handleDragEnd()` → czyści visual states
+3. `apiFetch("/api/.../reorder")` w background
+4. Sukces → cisza (UI już zaktualizowane)
+5. Błąd → `toastError()` + `loadData()` (pełny rollback z serwera)
+
+**Hint UX:** Pod toolbarem na stronach z reorderem:
+```
+<p className="text-[11px] text-muted-foreground/60 flex items-center gap-1.5">
+  <Info className="h-3 w-3 shrink-0" />
+  Kliknij element, aby go edytować. Przeciągnij za uchwyt, aby zmienić kolejność.
+</p>
+```
+
+**Czego NIE robimy:**
+- ❌ Przycisk "Sortuj" włączający tryb — zawsze aktywne
+- ❌ `draggable` na całej karcie — tylko na GripVertical
+- ❌ Partial reorder (podzbiór listy) — zawsze pełna lista
+- ❌ DOM manipulacja do efektów (requestAnimationFrame) — React state only
+- ❌ DnD biblioteki zewnętrzne — natywny HTML5 Drag and Drop API
 
 ### Block creator (Kalendarz → Nowa blokada)
 - Flow: daty → dostępność → zasoby

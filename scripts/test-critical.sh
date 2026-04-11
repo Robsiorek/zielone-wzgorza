@@ -70,15 +70,6 @@ if [ "$LOGIN_OK" != "True" ]; then
 fi
 echo -e "Zalogowano jako admin.\n"
 
-# ── Dynamiczne daty (zawsze 300+ dni w przyszłości) ──
-# Generuje 3 pary dat na testy (T1, T3, T4)
-D1_IN=$(date -d "+330 days" '+%Y-%m-%d')
-D1_OUT=$(date -d "+332 days" '+%Y-%m-%d')
-D3_IN=$(date -d "+340 days" '+%Y-%m-%d')
-D3_OUT=$(date -d "+342 days" '+%Y-%m-%d')
-D4_IN=$(date -d "+350 days" '+%Y-%m-%d')
-D4_OUT=$(date -d "+352 days" '+%Y-%m-%d')
-
 # ── Pre-cleanup: anuluj WSZYSTKIE stare rezerwacje testowe ──
 echo "Pre-cleanup — czyszczę stare rezerwacje testowe..."
 for SEARCH_TERM in "Test+Regression" "Test+A" "Test+B" "Public+Test"; do
@@ -89,21 +80,71 @@ for SEARCH_TERM in "Test+Regression" "Test+A" "Test+B" "Public+Test"; do
       -d '{"cancelReason":"Test pre-cleanup"}' > /dev/null 2>&1
   done
 done
-echo "Pre-cleanup done."
-echo ""
+echo -e "Pre-cleanup done.\n"
 
-# Znajdź dostępny zasób i wariant
-echo "Szukam dostępnego zasobu..."
-AVAIL=$(curl -s "$BASE/api/public/availability?checkIn=$D1_IN&checkOut=$D1_OUT")
-RESOURCE_ID=$(echo "$AVAIL" | json_field "d['data']['available'][0]['resourceId']")
-VARIANT_ID=$(echo "$AVAIL" | json_field "d['data']['available'][0]['variants'][0]['variantId']")
+# ── Dynamic slot finder (query availability until 3 free slots found) ──
+# Szuka 3 wolnych 2-nocowych slotów, startując od +300 dni w przyszłości.
+# Każdy slot testowany osobno przez /api/public/availability.
+# Eliminuje flaky tests — zawsze trafia na faktycznie wolne terminy.
 
-if [ -z "$RESOURCE_ID" ] || [ "$RESOURCE_ID" = "None" ]; then
-  echo -e "${RED}BŁĄD: Brak dostępnych zasobów na $D1_IN..$D1_OUT. Sprawdź sezony/ceny.${NC}"
+echo "Szukam 3 wolnych slotów (dynamic availability)..."
+
+SLOTS_FOUND=0
+SLOT_START=300  # start szukania od +300 dni
+SLOT_STEP=5     # co 5 dni próbuj następny
+SLOT_MAX=50     # max prób
+RESOURCE_ID=""
+VARIANT_ID=""
+
+for i in $(seq 0 $SLOT_MAX); do
+  OFFSET=$((SLOT_START + i * SLOT_STEP))
+  TRY_IN=$(date -d "+${OFFSET} days" '+%Y-%m-%d')
+  TRY_OUT=$(date -d "+$((OFFSET + 2)) days" '+%Y-%m-%d')
+
+  AVAIL=$(curl -s "$BASE/api/public/availability?checkIn=$TRY_IN&checkOut=$TRY_OUT")
+  # Find first available resource
+  SLOT_DATA=$(echo "$AVAIL" | python3 -c "
+import sys, json
+try:
+    d = json.load(sys.stdin)
+    for r in d.get('data', {}).get('available', []):
+        if r.get('available') == True and r.get('variants'):
+            print(r['resourceId'] + '|' + r['variants'][0]['variantId'])
+            break
+except: pass
+" 2>/dev/null)
+
+  if [ -n "$SLOT_DATA" ]; then
+    RES_ID=$(echo "$SLOT_DATA" | cut -d'|' -f1)
+    VAR_ID=$(echo "$SLOT_DATA" | cut -d'|' -f2)
+
+    # First available slot → set resource/variant (use same resource for all tests)
+    if [ -z "$RESOURCE_ID" ]; then
+      RESOURCE_ID="$RES_ID"
+      VARIANT_ID="$VAR_ID"
+    fi
+
+    # Only count slots for our chosen resource
+    if [ "$RES_ID" = "$RESOURCE_ID" ]; then
+      SLOTS_FOUND=$((SLOTS_FOUND + 1))
+      case $SLOTS_FOUND in
+        1) D1_IN="$TRY_IN"; D1_OUT="$TRY_OUT"; echo "  Slot 1 (T1): $D1_IN..$D1_OUT" ;;
+        2) D3_IN="$TRY_IN"; D3_OUT="$TRY_OUT"; echo "  Slot 2 (T3): $D3_IN..$D3_OUT" ;;
+        3) D4_IN="$TRY_IN"; D4_OUT="$TRY_OUT"; echo "  Slot 3 (T4): $D4_IN..$D4_OUT" ;;
+      esac
+    fi
+
+    [ $SLOTS_FOUND -ge 3 ] && break
+  fi
+done
+
+if [ $SLOTS_FOUND -lt 3 ]; then
+  echo -e "${RED}BŁĄD: Znaleziono tylko $SLOTS_FOUND wolnych slotów (potrzeba 3). Sprawdź sezony/ceny/blokady.${NC}"
   exit 1
 fi
+
 echo -e "Zasób: $RESOURCE_ID, Wariant: $VARIANT_ID"
-echo -e "Daty testowe: T1=$D1_IN..$D1_OUT  T3=$D3_IN..$D3_OUT  T4=$D4_IN..$D4_OUT\n"
+echo -e "Wszystkie 3 sloty wolne — start testów.\n"
 
 # Znajdź klienta do testów admin
 CLIENT_ID=$(curl -s "$BASE/api/clients?limit=1" -b "$COOKIES" | json_field "d['data']['clients'][0]['id']")
