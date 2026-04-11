@@ -70,17 +70,40 @@ if [ "$LOGIN_OK" != "True" ]; then
 fi
 echo -e "Zalogowano jako admin.\n"
 
+# ── Dynamiczne daty (zawsze 300+ dni w przyszłości) ──
+# Generuje 3 pary dat na testy (T1, T3, T4)
+D1_IN=$(date -d "+330 days" '+%Y-%m-%d')
+D1_OUT=$(date -d "+332 days" '+%Y-%m-%d')
+D3_IN=$(date -d "+340 days" '+%Y-%m-%d')
+D3_OUT=$(date -d "+342 days" '+%Y-%m-%d')
+D4_IN=$(date -d "+350 days" '+%Y-%m-%d')
+D4_OUT=$(date -d "+352 days" '+%Y-%m-%d')
+
+# ── Pre-cleanup: anuluj WSZYSTKIE stare rezerwacje testowe ──
+echo "Pre-cleanup — czyszczę stare rezerwacje testowe..."
+for SEARCH_TERM in "Test+Regression" "Test+A" "Test+B" "Public+Test"; do
+  for RES_ID_PRE in $(curl -s "$BASE/api/reservations?search=$SEARCH_TERM&limit=50" -b "$COOKIES" 2>/dev/null | \
+    python3 -c "import sys,json; [print(r['id']) for r in json.load(sys.stdin).get('data',{}).get('reservations',[]) if r.get('status') not in ('CANCELLED',)]" 2>/dev/null); do
+    curl -s -X POST "$BASE/api/reservations/$RES_ID_PRE/cancel" \
+      -H "Content-Type: application/json" -b "$COOKIES" \
+      -d '{"cancelReason":"Test pre-cleanup"}' > /dev/null 2>&1
+  done
+done
+echo "Pre-cleanup done."
+echo ""
+
 # Znajdź dostępny zasób i wariant
 echo "Szukam dostępnego zasobu..."
-AVAIL=$(curl -s "$BASE/api/public/availability?checkIn=2027-01-10&checkOut=2027-01-12")
+AVAIL=$(curl -s "$BASE/api/public/availability?checkIn=$D1_IN&checkOut=$D1_OUT")
 RESOURCE_ID=$(echo "$AVAIL" | json_field "d['data']['available'][0]['resourceId']")
 VARIANT_ID=$(echo "$AVAIL" | json_field "d['data']['available'][0]['variants'][0]['variantId']")
 
 if [ -z "$RESOURCE_ID" ] || [ "$RESOURCE_ID" = "None" ]; then
-  echo -e "${RED}BŁĄD: Brak dostępnych zasobów na 2027-01-10..12. Sprawdź sezony/ceny.${NC}"
+  echo -e "${RED}BŁĄD: Brak dostępnych zasobów na $D1_IN..$D1_OUT. Sprawdź sezony/ceny.${NC}"
   exit 1
 fi
-echo -e "Zasób: $RESOURCE_ID, Wariant: $VARIANT_ID\n"
+echo -e "Zasób: $RESOURCE_ID, Wariant: $VARIANT_ID"
+echo -e "Daty testowe: T1=$D1_IN..$D1_OUT  T3=$D3_IN..$D3_OUT  T4=$D4_IN..$D4_OUT\n"
 
 # Znajdź klienta do testów admin
 CLIENT_ID=$(curl -s "$BASE/api/clients?limit=1" -b "$COOKIES" | json_field "d['data']['clients'][0]['id']")
@@ -94,7 +117,7 @@ echo -e "${YELLOW}── GRUPA 1: Booking core ──${NC}"
 echo "T1: Quote → Book (happy path)"
 QUOTE=$(curl -s -X POST "$BASE/api/public/quote" \
   -H "Content-Type: application/json" \
-  -d "{\"checkIn\":\"2027-01-10\",\"checkOut\":\"2027-01-12\",\"items\":[{\"variantId\":\"$VARIANT_ID\",\"adults\":2,\"children\":0}]}")
+  -d "{\"checkIn\":\"$D1_IN\",\"checkOut\":\"$D1_OUT\",\"items\":[{\"variantId\":\"$VARIANT_ID\",\"adults\":2,\"children\":0}]}")
 Q_ID=$(echo "$QUOTE" | json_field "d['data']['quoteId']")
 Q_SEC=$(echo "$QUOTE" | json_field "d['data']['quoteSecret']")
 
@@ -136,13 +159,13 @@ fi
 echo "T3: Dwa quote na ten sam slot → conflict"
 QA=$(curl -s -X POST "$BASE/api/public/quote" \
   -H "Content-Type: application/json" \
-  -d "{\"checkIn\":\"2027-02-01\",\"checkOut\":\"2027-02-03\",\"items\":[{\"variantId\":\"$VARIANT_ID\",\"adults\":2,\"children\":0}]}")
+  -d "{\"checkIn\":\"$D3_IN\",\"checkOut\":\"$D3_OUT\",\"items\":[{\"variantId\":\"$VARIANT_ID\",\"adults\":2,\"children\":0}]}")
 QA_ID=$(echo "$QA" | json_field "d['data']['quoteId']")
 QA_SEC=$(echo "$QA" | json_field "d['data']['quoteSecret']")
 
 QB=$(curl -s -X POST "$BASE/api/public/quote" \
   -H "Content-Type: application/json" \
-  -d "{\"checkIn\":\"2027-02-01\",\"checkOut\":\"2027-02-03\",\"items\":[{\"variantId\":\"$VARIANT_ID\",\"adults\":2,\"children\":0}]}")
+  -d "{\"checkIn\":\"$D3_IN\",\"checkOut\":\"$D3_OUT\",\"items\":[{\"variantId\":\"$VARIANT_ID\",\"adults\":2,\"children\":0}]}")
 QB_ID=$(echo "$QB" | json_field "d['data']['quoteId']")
 QB_SEC=$(echo "$QB" | json_field "d['data']['quoteSecret']")
 
@@ -168,7 +191,7 @@ fi
 echo "T4: Admin vs public na ten sam slot → conflict"
 QP=$(curl -s -X POST "$BASE/api/public/quote" \
   -H "Content-Type: application/json" \
-  -d "{\"checkIn\":\"2027-03-01\",\"checkOut\":\"2027-03-03\",\"items\":[{\"variantId\":\"$VARIANT_ID\",\"adults\":2,\"children\":0}]}")
+  -d "{\"checkIn\":\"$D4_IN\",\"checkOut\":\"$D4_OUT\",\"items\":[{\"variantId\":\"$VARIANT_ID\",\"adults\":2,\"children\":0}]}")
 QP_ID=$(echo "$QP" | json_field "d['data']['quoteId']")
 QP_SEC=$(echo "$QP" | json_field "d['data']['quoteSecret']")
 
@@ -179,7 +202,7 @@ BOOK_PUB=$(curl -s -X POST "$BASE/api/public/book" \
 PUB_OK=$(echo "$BOOK_PUB" | json_field "d.get('success', False)")
 
 # Admin on same dates/resource
-ADMIN_BODY="{\"type\":\"BOOKING\",\"status\":\"CONFIRMED\",\"checkIn\":\"2027-03-01\",\"checkOut\":\"2027-03-03\",\"source\":\"PHONE\",\"clientId\":\"$CLIENT_ID\",\"adults\":2,\"children\":0,\"items\":[{\"resourceId\":\"$RESOURCE_ID\"}]}"
+ADMIN_BODY="{\"type\":\"BOOKING\",\"status\":\"CONFIRMED\",\"checkIn\":\"$D4_IN\",\"checkOut\":\"$D4_OUT\",\"source\":\"PHONE\",\"clientId\":\"$CLIENT_ID\",\"adults\":2,\"children\":0,\"items\":[{\"resourceId\":\"$RESOURCE_ID\"}]}"
 BOOK_ADM=$(curl -s -X POST "$BASE/api/reservations" \
   -H "Content-Type: application/json" -b "$COOKIES" \
   -d "$ADMIN_BODY")
@@ -439,11 +462,13 @@ fi
 # ═══════════════════════════════════════════════
 echo ""
 echo "Cleanup — anuluję rezerwacje testowe..."
-for RES_ID_CLEAN in $(curl -s "$BASE/api/reservations?search=Test+Regression&limit=10" -b "$COOKIES" 2>/dev/null | \
-  python3 -c "import sys,json; [print(r['id']) for r in json.load(sys.stdin).get('data',{}).get('reservations',[])]" 2>/dev/null); do
-  curl -s -X POST "$BASE/api/reservations/$RES_ID_CLEAN/cancel" \
-    -H "Content-Type: application/json" -b "$COOKIES" \
-    -d '{"cancelReason":"Test cleanup"}' > /dev/null 2>&1
+for SEARCH_TERM in "Test+Regression" "Test+A" "Test+B" "Public+Test"; do
+  for RES_ID_CLEAN in $(curl -s "$BASE/api/reservations?search=$SEARCH_TERM&limit=50" -b "$COOKIES" 2>/dev/null | \
+    python3 -c "import sys,json; [print(r['id']) for r in json.load(sys.stdin).get('data',{}).get('reservations',[]) if r.get('status') not in ('CANCELLED',)]" 2>/dev/null); do
+    curl -s -X POST "$BASE/api/reservations/$RES_ID_CLEAN/cancel" \
+      -H "Content-Type: application/json" -b "$COOKIES" \
+      -d '{"cancelReason":"Test cleanup"}' > /dev/null 2>&1
+  done
 done
 echo "Cleanup done."
 

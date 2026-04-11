@@ -3,7 +3,8 @@ import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
 import { prisma } from "./prisma";
 
-const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-me";
+if (!process.env.JWT_SECRET) throw new Error("JWT_SECRET environment variable is required");
+const JWT_SECRET: string = process.env.JWT_SECRET;
 const TOKEN_NAME = "zw_admin_token";
 const TOKEN_EXPIRY = 60 * 60 * 24 * 7;
 
@@ -54,9 +55,9 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
 }
 
 export function setAuthCookie(token: string): string {
-  return `${TOKEN_NAME}=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${TOKEN_EXPIRY}`;
+  return `${TOKEN_NAME}=${token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${TOKEN_EXPIRY}`;
 }
 
 export function clearAuthCookie(): string {
-  return `${TOKEN_NAME}=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0`;
+  return `${TOKEN_NAME}=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0`;
 }
