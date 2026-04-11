@@ -4803,12 +4803,16 @@ data-theme="light"). booking/ --- widget rezerwacyjny (E2, 5-krokowy
 flow). offer/[token] --- strona oferty dla klienta.
 reservation/[token] --- publiczna strona rezerwacji (E2, read-only,
 dane do przelewu).
-scripts/ --- skrypty SQL: migracje (d-hours-migration.sql,
-e1-default-variants.sql), cleanup (e1-cleanup-quotes.sql), drop legacy
-(s2b-drop-legacy.sql).
-docs/ --- dokumentacja: DESIGN_SYSTEM.md (26 sekcji, źródło prawdy UI),
-DESIGN_SYSTEM_ADDENDUM_C2.md, nginx-engine.conf (do aktualizacji po
-basePath refaktorze). data/avatars/ --- upload avatarów
+scripts/ --- aktywne skrypty: testy (test-critical.sh, test-b1-media.sh,
+test-b2-content.sh), narzędzia (rebuild-timeline.ts, check-polish.sh),
+maintenance (e1-cleanup-quotes.sql), constraint (add-overlap-constraint.sql).
+Jednorazowe migracje SQL przeniesione do scripts/archive/.
+docs/ --- dokumentacja: master-plan-v2_3.md (MP, źródło prawdy systemu),
+DESIGN_SYSTEM.md (DS v1.3, 27 sekcji, źródło prawdy UI),
+TIMELINE_SPEC.md, TIMELINE_TODO.md, UNIFIED_PANEL_SPEC.md,
+BOOKING_EDIT_DESIGN.md (wszystkie ze statusem ✅ ZREALIZOWANE),
+nginx-engine.conf (konfiguracja referencyjna — aktualna config na VPS).
+data/avatars/ --- upload avatarów
 użytkowników (LocalDiskStorage, gotowe na S3). data/widget/ --- upload
 logo widgetu (pliki logo-{hex}.{ext}, zarządzane przez POST
 /api/settings/widget). next.config.js ---
@@ -4818,20 +4822,22 @@ auth, /api/public/* i /api/auth/* bez auth, /api/internal/* wymaga
 x-cron-secret (E3a), /offer/ /booking/ /pay/ /reservation/ bez auth
 (publiczny frontend).
 
-**Znane dead code / stale files (do posprzątania):**
+**Znane dead code (niski priorytet, do posprzątania przy okazji):**
 - src/lib/navigation.ts — nie importowany nigdzie (sidebar ma własne menu)
-- prisma/schema.backup.prisma, prisma/schema.new.prisma — stare kopie
-- tailwind.config.ts.bak, src/styles/globals.css.bak — backup files
-- seed-categories.js w root (duplikat prisma/seed-categories.js)
-- /206 — pusty plik (artefakt)
-- docs/nginx-engine.conf — odnosi się do starego basePath (stale)
+- prisma/schema.backup.prisma, prisma/schema.new.prisma — stare kopie schema
 - src/components/engine/offer-view.tsx — wywołuje /api/public/offers/:token
   który jeszcze nie istnieje (dead code, endpoint do implementacji
   w przyszłości)
 
+**Posprzątane (kwiecień 2026):**
+- ✅ Usunięte: docs/DESIGN_SYSTEM_ADDENDUM_C2.md (duplikat, wciągnięty do DS)
+- ✅ Usunięte: docs/SCHEMA_CHANGES_v3.md (przestarzałe instrukcje migracji)
+- ✅ Usunięte: 206, seed-categories.js, tailwind.config.ts.bak, *.tar.gz
+- ✅ Zarchiwizowane: 8 jednorazowych skryptów SQL → scripts/archive/
+
 30\. Design System --- referencja
 
-Plik: docs/DESIGN_SYSTEM.md (865 linii, 26 sekcji). Jest to ŹRÓDŁO
+Plik: docs/DESIGN_SYSTEM.md (v1.3, ~860 linii, 27 sekcji). Jest to ŹRÓDŁO
 PRAWDY dla całego UI panelu. Każdy komponent, kolor, spacing, animacja,
 wzorzec --- wszystko jest tam opisane. PRZED tworzeniem jakiegokolwiek
 komponentu UI przeczytaj odpowiednią sekcję DS.
@@ -5046,9 +5052,9 @@ NEXT_PUBLIC_FRONT_BASE_URL.
 **Nginx na VPS:**
 Nginx proxyuje: /admin/ → localhost:3000/admin/, /offer/ →
 localhost:3000/offer/, /_next/ → localhost:3000/_next/, /api/ →
-localhost:3000/api/. UWAGA: docs/nginx-engine.conf w repo jest stale
-(odwołuje się do starego basePath). Aktualna konfiguracja nginx jest
-bezpośrednio na VPS.
+localhost:3000/api/. docs/nginx-engine.conf w repo jest konfiguracją
+referencyjną — aktualna produkcyjna konfiguracja jest bezpośrednio
+na VPS w /etc/nginx/sites-available/.
 
 **Konsekwencje dla developmentu:**
 - Sidebar używa pełnych ścieżek: /admin/dashboard, /admin/calendar etc.

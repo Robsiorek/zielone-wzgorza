@@ -1,9 +1,10 @@
 # SPECYFIKACJA: Timeline / Kalendarz — Zielone Wzgórza Admin Panel
 # Wersja 1.0 | Marzec 2026
 # STATUS: ✅ ZREALIZOWANE — działający moduł kalendarza.
+# TYP: Spec architektoniczny (częściowo historyczny układ plików).
+#   Źródło prawdy implementacji = kod w src/components/calendar/ + MP.
 # UWAGA: calendar-action-panel.tsx i block-creator-panel.tsx zostały zastąpione
-# przez UnifiedPanel (patrz UNIFIED_PANEL_SPEC.md). Architektura plików poniżej
-# częściowo nieaktualna — źródło prawdy to kod w src/components/calendar/.
+# przez UnifiedPanel (patrz UNIFIED_PANEL_SPEC.md).
 
 ---
 
