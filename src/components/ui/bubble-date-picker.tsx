@@ -237,7 +237,6 @@ export function BubbleDatePicker({
           type="button"
           onClick={goToToday}
           className="text-[13px] font-semibold text-foreground hover:text-primary transition-colors duration-150 px-2 py-1 rounded-lg"
-          title="Wróć do dzisiaj"
         >
           {MONTHS_PL[viewMonth]} {viewYear}
         </button>

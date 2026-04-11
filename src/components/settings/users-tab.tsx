@@ -15,6 +15,7 @@ import {
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api-fetch";
 import { SlidePanel } from "@/components/ui/slide-panel";
+import { Tooltip } from "@/components/ui/tooltip";
 import { BubbleSelect } from "@/components/ui/bubble-select";
 import { useToast } from "@/components/ui/toast";
 
@@ -249,18 +250,22 @@ export function UsersTab() {
                 {/* Hover actions */}
                 <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
                   onClick={e => e.stopPropagation()}>
-                  <button onClick={() => openEdit(u)} title="Edytuj"
+                  <Tooltip content="Edytuj">
+                  <button onClick={() => openEdit(u)}
                     className="h-8 w-8 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-all">
                     <Pencil className="h-3.5 w-3.5" />
                   </button>
+                  </Tooltip>
                   {!isSelf(u) && (
-                    <button onClick={() => setConfirmDeactivate(u)} title={u.isActive ? "Dezaktywuj" : "Aktywuj"}
+                    <Tooltip content={u.isActive ? "Dezaktywuj" : "Aktywuj"}>
+                    <button onClick={() => setConfirmDeactivate(u)}
                       className={cn("h-8 w-8 rounded-xl flex items-center justify-center transition-all",
                         u.isActive ? "text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                           : "text-muted-foreground hover:bg-emerald-100 hover:text-emerald-700 dark:hover:bg-emerald-900/20"
                       )}>
                       {u.isActive ? <UserX className="h-3.5 w-3.5" /> : <UserCheck className="h-3.5 w-3.5" />}
                     </button>
+                    </Tooltip>
                   )}
                 </div>
               </div>

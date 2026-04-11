@@ -274,13 +274,17 @@ export function OffersContent() {
                     </td>
                     <td className="px-3 py-3 text-right" onClick={e => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-1">
-                        <button onClick={() => { setSelectedOffer(o); setPanelOpen(true); }} className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-all" title="Podgląd">
+                        <Tooltip content="Podgląd">
+                        <button onClick={() => { setSelectedOffer(o); setPanelOpen(true); }} className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-all">
                           <Eye className="h-3.5 w-3.5" />
                         </button>
+                        </Tooltip>
                         {o.status === "PENDING" && (
-                          <button onClick={() => setCancelId(o.id)} className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all" title="Anuluj">
+                          <Tooltip content="Anuluj">
+                          <button onClick={() => setCancelId(o.id)} className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all">
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
+                          </Tooltip>
                         )}
                       </div>
                     </td>

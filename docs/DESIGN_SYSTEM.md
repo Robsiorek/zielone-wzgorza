@@ -531,6 +531,72 @@ Rezerwacja/oferta obejmująca wiele zasobów:
 - Każdy kontakt: ikonka (8x8 rounded-lg bg-muted) + label (text-[11px]) + wartość (text-[13px] text-primary)
 - Hover na kontakcie: ikonka zmienia bg na `primary/10`, tekst na `primary`
 
+### Tooltip — SYSTEM GLOBALNY (Floating UI)
+
+Jedyny dozwolony system tooltipów w panelu. Oparty o `@floating-ui/react`.
+Natywny atrybut `title=""` jest **ZAKAZANY** na elementach HTML w panelu admina.
+`title` jako prop komponentu React (SectionCard, SlidePanel, ConfirmDialog) — bez zmian.
+
+**Komponent:** `src/components/ui/tooltip.tsx`
+
+**Użycie:**
+```tsx
+<Tooltip content="Edytuj">
+  <button className="btn-icon-bubble ..."><Pencil /></button>
+</Tooltip>
+```
+
+**Kiedy obowiązkowy:**
+- Icon-only buttons (ołówek, kosz, oko, toggle, strzałki nawigacji)
+- Akcje w tabelach (kolumna Akcje)
+- Przyciski w toolbarach (ikona bez tekstu)
+- Statusy/badge'e (!, ⚠, $, ✓) jeśli znaczenie nieoczywiste
+
+**Kiedy NIE stosować:**
+- Przyciski z jawnym tekstem ("Zapisz", "Anuluj", "Nowy dodatek")
+- Elementy z opisem obok (label + input)
+- Nie spamujemy na wszystkim — tylko tam, gdzie ikona jest jedynym nośnikiem znaczenia
+
+**Mechanika:**
+- Wrapper: `<span style="display: inline-flex">` (nie cloneElement)
+- Portal: `FloatingPortal` do `document.body`
+- Pozycjonowanie: `offset(8)` + `flip({ padding: 8 })` + `shift({ padding: 8 })`
+- Arrow: `FloatingArrow` wewnątrz wewnętrznego div (nie na tym samym co `floatingStyles`)
+- Animacja: `tooltipIn 0.15s cubic-bezier(0.16, 1, 0.3, 1)` — fade + scale(0.96→1) + translateY(3px→0)
+- Delay: 180ms open, 0ms close
+- Zamykanie: hover-leave, blur, Escape
+
+**Styl:**
+- Tło: `hsl(220, 15%, 13%)` (ciemne)
+- Tekst: `hsl(220, 10%, 95%)` (jasny)
+- borderRadius: 12 (bubble)
+- padding: 7px 14px
+- fontSize: 12, fontWeight: 500
+- Cień: dwuwarstwowy (depth + edge)
+- Arrow: ten sam kolor co tło, width 12, height 6
+
+**Architektura (dwa divy):**
+- Zewnętrzny div: `ref={refs.setFloating}`, `floatingStyles` (pozycjonowanie Floating UI)
+- Wewnętrzny div: tło, padding, animacja, `position: relative` (dla arrow)
+- NIGDY nie łączyć animacji `transform` z `floatingStyles` na tym samym elemencie
+
+**Props:**
+| Prop | Typ | Default | Opis |
+|------|-----|---------|------|
+| content | ReactNode | — | Treść tooltipa |
+| children | ReactNode | — | Trigger (button, span) |
+| side | "top" / "right" / "bottom" / "left" | "top" | Preferowana strona |
+| delay | number | 180 | Delay otwarcia (ms) |
+| disabled | boolean | false | Wyłącza tooltip |
+| maxWidth | number | 280 | Max szerokość (px) |
+
+**Czego NIE robimy:**
+- ❌ `title=""` na elementach HTML — twardy zakaz
+- ❌ Osobne lokalne implementacje tooltipów w modułach
+- ❌ `cloneElement` + ref forwarding (zawodne)
+- ❌ Animacja `transform` na elemencie z `floatingStyles` (nadpisuje pozycjonowanie)
+- ❌ Tooltip bez portalu (ucina się w overflow kontenerach)
+
 ### Drag & drop reorder — WZORZEC GLOBALNY (ADR-17)
 
 Uniwersalny wzorzec przeciągania elementów w panelu. Stosowany w: Zasoby (karty),

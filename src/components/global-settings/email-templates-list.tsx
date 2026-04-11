@@ -8,6 +8,7 @@ import {
 import { apiFetch } from "@/lib/api-fetch";
 import { useToast } from "@/components/ui/toast";
 import { SlidePanel } from "@/components/ui/slide-panel";
+import { Tooltip } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 interface TemplateInfo {
@@ -122,13 +123,14 @@ export function EmailTemplatesList() {
                   )}
                 </div>
               </div>
+              <Tooltip content="Podgląd e-maila">
               <button
                 onClick={(e) => { e.stopPropagation(); openPreview(tpl.type, tpl.label); }}
-                title="Podgląd e-maila"
                 className="h-8 w-8 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-all shrink-0"
               >
                 <Eye className="h-3.5 w-3.5" />
               </button>
+              </Tooltip>
             </div>
           </div>
         );

@@ -14,6 +14,7 @@ import { CalendarGrid, getColWidth } from "@/components/calendar/calendar-grid";
 import { CalendarDetailPanel } from "@/components/calendar/calendar-detail-panel";
 import { UnifiedPanel, type UnifiedPrefill, type PanelTab } from "@/components/unified-panel";
 import { BubbleSelect } from "@/components/ui/bubble-select";
+import { Tooltip } from "@/components/ui/tooltip";
 import { parseLocalDate } from "@/lib/dates";
 
 // ── Types (v5.0 — Multi-Type Resources) ──
@@ -628,17 +629,19 @@ export function CalendarContent() {
             )}
           </div>
 
-          <button onClick={() => scrollByDays(-30)} className="btn-icon-bubble h-9 w-9" title="Przewiń wstecz"><ChevronLeft className="h-4 w-4" /></button>
+          <Tooltip content="Przewiń wstecz"><button onClick={() => scrollByDays(-30)} className="btn-icon-bubble h-9 w-9"><ChevronLeft className="h-4 w-4" /></button></Tooltip>
           <button onClick={scrollToToday} className="btn-bubble btn-secondary-bubble px-3 py-2 text-[12px]">Dziś</button>
-          <button onClick={() => scrollByDays(30)} className="btn-icon-bubble h-9 w-9" title="Przewiń dalej"><ChevronRight className="h-4 w-4" /></button>
+          <Tooltip content="Przewiń dalej"><button onClick={() => scrollByDays(30)} className="btn-icon-bubble h-9 w-9"><ChevronRight className="h-4 w-4" /></button></Tooltip>
 
           <span className="text-[13px] font-semibold min-w-[130px] text-right hidden sm:block">{visibleMonthLabel}</span>
 
           <div className="relative" ref={pickerRef}>
+            <Tooltip content="Przejdź do daty">
             <button onClick={() => { setPickerOpen(!pickerOpen); setPickerYear(today.getFullYear()); setPickerMonth(today.getMonth()); }}
-              className="btn-icon-bubble h-9 w-9" title="Przejdź do daty">
+              className="btn-icon-bubble h-9 w-9">
               <CalendarDays className="h-4 w-4" />
             </button>
+            </Tooltip>
             {pickerOpen && (
               <div className="absolute z-30 top-full mt-2 right-0 bg-card border-2 border-border rounded-2xl p-5 fade-in-scale" style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.08)", width: 320 }}>
                 <div className="flex items-center gap-2.5 mb-4">
@@ -710,7 +713,7 @@ export function CalendarContent() {
         <div className="flex items-center gap-4 text-[12px] text-muted-foreground">
           {anyLoading && <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />}
           {errorCount > 0 && (
-            <button onClick={retryFailedMonths} className="flex items-center gap-1 text-red-500 hover:text-red-600 transition-colors" title="Kliknij aby ponowić">
+            <button onClick={retryFailedMonths} className="flex items-center gap-1 text-red-500 hover:text-red-600 transition-colors">
               <span className="text-[11px] font-semibold">Błąd ({errorCount})</span>
               <span className="text-[10px] underline">Ponów</span>
             </button>

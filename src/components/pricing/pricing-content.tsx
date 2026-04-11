@@ -10,6 +10,7 @@ import { apiFetch } from "@/lib/api-fetch";
 import { parseLocalDate } from "@/lib/dates";
 import { parseMoneyToMinor, fromMinor } from "@/lib/format";
 import { SlidePanel } from "@/components/ui/slide-panel";
+import { Tooltip } from "@/components/ui/tooltip";
 import { BubbleSelect } from "@/components/ui/bubble-select";
 import { UnitBadge } from "@/components/ui/unit-badge";
 import { BubbleDatePicker } from "@/components/ui/bubble-date-picker";
@@ -327,8 +328,8 @@ export function PricingContent() {
                       </div>
                     </div>
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button onClick={() => openSeasonEdit(s)} className="h-8 w-8 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-all"><Pencil className="h-3.5 w-3.5" /></button>
-                      <button onClick={() => deleteSeason(s.id)} className="h-8 w-8 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all"><Trash2 className="h-3.5 w-3.5" /></button>
+                      <Tooltip content="Edytuj"><button onClick={() => openSeasonEdit(s)} className="h-8 w-8 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-all"><Pencil className="h-3.5 w-3.5" /></button></Tooltip>
+                      <Tooltip content="Usuń"><button onClick={() => deleteSeason(s.id)} className="h-8 w-8 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all"><Trash2 className="h-3.5 w-3.5" /></button></Tooltip>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -367,8 +368,8 @@ export function PricingContent() {
                       </div>
                     </div>
                     <div className="flex gap-1">
-                      <button onClick={() => openRatePlanEdit(rp)} className="h-8 w-8 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-all"><Pencil className="h-3.5 w-3.5" /></button>
-                      <button onClick={() => deleteRatePlan(rp.id)} className="h-8 w-8 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all"><Trash2 className="h-3.5 w-3.5" /></button>
+                      <Tooltip content="Edytuj"><button onClick={() => openRatePlanEdit(rp)} className="h-8 w-8 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-all"><Pencil className="h-3.5 w-3.5" /></button></Tooltip>
+                      <Tooltip content="Usuń"><button onClick={() => deleteRatePlan(rp.id)} className="h-8 w-8 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all"><Trash2 className="h-3.5 w-3.5" /></button></Tooltip>
                     </div>
                   </div>
                 </div>
@@ -440,8 +441,8 @@ export function PricingContent() {
                     </div>
                   </div>
                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={() => openPromoEdit(pc)} className="h-8 w-8 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-all"><Pencil className="h-3.5 w-3.5" /></button>
-                    <button onClick={() => deletePromo(pc.id)} className="h-8 w-8 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all"><Trash2 className="h-3.5 w-3.5" /></button>
+                    <Tooltip content="Edytuj"><button onClick={() => openPromoEdit(pc)} className="h-8 w-8 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-all"><Pencil className="h-3.5 w-3.5" /></button></Tooltip>
+                    <Tooltip content="Usuń"><button onClick={() => deletePromo(pc.id)} className="h-8 w-8 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all"><Trash2 className="h-3.5 w-3.5" /></button></Tooltip>
                   </div>
                 </div>
               ))}

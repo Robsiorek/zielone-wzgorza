@@ -5,6 +5,7 @@ import { Search, Plus, Loader2, Users, ChevronLeft, ChevronRight, Building2, Use
 import { BubbleSelect } from "@/components/ui/bubble-select";
 import { apiFetch } from "@/lib/api-fetch";
 import { ClientsSkeleton } from "@/components/ui/skeleton";
+import { Tooltip } from "@/components/ui/tooltip";
 
 interface ClientRow {
   id: string; clientNumber: string; type: string; status: string; segment: string;
@@ -185,8 +186,8 @@ export function ClientsContent() {
                   <td className="px-3 py-3 text-[11px] text-muted-foreground hidden xl:table-cell">{timeAgo(c.lastActivityAt || c.createdAt)}</td>
                   <td className="px-3 py-3 text-right" onClick={e => e.stopPropagation()}>
                     <div className="flex items-center justify-end gap-1">
-                      <button onClick={() => router.push("/admin/clients/" + c.id)} className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-all" title="Podgląd"><Eye className="h-3.5 w-3.5" /></button>
-                      <button onClick={() => router.push("/admin/clients/" + c.id + "/edit")} className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-all" title="Edytuj"><Pencil className="h-3.5 w-3.5" /></button>
+<Tooltip content="Podgląd"><button onClick={() => router.push("/admin/clients/" + c.id)} className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-all"><Eye className="h-3.5 w-3.5" /></button></Tooltip>
+<Tooltip content="Edytuj"><button onClick={() => router.push("/admin/clients/" + c.id + "/edit")} className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-all"><Pencil className="h-3.5 w-3.5" /></button></Tooltip>
                     </div>
                   </td>
                 </tr>

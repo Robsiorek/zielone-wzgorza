@@ -13,6 +13,7 @@ import { parseMoneyToMinor, fromMinor } from "@/lib/format";
 import { ImageUpload } from "@/components/resources/image-upload";
 import { BED_TYPES, BED_TYPE_KEYS, isValidBedType, getBedTypeLabel } from "@/lib/bed-types";
 import { DynamicIcon } from "@/components/ui/dynamic-icon";
+import { Tooltip } from "@/components/ui/tooltip";
 import type { BedType } from "@/lib/bed-types";
 
 interface Category { id: string; name: string; slug: string; unitNumber: string | null; type: string; icon: string | null; description: string | null; _count?: { resources: number }; }
@@ -300,13 +301,14 @@ function ResourceBedsEditor({ resourceId, beds, onBedsChange }: { resourceId: st
             />
           </div>
           <div className="h-11 flex items-center shrink-0">
+            <Tooltip content="Usuń">
             <button
               onClick={() => removeBed(idx)}
               className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all"
-              title="Usuń"
             >
               <Trash2 className="h-3 w-3" />
             </button>
+            </Tooltip>
           </div>
         </div>
       ))}
@@ -834,18 +836,22 @@ export function ResourcesList() {
                     className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
                     onClick={(e) => e.stopPropagation()}
                   >
+                    <Tooltip content="Edytuj">
                     <button
                       onClick={() => openView(resource)}
                       className="h-8 w-8 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
                     >
                       <Pencil className="h-3.5 w-3.5" />
                     </button>
+                    </Tooltip>
+                    <Tooltip content="Usuń">
                     <button
                       onClick={() => handleDelete(resource.id)}
                       className="h-8 w-8 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
+                    </Tooltip>
                   </div>
                 </div>
                 {resource.longDescription && (
@@ -916,13 +922,14 @@ export function ResourcesList() {
                     <UnitBadge number={selectedResource.unitNumber} size="md" />
                   )}
                 </div>
+                <Tooltip content="Usuń zasób">
                 <button
                   onClick={() => handleDelete(selectedResource.id)}
                   className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all shrink-0 mt-1"
-                  title="Usuń zasób"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>
+                </Tooltip>
               </div>
 
               {/* Status badges */}
@@ -1211,18 +1218,22 @@ export function ResourcesList() {
                         </div>
                       </div>
                       <div className="flex gap-1 opacity-0 group-hover/v:opacity-100 transition-opacity">
+                        <Tooltip content="Edytuj wariant">
                         <button
                           onClick={() => openVarEdit(v)}
                           className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
                         >
                           <Pencil className="h-3 w-3" />
                         </button>
+                        </Tooltip>
+                        <Tooltip content="Usuń wariant">
                         <button
                           onClick={() => handleDeleteVariant(v.id)}
                           className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all"
                         >
                           <Trash2 className="h-3 w-3" />
                         </button>
+                        </Tooltip>
                       </div>
                     </div>
                   ))}

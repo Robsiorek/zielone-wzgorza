@@ -11,6 +11,7 @@ import { apiFetch } from "@/lib/api-fetch";
 import { useToast } from "@/components/ui/toast";
 import { SlidePanel } from "@/components/ui/slide-panel";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Tooltip } from "@/components/ui/tooltip";
 import { BubbleSelect } from "@/components/ui/bubble-select";
 import { DynamicIcon } from "@/components/ui/dynamic-icon";
 import { AmenitiesSkeleton } from "@/components/amenities/amenities-skeleton";
@@ -541,10 +542,10 @@ export function AmenitiesContent() {
                                 <div className="flex gap-1 opacity-0 group-hover/a:opacity-100 transition-opacity shrink-0"
                                   onClick={(e) => e.stopPropagation()}
                                 >
+                                  <Tooltip content={a.isActive ? "Dezaktywuj" : "Aktywuj"}>
                                   <button
                                     onClick={(e) => toggleAmenityActive(e, a)}
                                     className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
-                                    title={a.isActive ? "Dezaktywuj" : "Aktywuj"}
                                   >
                                     <div className={cn(
                                       "relative inline-flex h-4 w-7 items-center rounded-full transition-colors",
@@ -556,12 +557,15 @@ export function AmenitiesContent() {
                                       )} />
                                     </div>
                                   </button>
+                                  </Tooltip>
+                                  <Tooltip content="Usuń">
                                   <button
                                     onClick={(e) => { e.stopPropagation(); setDeleteTarget({ type: "amenity", id: a.id, name: a.name }); }}
                                     className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all"
                                   >
                                     <Trash2 className="h-3 w-3" />
                                   </button>
+                                  </Tooltip>
                                 </div>
                               </div>
                             );
@@ -643,10 +647,10 @@ export function AmenitiesContent() {
                     <div className="flex gap-1 opacity-0 group-hover/c:opacity-100 transition-opacity shrink-0"
                       onClick={(e) => e.stopPropagation()}
                     >
+                      <Tooltip content={c.isActive ? "Dezaktywuj" : "Aktywuj"}>
                       <button
                         onClick={(e) => toggleCatActive(e, c)}
                         className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
-                        title={c.isActive ? "Dezaktywuj" : "Aktywuj"}
                       >
                         <div className={cn(
                           "relative inline-flex h-4 w-7 items-center rounded-full transition-colors",
@@ -658,12 +662,15 @@ export function AmenitiesContent() {
                           )} />
                         </div>
                       </button>
+                      </Tooltip>
+                      <Tooltip content="Usuń">
                       <button
                         onClick={(e) => { e.stopPropagation(); setDeleteTarget({ type: "category", id: c.id, name: c.name }); }}
                         className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all"
                       >
                         <Trash2 className="h-3 w-3" />
                       </button>
+                      </Tooltip>
                     </div>
                   </div>
                 );

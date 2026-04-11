@@ -10,6 +10,7 @@ import { apiFetch } from "@/lib/api-fetch";
 import { useToast } from "@/components/ui/toast";
 import { SlidePanel } from "@/components/ui/slide-panel";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Tooltip } from "@/components/ui/tooltip";
 import { BubbleSelect } from "@/components/ui/bubble-select";
 import { AddonsSkeleton } from "@/components/addons/addons-skeleton";
 import { formatMoneyMinor, parseMoneyToMinor } from "@/lib/format";
@@ -271,19 +272,24 @@ export function AddonsContent() {
                   </td>
                   <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-end gap-1">
+                      <Tooltip content={a.isActive ? "Dezaktywuj" : "Aktywuj"}>
                       <button onClick={() => toggleActive(a)}
-                        className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
-                        title={a.isActive ? "Dezaktywuj" : "Aktywuj"}>
+                        className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-all">
                         {a.isActive ? <ToggleRight className="h-3.5 w-3.5 text-emerald-500" /> : <ToggleLeft className="h-3.5 w-3.5" />}
                       </button>
+                      </Tooltip>
+                      <Tooltip content="Edytuj">
                       <button onClick={() => openEdit(a)}
-                        className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-all" title="Edytuj">
+                        className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-all">
                         <Pencil className="h-3.5 w-3.5" />
                       </button>
+                      </Tooltip>
+                      <Tooltip content="Usuń">
                       <button onClick={() => setDeleteId(a.id)}
-                        className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all" title="Usuń">
+                        className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all">
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
+                      </Tooltip>
                     </div>
                   </td>
                 </tr>

@@ -248,14 +248,18 @@ export function ReservationsContent() {
                     </td>
                     <td className="px-3 py-3 text-right" onClick={e => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-1">
+                        <Tooltip content="Podgląd">
                         <button onClick={() => { setSelectedReservation(r); setPanelOpen(true); }}
-                          className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-all" title="Podgląd">
+                          className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-all">
                           <Eye className="h-3.5 w-3.5" />
                         </button>
+                        </Tooltip>
+                        <Tooltip content="Szczegóły">
                         <button onClick={() => router.push(`/admin/reservations/${r.id}`)}
-                          className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-all" title="Szczegóły">
+                          className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-all">
                           <ExternalLink className="h-3.5 w-3.5" />
                         </button>
+                        </Tooltip>
                       </div>
                     </td>
                   </tr>

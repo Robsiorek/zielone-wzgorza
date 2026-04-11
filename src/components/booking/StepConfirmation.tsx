@@ -3,6 +3,7 @@
 import React from "react";
 import { CheckCircle2, Copy, CalendarDays, Home, CreditCard, ExternalLink } from "lucide-react";
 import type { BookingDates, SelectedResource, ClientData, BookingResult } from "./BookingWidget";
+import { Tooltip } from "@/components/ui/tooltip";
 
 interface Props {
   result: BookingResult;
@@ -135,10 +136,10 @@ export function StepConfirmation({ result, dates, resources, clientData }: Props
                   <p className="text-[10px] text-muted-foreground">{row.label}</p>
                   <p className="text-[13px] font-medium">{row.value}</p>
                 </div>
+                <Tooltip content="Kopiuj">
                 <button
                   onClick={() => handleCopy(row.label, row.value)}
                   className="h-8 w-8 rounded-lg hover:bg-muted flex items-center justify-center transition-colors"
-                  title="Kopiuj"
                 >
                   {copied === row.label ? (
                     <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
@@ -146,6 +147,7 @@ export function StepConfirmation({ result, dates, resources, clientData }: Props
                     <Copy className="h-3.5 w-3.5 text-muted-foreground" />
                   )}
                 </button>
+                </Tooltip>
               </div>
             ))}
           </div>

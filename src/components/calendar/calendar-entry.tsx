@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import { Home, Calendar, Clock, Users, Building2, User as UserIcon, Lock } from "lucide-react";
 import { parseLocalDate } from "@/lib/dates";
+import { Tooltip } from "@/components/ui/tooltip";
 import type { TimelineEntry } from "@/components/calendar/calendar-content";
 
 type ViewMode = "month" | "2weeks" | "week";
@@ -349,22 +350,22 @@ export function CalendarEntry({ positioned, colWidth, rowHeight, viewMode, resou
             const badges: React.ReactNode[] = [];
             // Priority 1: overdue
             if (isOverdue) badges.push(
-              <span key="overdue" className="shrink-0 text-[8px] font-bold px-1 py-0.5 rounded leading-none bg-red-500 text-white" title="Po terminie">!</span>
+              <Tooltip key="t-overdue" content="Po terminie"><span key="overdue" className="shrink-0 text-[8px] font-bold px-1 py-0.5 rounded leading-none bg-red-500 text-white">!</span></Tooltip>
             );
             // Priority 2: requiresAttention
             if (needsAttention && badges.length < 2) badges.push(
-              <span key="attn" className="shrink-0 text-[9px] font-bold text-amber-600 dark:text-amber-400" style={{ animation: "pulse 2s ease-in-out infinite" }} title="Do wyjaśnienia">⚠</span>
+              <Tooltip key="t-attn" content="Do wyjaśnienia"><span key="attn" className="shrink-0 text-[9px] font-bold text-amber-600 dark:text-amber-400" style={{ animation: "pulse 2s ease-in-out infinite" }}>⚠</span></Tooltip>
             );
             // Priority 3: payment (only PAID or PARTIAL)
             if (badges.length < 2 && paymentStatus === "PAID") badges.push(
-              <span key="pay" className="shrink-0 text-[8px] font-bold px-1 py-0.5 rounded leading-none bg-emerald-500 text-white" title="Opłacona">$</span>
+              <Tooltip key="t-paid" content="Opłacona"><span key="pay" className="shrink-0 text-[8px] font-bold px-1 py-0.5 rounded leading-none bg-emerald-500 text-white">$</span></Tooltip>
             );
             if (badges.length < 2 && paymentStatus === "PARTIAL") badges.push(
-              <span key="pay" className="shrink-0 text-[8px] font-bold px-1 py-0.5 rounded leading-none bg-amber-500 text-white" title="Częściowo">$</span>
+              <Tooltip key="t-partial" content="Częściowo opłacona"><span key="pay" className="shrink-0 text-[8px] font-bold px-1 py-0.5 rounded leading-none bg-amber-500 text-white">$</span></Tooltip>
             );
             // Priority 4: checkedIn
             if (badges.length < 2 && isCheckedIn) badges.push(
-              <span key="ci" className="shrink-0 text-[9px] font-bold text-emerald-600 dark:text-emerald-400" title="Zameldowany">✓</span>
+              <Tooltip key="t-ci" content="Zameldowany"><span key="ci" className="shrink-0 text-[9px] font-bold text-emerald-600 dark:text-emerald-400">✓</span></Tooltip>
             );
             return badges;
           })()}
