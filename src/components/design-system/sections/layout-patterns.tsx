@@ -178,7 +178,7 @@ export function LayoutPatternsSection() {
           </div>
         </div>
         <ReferenceBox items={[
-          { label: "Pattern", value: "flex flex-wrap gap-2 + overflow:visible (portal BubbleSelect)" },
+          { label: "Pattern", value: "flex flex-wrap gap-2 + overflow:visible (FloatingPortal BubbleSelect)" },
           { label: "Selekty", value: "BubbleSelect w div z width + overflow:visible" },
           { label: "Search", value: "input-bubble z paddingLeft:40 (inline, nie @apply)" },
           { label: "Spacer", value: "flex-1 między filtrami a countem" },

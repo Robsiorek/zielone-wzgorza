@@ -17,7 +17,7 @@ export function PanelsFeedbackSection() {
   return (
     <div className="space-y-5">
       {/* SlidePanel — live demo */}
-      <SectionBlock title="SlidePanel" description="Panel boczny z prawej. ZAWSZE w DOM (nigdy {open && ...}). Kliknij przycisk, aby otworzyć.">
+      <SectionBlock title="SlidePanel" description="Panel boczny z prawej. Z.SLIDE_PANEL=300. Portal root dla dropdownów wewnątrz. ZAWSZE w DOM (nigdy {open && ...}).">
         <PreviewRow label="Otwórz SlidePanel">
           <button onClick={() => setSlideOpen(true)} className="btn-bubble btn-primary-bubble px-4 py-2 text-[12px]">
             Otwórz SlidePanel
@@ -27,7 +27,9 @@ export function PanelsFeedbackSection() {
           { label: "Komponent", value: "SlidePanel" },
           { label: "Plik", value: "src/components/ui/slide-panel.tsx" },
           { label: "Props", value: "open, onClose, title, children, width?" },
-          { label: "Zamykanie", value: "Overlay click, X button, Escape" },
+          { label: "Z-index", value: "Z.SLIDE_PANEL=300 (position: fixed, inset: 0)" },
+          { label: "3 warstwy", value: "Header z-20 > Portal root z-10 > Content z-1" },
+          { label: "Context", value: "FloatingZContext(10) + FloatingPortalRootContext(ref)" },
           { label: "Nesting", value: "Obsługuje 3 poziomy (payment → form → addon picker)" },
         ]} />
         <RulesBlock
@@ -70,7 +72,7 @@ export function PanelsFeedbackSection() {
       </SectionBlock>
 
       {/* ConfirmDialog — live demo */}
-      <SectionBlock title="ConfirmDialog" description="Modal potwierdzenia destrukcyjnych akcji. Overlay + centered card. Kliknij przycisk.">
+      <SectionBlock title="ConfirmDialog" description="Modal potwierdzenia destrukcyjnych akcji. Z.CONFIRM=500. Overlay + centered card.">
         <PreviewRow label="Otwórz ConfirmDialog">
           <button onClick={() => setConfirmOpen(true)} className="btn-bubble btn-secondary-bubble px-4 py-2 text-[12px] text-destructive hover:border-destructive">
             Otwórz ConfirmDialog
@@ -80,6 +82,7 @@ export function PanelsFeedbackSection() {
           { label: "Komponent", value: "ConfirmDialog" },
           { label: "Plik", value: "src/components/ui/confirm-dialog.tsx" },
           { label: "Props", value: "open, onConfirm, onCancel, title?, message, confirmLabel?, variant?" },
+          { label: "Z-index", value: "Z.CONFIRM=500 — powyżej SlidePanel(300) i dropdownów" },
           { label: "Variant", value: "danger (red button) | default (blue button)" },
           { label: "Użycie", value: "Usuwanie, resetowanie, anulowanie — nieodwracalne akcje" },
         ]} />
@@ -95,7 +98,7 @@ export function PanelsFeedbackSection() {
       </SectionBlock>
 
       {/* Toast — live demo */}
-      <SectionBlock title="Toast" description="Powiadomienia popup w prawym górnym rogu. Zielone (sukces) i czerwone (błąd).">
+      <SectionBlock title="Toast" description="Powiadomienia popup w prawym dolnym rogu. Z.TOAST=600 — powyżej wszystkiego.">
         <PreviewRow label="Wyzwól toast (kliknij)">
           <button onClick={() => showSuccess("Operacja zakończona pomyślnie!")} className="btn-bubble btn-primary-bubble px-4 py-2 text-[12px]">Toast sukces</button>
           <button onClick={() => showError("Coś poszło nie tak. Spróbuj ponownie.")} className="btn-bubble btn-secondary-bubble px-4 py-2 text-[12px] text-destructive hover:border-destructive">Toast błąd</button>
@@ -103,6 +106,7 @@ export function PanelsFeedbackSection() {
         <ReferenceBox items={[
           { label: "Hook", value: "useToast() → { success, error }" },
           { label: "Plik", value: "src/components/ui/toast.tsx" },
+          { label: "Z-index", value: "Z.TOAST=600 — zawsze widoczny, powyżej ConfirmDialog" },
           { label: "Provider", value: "ToastProvider w layout.tsx" },
           { label: "Użycie", value: "Po każdym zapisie, błędzie, wysyłce — zamiast inline alertów" },
         ]} />
