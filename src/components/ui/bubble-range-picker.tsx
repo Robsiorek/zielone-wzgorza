@@ -4,14 +4,15 @@
  * BubbleRangePicker — DS range date picker.
  *
  * Single calendar, user selects checkIn then checkOut.
- * Range highlighted between dates. Same portal pattern as BubbleDatePicker.
+ * Range highlighted between dates. Floating UI portal (ADR-20).
  * Polish locale.
  */
 
-import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
-import { createPortal } from "react-dom";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { FloatingPortal } from "@floating-ui/react";
+import { useFloatingDropdown } from "@/hooks/use-floating-dropdown";
 
 const MONTHS_PL = [
   "Styczeń", "Luty", "Marzec", "Kwiecień", "Maj", "Czerwiec",
@@ -75,68 +76,35 @@ function nightsBetween(a: string, b: string): number {
 }
 
 export function BubbleRangePicker({ checkIn, checkOut, onChange, min }: BubbleRangePickerProps) {
-  const [open, setOpen] = useState(false);
-  // Selection state: null = selecting checkIn, "checkIn" = checkIn selected, selecting checkOut
+  // Selection state
   const [selectionPhase, setSelectionPhase] = useState<"checkIn" | "checkOut">(checkIn ? "checkOut" : "checkIn");
   const [hoverDate, setHoverDate] = useState<string | null>(null);
 
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 });
+  // ── Floating UI (ADR-20) — onOpenChange handles selectionPhase ──
+  const { refs, floatingStyles, getReferenceProps, getFloatingProps, open, setOpen } =
+    useFloatingDropdown({
+      placement: "bottom",
+      fixedWidth: 320,
+      onOpenChange: (nextOpen) => {
+        if (nextOpen) {
+          // Prepare selectionPhase when opening
+          if (!checkIn) setSelectionPhase("checkIn");
+          else if (!checkOut) setSelectionPhase("checkOut");
+          else setSelectionPhase("checkIn"); // restart selection
+        }
+      },
+    });
 
   const initial = useMemo(() => {
     const d = parseDate(checkIn) || new Date();
     return { year: d.getFullYear(), month: d.getMonth() };
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [viewYear, setViewYear] = useState(initial.year);
   const [viewMonth, setViewMonth] = useState(initial.month);
 
   const minDate = parseDate(min || "");
   const nights = nightsBetween(checkIn, checkOut);
-
-  // Position
-  useEffect(() => {
-    if (!open || !triggerRef.current) return;
-    const rect = triggerRef.current.getBoundingClientRect();
-    const dropH = 420;
-    const dropW = 320;
-    const viewH = window.innerHeight;
-    const viewW = window.innerWidth;
-
-    let top = rect.bottom + 8;
-    if (top + dropH > viewH) top = rect.top - dropH - 8;
-    top = Math.max(8, top);
-
-    let left = rect.left + rect.width / 2 - dropW / 2;
-    if (left + dropW > viewW - 8) left = viewW - dropW - 8;
-    if (left < 8) left = 8;
-
-    setDropdownPos({ top, left });
-  }, [open]);
-
-  // Click outside
-  useEffect(() => {
-    if (!open) return;
-    function handleClick(e: MouseEvent) {
-      if (
-        triggerRef.current && !triggerRef.current.contains(e.target as Node) &&
-        dropdownRef.current && !dropdownRef.current.contains(e.target as Node)
-      ) {
-        setOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, [open]);
-
-  // Escape
-  useEffect(() => {
-    if (!open) return;
-    function handleKey(e: KeyboardEvent) { if (e.key === "Escape") setOpen(false); }
-    document.addEventListener("keydown", handleKey);
-    return () => document.removeEventListener("keydown", handleKey);
-  }, [open]);
 
   const prevMonth = useCallback(() => {
     setViewMonth(prev => {
@@ -168,13 +136,6 @@ export function BubbleRangePicker({ checkIn, checkOut, onChange, min }: BubbleRa
         setOpen(false);
       }
     }
-  }
-
-  function handleOpen() {
-    setOpen(true);
-    if (!checkIn) setSelectionPhase("checkIn");
-    else if (!checkOut) setSelectionPhase("checkOut");
-    else setSelectionPhase("checkIn"); // restart selection
   }
 
   function isDisabled(dateStr: string): boolean {
@@ -213,109 +174,12 @@ export function BubbleRangePicker({ checkIn, checkOut, onChange, min }: BubbleRa
 
   const todayStr = formatDate(new Date());
 
-  const dropdown = open && typeof window !== "undefined" ? createPortal(
-    <div
-      ref={dropdownRef}
-      style={{
-        position: "fixed",
-        top: dropdownPos.top,
-        left: dropdownPos.left,
-        width: 320,
-        zIndex: 99999,
-        border: "1px solid hsl(var(--border))",
-        animation: "scaleIn 0.15s cubic-bezier(0.16, 1, 0.3, 1) both",
-      }}
-      className="rounded-2xl bg-card p-4"
-    >
-      {/* Phase indicator */}
-      <div className="flex items-center justify-center gap-3 mb-3">
-        <div className={cn(
-          "text-[12px] font-semibold px-3 py-1 rounded-full transition-colors",
-          selectionPhase === "checkIn" ? "bg-primary text-white" : "bg-muted text-muted-foreground"
-        )}>
-          {checkIn ? formatDisplayShort(checkIn) : "Przyjazd"}
-        </div>
-        <span className="text-[11px] text-muted-foreground">→</span>
-        <div className={cn(
-          "text-[12px] font-semibold px-3 py-1 rounded-full transition-colors",
-          selectionPhase === "checkOut" ? "bg-primary text-white" : "bg-muted text-muted-foreground"
-        )}>
-          {checkOut ? formatDisplayShort(checkOut) : "Wyjazd"}
-        </div>
-      </div>
-
-      {/* Month navigation */}
-      <div className="flex items-center justify-between mb-2">
-        <button type="button" onClick={prevMonth}
-          className="h-8 w-8 rounded-xl flex items-center justify-center hover:bg-muted transition-colors">
-          <ChevronLeft className="h-4 w-4" />
-        </button>
-        <span className="text-[13px] font-semibold">
-          {MONTHS_PL[viewMonth]} {viewYear}
-        </span>
-        <button type="button" onClick={nextMonth}
-          className="h-8 w-8 rounded-xl flex items-center justify-center hover:bg-muted transition-colors">
-          <ChevronRight className="h-4 w-4" />
-        </button>
-      </div>
-
-      {/* Day headers */}
-      <div className="grid grid-cols-7 mb-1">
-        {DAYS_PL.map(d => (
-          <div key={d} className="text-center text-[10px] font-semibold text-muted-foreground py-1">{d}</div>
-        ))}
-      </div>
-
-      {/* Days grid */}
-      <div className="grid grid-cols-7">
-        {cells.map((day, i) => {
-          if (day === null) return <div key={`e-${i}`} />;
-          const dateStr = formatDate(new Date(viewYear, viewMonth, day));
-          const disabled = isDisabled(dateStr);
-          const isToday = dateStr === todayStr;
-          const dayClass = getDayClass(dateStr);
-
-          return (
-            <button
-              key={dateStr}
-              type="button"
-              disabled={disabled}
-              onClick={() => handleDayClick(dateStr)}
-              onMouseEnter={() => selectionPhase === "checkOut" && checkIn && setHoverDate(dateStr)}
-              onMouseLeave={() => setHoverDate(null)}
-              className={cn(
-                "h-9 text-[13px] transition-colors relative",
-                disabled && "opacity-30 cursor-not-allowed",
-                !disabled && dayClass,
-              )}
-            >
-              {day}
-              {isToday && !dayClass.includes("bg-primary") && (
-                <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-primary" />
-              )}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Nights count */}
-      {checkIn && checkOut && (
-        <div className="mt-3 text-center">
-          <span className="text-[12px] font-semibold text-primary">
-            {nights} {nights === 1 ? "noc" : nights < 5 ? "noce" : "nocy"}
-          </span>
-        </div>
-      )}
-    </div>,
-    document.body
-  ) : null;
-
   return (
     <div>
       <button
-        ref={triggerRef}
+        ref={refs.setReference}
         type="button"
-        onClick={handleOpen}
+        {...getReferenceProps()}
         className={cn(
           "w-full rounded-2xl border-2 border-border px-4 py-3 flex items-center gap-3 text-left transition-colors",
           "hover:border-primary",
@@ -340,7 +204,105 @@ export function BubbleRangePicker({ checkIn, checkOut, onChange, min }: BubbleRa
           </span>
         )}
       </button>
-      {dropdown}
+
+      {/* Calendar dropdown — Floating UI portal (ADR-20) */}
+      {open && (
+        <FloatingPortal>
+          <div
+            ref={refs.setFloating}
+            style={floatingStyles}
+            {...getFloatingProps()}
+          >
+            <div
+              className="rounded-2xl bg-card p-4"
+              style={{
+                border: "1px solid hsl(var(--border))",
+                animation: "scaleIn 0.15s cubic-bezier(0.16, 1, 0.3, 1) both",
+              }}
+            >
+              {/* Phase indicator */}
+              <div className="flex items-center justify-center gap-3 mb-3">
+                <div className={cn(
+                  "text-[12px] font-semibold px-3 py-1 rounded-full transition-colors",
+                  selectionPhase === "checkIn" ? "bg-primary text-white" : "bg-muted text-muted-foreground"
+                )}>
+                  {checkIn ? formatDisplayShort(checkIn) : "Przyjazd"}
+                </div>
+                <span className="text-[11px] text-muted-foreground">→</span>
+                <div className={cn(
+                  "text-[12px] font-semibold px-3 py-1 rounded-full transition-colors",
+                  selectionPhase === "checkOut" ? "bg-primary text-white" : "bg-muted text-muted-foreground"
+                )}>
+                  {checkOut ? formatDisplayShort(checkOut) : "Wyjazd"}
+                </div>
+              </div>
+
+              {/* Month navigation */}
+              <div className="flex items-center justify-between mb-2">
+                <button type="button" onClick={prevMonth}
+                  className="h-8 w-8 rounded-xl flex items-center justify-center hover:bg-muted transition-colors">
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <span className="text-[13px] font-semibold">
+                  {MONTHS_PL[viewMonth]} {viewYear}
+                </span>
+                <button type="button" onClick={nextMonth}
+                  className="h-8 w-8 rounded-xl flex items-center justify-center hover:bg-muted transition-colors">
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+
+              {/* Day headers */}
+              <div className="grid grid-cols-7 mb-1">
+                {DAYS_PL.map(d => (
+                  <div key={d} className="text-center text-[10px] font-semibold text-muted-foreground py-1">{d}</div>
+                ))}
+              </div>
+
+              {/* Days grid */}
+              <div className="grid grid-cols-7">
+                {cells.map((day, i) => {
+                  if (day === null) return <div key={`e-${i}`} />;
+                  const dateStr = formatDate(new Date(viewYear, viewMonth, day));
+                  const disabled = isDisabled(dateStr);
+                  const isToday = dateStr === todayStr;
+                  const dayClass = getDayClass(dateStr);
+
+                  return (
+                    <button
+                      key={dateStr}
+                      type="button"
+                      disabled={disabled}
+                      onClick={() => handleDayClick(dateStr)}
+                      onMouseEnter={() => selectionPhase === "checkOut" && checkIn && setHoverDate(dateStr)}
+                      onMouseLeave={() => setHoverDate(null)}
+                      className={cn(
+                        "h-9 text-[13px] transition-colors relative",
+                        disabled && "opacity-30 cursor-not-allowed",
+                        !disabled && dayClass,
+                      )}
+                    >
+                      {day}
+                      {isToday && !dayClass.includes("bg-primary") && (
+                        <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-primary" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Nights count */}
+              {checkIn && checkOut && (
+                <div className="mt-3 text-center">
+                  <span className="text-[12px] font-semibold text-primary">
+                    {nights} {nights === 1 ? "noc" : nights < 5 ? "noce" : "nocy"}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        </FloatingPortal>
+      )}
     </div>
   );
 }

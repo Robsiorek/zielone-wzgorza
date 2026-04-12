@@ -4,7 +4,7 @@ Panel Administracyjny
 
 **MASTER PLAN --- Pełna Specyfikacja Systemu**
 
-Wersja 2.3 --- 11 kwietnia 2026
+Wersja 2.4 --- 11 kwietnia 2026
 
 *Dokument zawiera pełną specyfikację logiki biznesowej, architektury
 technicznej i plan implementacji systemu rezerwacyjnego.*
@@ -27,7 +27,7 @@ Repo: github.com/Robsiorek/zielone-wzgorza (public).
 - ✅ GET /api/health (DB + SMTP cached + cron heartbeat)
 - ✅ Timeline rebuild CLI (dry-run domyślny, atomic --apply)
 - ✅ Cron heartbeat (zapis po każdym uruchomieniu reminder)
-- ✅ Testy regresyjne: 18/18 PASS (scripts/test-critical.sh)
+- ✅ Testy regresyjne: 41/41 PASS (scripts/test-critical.sh + test-b1/b2/b3)
 - ✅ Git na serwerze + GitHub backup (push po deployu)
 - ✅ Email: SPF ✅ + DKIM ✅ + DMARC ✅ (p=none)
 - ✅ Widget publiczny (pełny flow booking)
@@ -37,6 +37,8 @@ Repo: github.com/Robsiorek/zielone-wzgorza (public).
 - ✅ B1 Media Storage (upload, processing, CRUD, local/R2-ready)
 - ✅ B2 Resource Content (opisy, dane techniczne, łóżka, ADR-14 rename)
 - ✅ B2 Panel zasobu (inline SectionCards, brak edit mode)
+- ✅ B3 Amenities (model, 165 ikon, panel admin, drag reorder, resource SectionCard #7, public API)
+- ✅ test-critical.sh: dynamic availability (eliminuje flaky tests)
 
 **Production readiness vs Product readiness:**
 
@@ -44,11 +46,11 @@ Production readiness (silnik): ✅ GOTOWY. Core działa, jest bezpieczny,
 odporny na concurrency, diagnozowalny (health, requestId), naprawialny
 (rebuild CLI), z backupem (git + GitHub + DB cron).
 
-Product readiness (produkt dla klienta): 🔵 W BUDOWIE. Zdjęcia i opisy
-domków (B1/B2) wdrożone. Brakuje: amenities i property content (B3-B5),
-moduł sprzątania (C), pakiety i reguły cenowe (D), integracje
-i channel manager (E). GO-LIVE dopiero po zamknięciu Warstw A–D
-i testach wewnętrznych.
+Product readiness (produkt dla klienta): 🔵 W BUDOWIE. Zdjęcia, opisy
+i udogodnienia domków (B1/B2/B3) wdrożone. Brakuje: property content
+i widget detail (B4-B5), moduł sprzątania (C), pakiety i reguły
+cenowe (D), integracje i channel manager (E). GO-LIVE dopiero po
+zamknięciu Warstw A–D i testach wewnętrznych.
 
 **Zależności serwerowe (B1):**
 - @aws-sdk/client-s3 — klient S3-compatible (dla Cloudflare R2)
@@ -439,9 +441,19 @@ Skutek: PropertyContent z propertyId. Gotowe na multi-property.
 - PATCH /api/resources/[id] — Partial update (was PUT, ADR-14)
 - PUT /api/resources/[id]/beds — Replace łóżka (full replace pattern)
 
-**Amenities (Warstwa B):**
+**Amenities (Warstwa B — ✅ B3 wdrożone):**
 
-- GET /api/amenities — Lista wszystkich amenities (dla checkboxów)
+- GET /api/amenity-categories — Lista kategorii (property-scoped)
+- POST /api/amenity-categories — Tworzenie kategorii (race-safe slug, P2002→409)
+- PATCH /api/amenity-categories/[id] — Edycja (P2002→409)
+- DELETE /api/amenity-categories/[id] — Usunięcie (Restrict→409 jeśli ma amenities)
+- PATCH /api/amenity-categories/reorder — Reorder (transakcja, completeness check)
+- GET /api/amenities — Lista amenities (property-scoped, filter by categoryId)
+- POST /api/amenities — Tworzenie (race-safe slug, iconKey walidacja, P2002→409)
+- PATCH /api/amenities/[id] — Edycja (category scope: propertyId + isActive, P2002→409)
+- DELETE /api/amenities/[id] — Usunięcie (Restrict→409 jeśli przypisane)
+- PATCH /api/amenities/reorder — Reorder (same-category only, completeness check)
+- PUT /api/resources/[id]/amenities — Replace amenity assignments (full replace pattern §2.6, walidacja: istnienie + isActive + propertyId scope)
 
 **Kategorie zasobów:**
 
@@ -2902,7 +2914,7 @@ categoryId, category: { id, name, slug, type },
 variants: [{ id, name, capacity, isDefault, unitNumber }],
 images: [{ id, alt, position, isCover, urls: { original, medium,
 thumbnail } }], beds: [{ bedType, quantity, label }],
-amenities: [{ id, name, icon }] }], count: number } }
+amenities: [{ id, slug, name, icon, categorySlug }] }], count: number } }
 Tylko: status=ACTIVE AND visibleInWidget=true AND category.type=
 ACCOMMODATION AND min 1 aktywny wariant.
 Katalog NIE zwraca longDescription — to pole jest tylko w detail
@@ -4057,10 +4069,18 @@ ani przeoczeniami. Każde ma plan rozwiązania w odpowiedniej warstwie.
 ⚠️ Branching: Jeden branch (master). Świadoma decyzja (ADR-08).
   Plan: dev + feature/* gdy dojdzie drugi developer.
 
+⚠️ getPropertyId(): single-property shortcut (ADR-16). Wszystkie B3
+  endpointy używają property.findFirst(). Przy multi-property: wymiana
+  na tenant scope z auth context.
+
+⚠️ DnD scale-95 efekt nie działa na kartach zasobów w CSS Grid.
+  Drag reorder funkcjonalny, efekt wizualny tylko w Amenities (lista).
+  Nie wpływa na funkcjonalność — tylko efekt wizualny. Świadoma decyzja.
+
 **── Ograniczenia produktowe (warstwy do zbudowania) ──**
 
-🟢 Warstwa B (częściowo): B1 Media ✅, B2 Content ✅. Pozostało:
-  B3 Amenities, B4 Property Content, B5 Widget detail UI.
+🟢 Warstwa B (częściowo): B1 Media ✅, B2 Content ✅, B3 Amenities ✅.
+  Pozostało: B4 Property Content, B5 Widget detail UI.
   Widget powinien docelowo preferować isCover=true, fallback: position ASC.
 
 🔵 Warstwa C: Brak modułu sprzątania / operacyjności obiektu.
@@ -4086,16 +4106,63 @@ ani przeoczeniami. Każde ma plan rozwiązania w odpowiedniej warstwie.
   description → longDescription, area (Decimal) → areaSqm (Int).
   PATCH zamiast PUT na /api/resources/[id].
 
+**ADR-15: Icon system = typed vocabulary + controlled icon map (B3)**
+Decyzja: Ikony amenities zarządzane przez registry (amenity-icons.ts)
++ zamkniętą mapę importów (amenity-icon-map.ts). Registry = gatekeeper,
+mapa = renderer. Bez wildcard import z lucide-react.
+Dlaczego: Wildcard import ładuje cały lucide-react (~1000 ikon) do bundle.
+Controlled map importuje dokładnie 165 ikon. Registry waliduje runtime.
+Odrzucone: import * as LucideIcons (brak kontroli, duży bundle).
+Skutek: Dodanie ikony = zmiana registry + regeneracja mapy.
+
+**ADR-16: getPropertyId() = single-property shortcut (B3)**
+Decyzja: Wszystkie B3 endpointy używają property.findFirst() jako
+źródła propertyId. Świadomy skrót pod single-property architekturę.
+Dlaczego: System obsługuje jeden obiekt. Pełny multi-property scope
+(z kontekstu auth/tenant) nie jest jeszcze potrzebny.
+Skutek: Przy multi-property: wymiana na tenant scope z auth context.
+Nie blokuje obecnego rozwoju. To jest świadomy technical debt
+zaakceptowany na etapie single-property.
+
+**ADR-17: DnD always-on za GripVertical (B3)**
+Decyzja: Drag & drop reorder bez przycisku "Sortuj". Drag inicjowany
+wyłącznie z uchwytu GripVertical (draggable na grip, nie na karcie).
+Klik karty = edit (SlidePanel). Separacja gestów przez stopPropagation.
+Dlaczego: Spójny UX — użytkownik widzi uchwyt, chwyta, przeciąga.
+Odrzucone: Przycisk "Sortuj" włączający tryb (dodatkowy krok, nieintuicyjny).
+Skutek: Zastosowane w Zasoby + Amenities. Zasoby: drag image via
+setDragImage na kartę, efekt scale-95 niedziałający w CSS Grid (known limitation).
+
+**ADR-18: Reorder endpointy z completeness check (B3)**
+Decyzja: PATCH /api/.../reorder wymaga pełnej listy elementów.
+Backend porównuje count w payload z count w DB — partial reorder = 400.
+Dlaczego: Eliminuje pół-stany (reorder tylko części listy). Frontend
+zawsze wysyła pełny splice. Walidacja: no duplicates, all exist,
+same property, same category (amenities), count match.
+Skutek: Reorder jest atomowy i deterministyczny. Payload reprezentuje
+pełny stan kolejności i nadpisuje poprzedni porządek.
+
+✅ ADR-19: test-critical.sh dynamic availability (11.04.2026).
+  Hardcoded date offsets zastąpione dynamic slot finderem. Test iteruje
+  po datach (co 5 dni od +300) i pyta /api/public/availability aż znajdzie
+  3 wolne sloty na tym samym zasobie. Fail-fast jeśli nie znajdzie (max 50 prób).
+  Eliminuje flaky tests zależne od stanu danych produkcyjnych.
+
 **── Testy ──**
 
 ✅ 18 testów regresyjnych (scripts/test-critical.sh). Wynik: 18/18 PASS.
   Grupy: booking core (T1-T4), lifecycle (T5-T10), payments (T11-T14),
-  integrity (T15-T18). Cleanup automatyczny.
+  integrity (T15-T18). Dynamic availability (ADR-19): test szuka 3
+  wolnych slotów przez /api/public/availability zamiast hardcoded dat.
+  Eliminuje flaky tests zależne od danych produkcyjnych.
 ✅ 6 testów B1 media (scripts/test-b1-media.sh). Wynik: 6/6 PASS.
   Upload, MIME validation, cover, reorder, delete, public streaming.
 ✅ 7 testów B2 content (scripts/test-b2-content.sh). Wynik: 7/7 PASS.
   Beds CRUD, validation, PATCH content, GET z B2 polami, catalog bez longDescription.
-⚠️ test-critical.sh ma hardcoded daty (fragile). Plan: dynamiczne daty.
+✅ 10 testów B3 amenities (scripts/test-b3-amenities.sh). Wynik: 10/10 PASS.
+  Categories CRUD, amenities CRUD, assign to resource, resource detail shape,
+  public catalog shape, delete restrict (409), cleanup.
+✅ Łączny bilans: 41/41 PASS (18 + 6 + 7 + 10).
 ⚠️ Brak unit testów. Brak CI/CD. Plan: rozbudowa przy Warstwie D.
 
 21\. Sekwencje i numeracja
@@ -5240,7 +5307,7 @@ vocabularies (source of truth w kodzie, runtime validation, versioned).
 B0 ✅ Kontrakt architektoniczny (zaakceptowany 09.04.2026)
 B1 ✅ Media: storage abstraction + upload + processing + API (wdrożone 10.04.2026)
 B2 ✅ Resource content: opisy, dane techniczne, łóżka, ADR-14 rename (wdrożone 11.04.2026)
-B3 🔵 Amenities: model, seed 50-60 ikon, panel admin
+B3 ✅ Amenities: model, 165 ikon, panel admin, drag reorder, public API (wdrożone 11.04.2026)
 B4 🔵 Property content: zasady, FAQ, info, trust badges
 B5 🔵 Widget: detail page + karty ze swipe zdjęć
 
@@ -5334,7 +5401,7 @@ Badges statusu i widoczności widgetu (niebieski gdy widoczny,
 czerwony "Niewidoczny w widgecie" gdy wyłączony). Grid 2×2 stats
 (pojemność, metraż, sypialnie, łazienki) z ikonami.
 
-6 sekcji SectionCard (wszystkie domyślnie zwinięte):
+7 sekcji SectionCard (wszystkie domyślnie zwinięte):
 1. Ustawienia zasobu — nazwa, kategoria, numer, sztuk, lokalizacja,
    status, widoczność → PATCH /resources/[id]
 2. Treści — krótki opis (200 zn.), pełny opis (Markdown, 10000 zn.)
@@ -5345,11 +5412,80 @@ czerwony "Niewidoczny w widgecie" gdy wyłączony). Grid 2×2 stats
    → PUT /resources/[id]/beds
 5. Zdjęcia — upload, reorder, cover, alt → images endpoints
 6. Warianty sprzedażowe — CRUD → variants endpoints
+7. Udogodnienia — toggle per amenity, pogrupowane per kategoria,
+   lazy load katalogu → PUT /resources/[id]/amenities (B3)
 
 Izolacja stref zapisu: każda sekcja ma własny lokalny state, własny
 przycisk save, własny toast. Żadna sekcja nie nadpisuje pól innej.
 Przycisk "Dodaj wariant" wewnątrz sekcji (nie na belce accordion).
 Edytowany wariant ukryty z listy (brak iluzji duplikatu).
+
+**B3 — Amenities (✅ wdrożone)**
+
+Trzy modele DB: AmenityCategory (propertyId, slug, iconKey, position,
+isActive), Amenity (propertyId, categoryId, slug, iconKey, position,
+isActive), ResourceAmenity (resourceId, amenityId). FK: Restrict na
+delete category/amenity, Cascade na delete resource.
+
+Migracja: 20260411120000_b3_amenities — drop starego resource_amenities
+(tabela pusta, bezpieczne), create 3 tabel.
+
+Typed vocabulary (ADR-15): amenity-icons.ts — 165 kuratorowanych
+ikon lucide dla branży noclegowej. Runtime walidacja isValidIconKey().
+Controlled icon map: amenity-icon-map.ts — auto-generowany z registry,
+explicit import 165 ikon. DynamicIcon czyta wyłącznie z mapy.
+7 ikon z nowszych wersji lucide usunięte (Binoculars, FirstAid,
+Hanger, Kayak, KettleSteam, Volleyball, Wheelchair) — niekompatybilne
+z lucide-react 0.378.
+
+CRUD categories: GET (property-scoped), POST (slug race-safe P2002→409),
+PATCH (P2002→409), DELETE (Restrict→409).
+CRUD amenities: GET (property-scoped, filter categoryId), POST (slug
+race-safe, iconKey walidacja), PATCH (category scope: propertyId match
++ isActive check, P2002→409), DELETE (Restrict→409 jeśli przypisane).
+Assign: PUT /resources/[id]/amenities — full replace pattern (§2.6),
+walidacja: istnienie + isActive + propertyId scope.
+Reorder: PATCH .../reorder — transakcja, no duplicates, all exist,
+same property, same category (amenities), completeness check
+(payload count === DB count, ADR-18).
+
+Public API rozszerzenie: GET /api/public/resources-catalog i
+GET /api/public/resources/[id] — frozen shape:
+amenities: [{ id, slug, name, icon, categorySlug }]. Filtr isActive.
+
+Admin UI: strona /admin/amenities — dwa taby (Udogodnienia + Kategorie).
+Tab Udogodnienia: collapsible sekcje per kategoria (section-collapse CSS),
+klik karty → SlidePanel, drag & drop za GripVertical (within-category
+reorder), toggle aktywności, delete z ConfirmDialog (409). Icon picker:
+wizualny grid 165 ikon w 8 grupach z wyszukiwarką.
+Tab Kategorie: lista z drag & drop, klik → SlidePanel, toggle, delete.
+
+SectionCard #7 w panelu zasobu: "Udogodnienia" — toggle per amenity
+pogrupowane per kategoria, osobny save/toast, lazy load katalogu.
+Sidebar: link "Udogodnienia" (Sparkles) między Zasoby i Dodatki.
+
+DnD refaktor w Zasoby: usunięto przycisk "Sortuj", drag always-on
+za GripVertical (ADR-17). Spójny wzorzec z Amenities.
+
+Seed: 6 kategorii × 58 amenities. Idempotentny upsert (ON CONFLICT
+DO UPDATE RETURNING id), gen_random_uuid(), re-runnable.
+
+Pliki nowe: prisma/migrations/20260411120000_b3_amenities/migration.sql,
+src/lib/amenity-icons.ts, src/lib/amenity-icon-map.ts,
+src/components/ui/dynamic-icon.tsx,
+src/app/api/amenity-categories/ (route.ts, [id]/route.ts, reorder/route.ts),
+src/app/api/amenities/ (route.ts, [id]/route.ts, reorder/route.ts),
+src/app/api/resources/[id]/amenities/route.ts,
+src/app/admin/(panel)/amenities/page.tsx,
+src/components/amenities/ (amenities-content.tsx, amenities-skeleton.tsx),
+scripts/seed-b3-amenities.sql, scripts/test-b3-amenities.sh.
+Pliki zmienione: prisma/schema.prisma, src/app/api/resources/ (route.ts,
+[id]/route.ts), src/app/api/public/ (resources-catalog/route.ts,
+resources/[id]/route.ts), src/components/resources/resources-list.tsx,
+src/components/layout/ (sidebar.tsx, topbar.tsx).
+
+Moduł B3 stanowi podstawę pod przyszłe filtrowanie w katalogu
+i widget detail page (B5).
 
 **Definition of Done Warstwy B:**
 1. ✅ Storage abstraction z R2 jako produkcyjnym targetem
@@ -5360,7 +5496,8 @@ Edytowany wariant ukryty z listy (brak iluzji duplikatu).
 6. 🔵 Wszystkie treści property-scoped (propertyId)
 7. ✅ Public API rozszerza istniejący resources-catalog
 8. ✅ Markdown jako jedyny format treści
-9. Partial: 18/18 core + 6/6 B1 + 7/7 B2 = 31 PASS. Docelowo: + B3-B5 testy.
+9. ✅ 18/18 core + 6/6 B1 + 7/7 B2 + 10/10 B3 = 41 PASS.
+   Docelowo: + B4-B5 testy.
 10. 🔵 Mobile responsive (B5)
 11. ✅ Prisma migration + raw SQL partial unique index
 12. ✅ Git commit + push (B1, B2)
@@ -6367,3 +6504,23 @@ v2.1 (09.04.2026) — Testy regresyjne 18/18 PASS, cron heartbeat fix,
   Warstwa B: kontrakt B0 zaakceptowany (storage, content model, API,
   DB constraints, typed vocabularies). ADR-11 do ADR-13 dodane.
   Git: GitHub repo public, semver, commit convention, pre-deploy tags.
+
+v2.2 (11.04.2026) — B1 Media Storage: provider abstraction (local + R2),
+  image processing (sharp, 3 rozmiary WebP), upload/reorder/cover/delete,
+  MIME validation, partial unique index. ADR-11, ADR-12. 6/6 PASS.
+
+v2.3 (11.04.2026) — B2 Resource Content: ADR-14 rename pól, nowe pola
+  content (shortDescription, longDescription, areaSqm, bedroom/bathroom),
+  ResourceBed model, beds typed vocabulary, panel zasobu z 6 SectionCards
+  (inline editing), public detail endpoint. 7/7 PASS.
+
+v2.4 (11.04.2026) — B3 Amenities: 3 modele DB (AmenityCategory, Amenity,
+  ResourceAmenity), 165 ikon lucide w controlled registry + map (ADR-15),
+  CRUD + assign + reorder z pełną walidacją (propertyId, isActive,
+  completeness check — ADR-18), panel admin z collapsible sekcjami
+  i drag & drop (ADR-17), SectionCard #7 w panelu zasobu, public API
+  frozen shape (categorySlug). Seed 6 kategorii × 58 amenities
+  (kuratorowane, bez duplikatów domenowych). DnD refaktor w Zasoby
+  (usunięto "Sortuj"). test-critical.sh: dynamic availability (ADR-19),
+  eliminacja flaky tests. Bilans: 41/41 PASS (18+6+7+10).
+  ADR-15 do ADR-19. getPropertyId() = known limitation (ADR-16).

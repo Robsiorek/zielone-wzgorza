@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
-import { createPortal } from "react-dom";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { FloatingPortal } from "@floating-ui/react";
+import { useFloatingDropdown } from "@/hooks/use-floating-dropdown";
 
 const MONTHS_PL = [
   "Styczeń", "Luty", "Marzec", "Kwiecień", "Maj", "Czerwiec",
@@ -61,10 +62,9 @@ export function BubbleDatePicker({
   min,
   max,
 }: BubbleDatePickerProps) {
-  const [open, setOpen] = useState(false);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 296 });
+  // ── Floating UI (ADR-20) ──
+  const { refs, floatingStyles, getReferenceProps, getFloatingProps, open, setOpen } =
+    useFloatingDropdown({ placement: "bottom-start", fixedWidth: 296 });
 
   // Calendar view state — initialize from value or today
   const initial = useMemo(() => {
@@ -84,62 +84,6 @@ export function BubbleDatePicker({
       setViewMonth(d.getMonth());
     }
   }, [value]);
-
-  // Position dropdown relative to trigger via portal
-  useEffect(() => {
-    if (open && triggerRef.current) {
-      const rect = triggerRef.current.getBoundingClientRect();
-      const dropH = 380;
-      const dropW = 296;
-      const viewH = window.innerHeight;
-      const viewW = window.innerWidth;
-      const spaceBelow = viewH - rect.bottom;
-
-      const top = spaceBelow >= dropH
-        ? rect.bottom + 6
-        : rect.top - dropH - 6;
-
-      // If dropdown would overflow right edge, align to right side of trigger
-      let left = rect.left;
-      if (left + dropW > viewW - 8) {
-        left = rect.right - dropW;
-      }
-      // Safety: never go off-screen left
-      left = Math.max(8, left);
-
-      setDropdownPos({
-        top: Math.max(8, top),
-        left,
-        width: dropW,
-      });
-    }
-  }, [open]);
-
-  // Close on outside click
-  useEffect(() => {
-    if (!open) return;
-    function handleClick(e: MouseEvent) {
-      const target = e.target as Node;
-      if (
-        triggerRef.current && !triggerRef.current.contains(target) &&
-        dropdownRef.current && !dropdownRef.current.contains(target)
-      ) {
-        setOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, [open]);
-
-  // Close on Escape
-  useEffect(() => {
-    if (!open) return;
-    function handleKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
-    }
-    document.addEventListener("keydown", handleKey);
-    return () => document.removeEventListener("keydown", handleKey);
-  }, [open]);
 
   const prevMonth = useCallback(() => {
     setSlideDir("right");
@@ -174,7 +118,7 @@ export function BubbleDatePicker({
     const selected = new Date(viewYear, viewMonth, day);
     onChange(formatDate(selected));
     setOpen(false);
-  }, [viewYear, viewMonth, onChange]);
+  }, [viewYear, viewMonth, onChange, setOpen]);
 
   const today = new Date();
   const todayStr = formatDate(today);
@@ -208,140 +152,6 @@ export function BubbleDatePicker({
     }
   }, [slideDir, viewMonth]);
 
-  const calendarDropdown = open && typeof window !== "undefined" ? createPortal(
-    <div
-      ref={dropdownRef}
-      style={{
-        position: "fixed",
-        top: dropdownPos.top,
-        left: dropdownPos.left,
-        width: 296,
-        zIndex: 99999,
-        border: "1px solid hsl(var(--border))",
-        boxShadow: "0 8px 32px hsl(220 15% 12% / 0.12), 0 4px 8px hsl(220 15% 12% / 0.06)",
-        animation: "scaleIn 0.15s cubic-bezier(0.16, 1, 0.3, 1) both",
-      }}
-      className="rounded-2xl bg-card p-3"
-    >
-      {/* Month navigation */}
-      <div className="flex items-center justify-between mb-2">
-        <button
-          type="button"
-          onClick={prevMonth}
-          className="h-8 w-8 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-150"
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </button>
-
-        <button
-          type="button"
-          onClick={goToToday}
-          className="text-[13px] font-semibold text-foreground hover:text-primary transition-colors duration-150 px-2 py-1 rounded-lg"
-        >
-          {MONTHS_PL[viewMonth]} {viewYear}
-        </button>
-
-        <button
-          type="button"
-          onClick={nextMonth}
-          className="h-8 w-8 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-150"
-        >
-          <ChevronRight className="h-4 w-4" />
-        </button>
-      </div>
-
-      {/* Day names header */}
-      <div className="grid grid-cols-7 mb-1">
-        {DAYS_PL.map((day) => (
-          <div
-            key={day}
-            className="h-8 flex items-center justify-center text-[11px] font-semibold text-muted-foreground/60 select-none"
-          >
-            {day}
-          </div>
-        ))}
-      </div>
-
-      {/* Days grid */}
-      <div
-        className="grid grid-cols-7"
-        key={`${viewYear}-${viewMonth}`}
-        style={
-          slideDir
-            ? {
-                animation: `${slideDir === "left" ? "slideCalLeft" : "slideCalRight"} 0.18s cubic-bezier(0.16, 1, 0.3, 1) both`,
-              }
-            : undefined
-        }
-      >
-        {cells.map((day, i) => {
-          if (day === null) {
-            return <div key={`empty-${i}`} className="h-9" />;
-          }
-
-          const dateStr = formatDate(new Date(viewYear, viewMonth, day));
-          const isSelected = dateStr === value;
-          const isToday = dateStr === todayStr;
-          const disabled = isDisabled(day);
-
-          return (
-            <button
-              key={day}
-              type="button"
-              disabled={disabled}
-              onClick={() => selectDay(day)}
-              className={cn(
-                "h-9 w-full rounded-xl text-[13px] font-medium transition-all duration-150 relative",
-                disabled && "opacity-30 cursor-not-allowed",
-                !disabled && !isSelected && "hover:bg-primary/8 hover:text-primary",
-                isSelected
-                  ? "bg-primary text-primary-foreground font-semibold shadow-sm"
-                  : isToday
-                    ? "text-primary font-semibold"
-                    : "text-foreground"
-              )}
-            >
-              {day}
-              {isToday && !isSelected && (
-                <span className="absolute bottom-1 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-primary" />
-              )}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Quick actions */}
-      <div
-        className="mt-2 pt-2 flex items-center justify-between"
-        style={{ borderTop: "1px solid hsl(var(--border) / 0.5)" }}
-      >
-        <button
-          type="button"
-          onClick={() => {
-            onChange(todayStr);
-            setOpen(false);
-          }}
-          className="text-[11px] font-medium text-primary hover:text-primary/80 transition-colors duration-150"
-        >
-          Dzisiaj
-        </button>
-        {value && (
-          <button
-            type="button"
-            onClick={() => {
-              onChange("");
-              setOpen(false);
-            }}
-            className="text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors duration-150"
-          >
-            Wyczyść
-          </button>
-        )}
-      </div>
-    </div>,
-    document.body
-  ) : null;
-
   return (
     <div className={cn("relative", className)}>
       {label && (
@@ -352,9 +162,9 @@ export function BubbleDatePicker({
 
       {/* Trigger button */}
       <button
-        ref={triggerRef}
+        ref={refs.setReference}
         type="button"
-        onClick={() => setOpen(!open)}
+        {...getReferenceProps()}
         className={cn(
           "flex h-11 w-full items-center justify-between rounded-2xl bg-card px-4 text-[13px] transition-all duration-200 outline-none",
           open
@@ -379,7 +189,141 @@ export function BubbleDatePicker({
         />
       </button>
 
-      {calendarDropdown}
+      {/* Calendar dropdown — Floating UI portal (ADR-20) */}
+      {open && (
+        <FloatingPortal>
+          <div
+            ref={refs.setFloating}
+            style={floatingStyles}
+            {...getFloatingProps()}
+          >
+            <div
+              className="rounded-2xl bg-card p-3"
+              style={{
+                border: "1px solid hsl(var(--border))",
+                boxShadow: "0 8px 32px hsl(220 15% 12% / 0.12), 0 4px 8px hsl(220 15% 12% / 0.06)",
+                animation: "scaleIn 0.15s cubic-bezier(0.16, 1, 0.3, 1) both",
+              }}
+            >
+              {/* Month navigation */}
+              <div className="flex items-center justify-between mb-2">
+                <button
+                  type="button"
+                  onClick={prevMonth}
+                  className="h-8 w-8 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-150"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={goToToday}
+                  className="text-[13px] font-semibold text-foreground hover:text-primary transition-colors duration-150 px-2 py-1 rounded-lg"
+                >
+                  {MONTHS_PL[viewMonth]} {viewYear}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={nextMonth}
+                  className="h-8 w-8 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-150"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+
+              {/* Day names header */}
+              <div className="grid grid-cols-7 mb-1">
+                {DAYS_PL.map((day) => (
+                  <div
+                    key={day}
+                    className="h-8 flex items-center justify-center text-[11px] font-semibold text-muted-foreground/60 select-none"
+                  >
+                    {day}
+                  </div>
+                ))}
+              </div>
+
+              {/* Days grid */}
+              <div
+                className="grid grid-cols-7"
+                key={`${viewYear}-${viewMonth}`}
+                style={
+                  slideDir
+                    ? {
+                        animation: `${slideDir === "left" ? "slideCalLeft" : "slideCalRight"} 0.18s cubic-bezier(0.16, 1, 0.3, 1) both`,
+                      }
+                    : undefined
+                }
+              >
+                {cells.map((day, i) => {
+                  if (day === null) {
+                    return <div key={`empty-${i}`} className="h-9" />;
+                  }
+
+                  const dateStr = formatDate(new Date(viewYear, viewMonth, day));
+                  const isSelected = dateStr === value;
+                  const isToday = dateStr === todayStr;
+                  const disabled = isDisabled(day);
+
+                  return (
+                    <button
+                      key={day}
+                      type="button"
+                      disabled={disabled}
+                      onClick={() => selectDay(day)}
+                      className={cn(
+                        "h-9 w-full rounded-xl text-[13px] font-medium transition-all duration-150 relative",
+                        disabled && "opacity-30 cursor-not-allowed",
+                        !disabled && !isSelected && "hover:bg-primary/8 hover:text-primary",
+                        isSelected
+                          ? "bg-primary text-primary-foreground font-semibold shadow-sm"
+                          : isToday
+                            ? "text-primary font-semibold"
+                            : "text-foreground"
+                      )}
+                    >
+                      {day}
+                      {isToday && !isSelected && (
+                        <span className="absolute bottom-1 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-primary" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Quick actions */}
+              <div
+                className="mt-2 pt-2 flex items-center justify-between"
+                style={{ borderTop: "1px solid hsl(var(--border) / 0.5)" }}
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    onChange(todayStr);
+                    setOpen(false);
+                  }}
+                  className="text-[11px] font-medium text-primary hover:text-primary/80 transition-colors duration-150"
+                >
+                  Dzisiaj
+                </button>
+                {value && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onChange("");
+                      setOpen(false);
+                    }}
+                    className="text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors duration-150"
+                  >
+                    Wyczyść
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </FloatingPortal>
+      )}
     </div>
   );
 }

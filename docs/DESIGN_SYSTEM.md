@@ -1,5 +1,5 @@
 # DESIGN SYSTEM — Zielone Wzgórza Admin Panel
-# Wersja 1.3 | Kwiecień 2026
+# Wersja 1.6 | Kwiecień 2026
 # Ten plik jest JEDYNYM źródłem prawdy dla stylu wizualnego panelu.
 # Czytaj go na starcie KAŻDEGO czatu przed generowaniem kodu.
 
@@ -986,13 +986,14 @@ enterprise inline editing. Brak osobnego trybu edycji.
 - Stats grid 2×2: ikona w `bg-background` boxie + liczba `text-[18px] font-bold`
   + etykieta w jednej linii (`flex items-baseline`)
 
-**6 sekcji SectionCard (wszystkie `defaultOpen={false}`):**
+**7 sekcji SectionCard (wszystkie `defaultOpen={false}`):**
 1. Ustawienia zasobu → PATCH /resources/[id]
 2. Treści → PATCH /resources/[id]
 3. Dane techniczne → PATCH /resources/[id]
 4. Łóżka → PUT /resources/[id]/beds
 5. Zdjęcia → images endpoints (B1)
 6. Warianty sprzedażowe → variants endpoints
+7. Udogodnienia → PUT /resources/[id]/amenities (B3)
 
 **Izolacja stref zapisu:**
 - Każda sekcja: własny useState, własny save button, własny toast
@@ -1011,3 +1012,105 @@ enterprise inline editing. Brak osobnego trybu edycji.
 - Dropdown: BubbleSelect (portal, §5) — NIGDY natywny `<select>`
 - Toggle: wzorzec z §20 — NIGDY checkbox
 - Inline row delete: `h-7 w-7 rounded-lg` + `hover:bg-destructive/10`
+
+## 28. FLOATING UI — STANDARD POZYCJONOWANIA PANELU (ADR-20)
+
+**Jedyny dozwolony system** pozycjonowania dropdownów, pickerów i popupów
+w panelu. Oparty o `@floating-ui/react` z `strategy: 'fixed'`.
+
+**Hook:** `src/hooks/use-floating-dropdown.ts`
+
+```tsx
+const { refs, floatingStyles, getReferenceProps, getFloatingProps, open, setOpen } =
+  useFloatingDropdown({
+    placement: 'bottom-start',  // default
+    offsetPx: 6,                // default
+    fixedWidth: 296,            // opcjonalnie
+    matchWidth: true,           // opcjonalnie (szerokość triggera)
+    interaction: 'click',       // default, lub 'hover'
+  });
+```
+
+**Controlled mode** (gdy komponent ma dodatkową logikę przy otwarciu):
+```tsx
+useFloatingDropdown({
+  onOpenChange: (next) => {
+    if (next) prepareState(); // logika przy otwarciu
+  },
+});
+```
+
+**Trigger:** `ref={refs.setReference} {...getReferenceProps()}`
+**Dropdown:** `<FloatingPortal><div ref={refs.setFloating} style={floatingStyles} {...getFloatingProps()}>...</div></FloatingPortal>`
+
+**Co hook załatwia (zero tego w komponentach):**
+- `useFloating({ strategy: 'fixed', whileElementsMounted: autoUpdate })`
+- `offset` + `flip({ padding: 8 })` + `shift({ padding: 8 })`
+- `size()` (matchWidth / fixedWidth / maxHeight)
+- `useClick` lub `useHover` + `useFocus`
+- `useDismiss` (Escape + click outside)
+- `zIndex: 99999` na floatingStyles
+
+**Zachowanie (standard jak Booking.com):**
+- Scroll strony przy otwartym dropdownie → element SIEDZI pod triggerem
+- Nie jedzie ze scrollem
+- Nie ucina się w overflow kontenerach (portal)
+- Flip na górę jeśli nie ma miejsca pod spodem
+- Dismiss na Escape i klik poza
+
+**Komponenty na hooku:**
+- BubbleDatePicker (fixedWidth: 296)
+- BubbleRangePicker (fixedWidth: 320)
+- BubbleColorPicker (fixedWidth: 280)
+
+**Komponenty na Floating UI bezpośrednio:**
+- Tooltip (useHover + arrow — dedykowany komponent §16.1)
+- BubbleSelect (matchWidth)
+- SearchableSelect (matchWidth)
+- CalendarEntry tooltip (useHover + arrow, placement: 'top')
+
+**Udokumentowane wyjątki (NIE na Floating UI):**
+
+Floating UI jest obowiązkowy dla overlays zakotwiczonych do elementu DOM.
+Coordinate-anchored overlays (pozycja z kursora lub kalkulacji gridu)
+są osobną kategorią wyjątków:
+- Calendar grid cursor follower — podąża za kursorem (mousePos), brak DOM triggera
+- Calendar grid action bubble — pozycja obliczana z kolumn gridu, brak DOM triggera
+- SlidePanel / ConfirmDialog — modale, nie dropdowny
+
+**Zasada dwóch divów (GLOBALNA — nie tylko tooltip):**
+- Zewnętrzny div: `ref={refs.setFloating}`, `style={floatingStyles}` — pozycjonowanie
+- Wewnętrzny div: tło, padding, border, animacja (`animation: scaleIn ...`)
+- NIGDY nie łączyć animacji `transform` (scale, translateY) z `floatingStyles`
+  na tym samym elemencie — nadpisuje `transform: translate(x,y)` z Floating UI
+- Ten sam wzorzec dotyczy tooltipów (§16.1), pickerów i każdego nowego overlay
+
+**Rules of Hooks — zakaz bezwzględny:**
+- Hooki Floating UI (`useClick`, `useHover`, `useDismiss`, `useFocus`)
+  wywołujemy WYŁĄCZNIE na top level komponentu/hooka
+- NIGDY w `useMemo`, `useCallback`, warunku `if` ani helperze
+- Tryb przełączamy przez flagę `enabled` na hooku:
+  `useClick(context, { enabled: interaction === "click" })`
+  `useHover(context, { enabled: interaction === "hover" })`
+- To jest reguła Reacta, nie konwencja — łamanie daje niestabilne rerendery
+
+**Controlled vs uncontrolled — standard API hooka:**
+- `open?: boolean` — controlled open state (gdy podany, hook nie trzyma stanu)
+- `defaultOpen?: boolean` — initial state dla uncontrolled mode (default: false)
+- `onOpenChange?: (open: boolean) => void` — callback, działa w obu trybach
+- Zakaz alternatywnych nazw: ❌ `externalOpen`, `isOpen`, `shown`, `visible`
+
+**Twardy ZAKAZ:**
+- ❌ `getBoundingClientRect()` + ręczne `top/left` do pozycjonowania dropdownów
+- ❌ `createPortal(…, document.body)` dla dropdownów (użyj `FloatingPortal`)
+- ❌ Ręczny `useEffect` na click outside / Escape (hook to robi)
+- ❌ Ręczny `useEffect` na scroll dismiss (autoUpdate to robi)
+- ❌ Klasa CSS `dropdown-bubble` z `position: absolute` — koliduje z Floating UI
+- ❌ Osobne implementacje pozycjonowania w modułach
+- ❌ Hooki Floating UI w `useMemo` / warunku / helperze (Rules of Hooks)
+- ❌ Animacja `transform` na elemencie z `floatingStyles` (nadpisuje pozycjonowanie)
+
+**Nowy dropdown = 3 kroki:**
+1. `useFloatingDropdown({ placement, fixedWidth })` w komponencie
+2. `ref={refs.setReference} {...getReferenceProps()}` na trigger
+3. `<FloatingPortal>` + `ref={refs.setFloating} style={floatingStyles}` na dropdown

@@ -1,11 +1,15 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useCallback } from "react";
-import { createPortal } from "react-dom";
+import React, { useRef } from "react";
 import { cn } from "@/lib/utils";
 import { Home, Calendar, Clock, Users, Building2, User as UserIcon, Lock } from "lucide-react";
 import { parseLocalDate } from "@/lib/dates";
 import { Tooltip } from "@/components/ui/tooltip";
+import {
+  useFloating, offset, flip, shift,
+  useHover, useDismiss, useInteractions,
+  autoUpdate, FloatingPortal, FloatingArrow, arrow,
+} from "@floating-ui/react";
 import type { TimelineEntry } from "@/components/calendar/calendar-content";
 
 type ViewMode = "month" | "2weeks" | "week";
@@ -129,49 +133,39 @@ const STATUS_LABELS: Record<string, string> = {
   NO_SHOW: "Niestawienie",
 };
 
-// ── Tooltip position ──
-
-interface TooltipData {
-  left: number;
-  top: number;
-  flipped: boolean;
-  arrowLeft: number;
-}
-
 const TOOLTIP_W = 260;
-
-function computeTooltipPos(anchorRect: DOMRect): TooltipData {
-  const TOOLTIP_H_ESTIMATE = 120;
-  const GAP = 8;
-  const EDGE = 8;
-
-  const anchorCenterX = anchorRect.left + anchorRect.width / 2;
-  let left = anchorCenterX - TOOLTIP_W / 2;
-  left = Math.max(EDGE, Math.min(left, window.innerWidth - TOOLTIP_W - EDGE));
-
-  let arrowLeft = anchorCenterX - left;
-  arrowLeft = Math.max(16, Math.min(arrowLeft, TOOLTIP_W - 16));
-
-  let top = anchorRect.top - TOOLTIP_H_ESTIMATE - GAP;
-  let flipped = false;
-  if (top < EDGE) {
-    top = anchorRect.bottom + GAP;
-    flipped = true;
-  }
-
-  return { left, top, flipped, arrowLeft };
-}
+const TOOLTIP_BG = "hsl(var(--foreground))";
 
 // ── Component ──
 
 export function CalendarEntry({ positioned, colWidth, rowHeight, viewMode, resourceCount = 1, highlighted = false, onGroupHover, onClick }: Props) {
   const { entry, startCol, endCol, logicalEndCol, lane, totalLanes, clippedLeft, clippedRight, halfStart, halfEnd } = positioned;
-  const [showTooltip, setShowTooltip] = useState(false);
-  const [tooltipPos, setTooltipPos] = useState<TooltipData>({ left: 0, top: 0, flipped: false, arrowLeft: TOOLTIP_W / 2 });
-  const entryRef = useRef<HTMLDivElement>(null);
-  const tooltipRef = useRef<HTMLDivElement>(null);
-  const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const arrowRef = useRef<SVGSVGElement>(null);
+
+  // ── Floating UI tooltip (ADR-20) ──
+  const [showTooltip, setShowTooltip] = React.useState(false);
+
+  const { refs, floatingStyles, context } = useFloating({
+    open: showTooltip,
+    onOpenChange: (v) => {
+      setShowTooltip(v);
+      onGroupHover?.(v);
+    },
+    placement: "top",
+    strategy: "fixed",
+    middleware: [
+      offset(8),
+      flip({ padding: 8 }),
+      shift({ padding: 8 }),
+      arrow({ element: arrowRef }),
+    ],
+    whileElementsMounted: autoUpdate,
+  });
+
+  const { getReferenceProps, getFloatingProps } = useInteractions([
+    useHover(context, { delay: { open: 200, close: 75 } }),
+    useDismiss(context),
+  ]);
 
   const bookingStyle = entry.type === "BOOKING" && entry.reservation
     ? BOOKING_STATUS_STYLES[entry.reservation.status] || BOOKING_STATUS_STYLES.CONFIRMED
@@ -217,76 +211,6 @@ export function CalendarEntry({ positioned, colWidth, rowHeight, viewMode, resou
     ? OFFER_STATUS_STYLES[resStatus] || OFFER_STATUS_STYLES.PENDING
     : null;
 
-  // Dismiss
-  const dismiss = useCallback(() => {
-    if (hoverTimer.current) clearTimeout(hoverTimer.current);
-    if (hideTimer.current) clearTimeout(hideTimer.current);
-    setShowTooltip(false);
-  }, []);
-
-  const handleMouseEnter = () => {
-    if (hideTimer.current) clearTimeout(hideTimer.current);
-    onGroupHover?.(true);
-    hoverTimer.current = setTimeout(() => {
-      if (entryRef.current) {
-        const rect = entryRef.current.getBoundingClientRect();
-        setTooltipPos(computeTooltipPos(rect));
-      }
-      setShowTooltip(true);
-    }, 200);
-  };
-
-  const handleMouseLeave = () => {
-    if (hoverTimer.current) clearTimeout(hoverTimer.current);
-    onGroupHover?.(false);
-    hideTimer.current = setTimeout(() => {
-      setShowTooltip(false);
-    }, 75);
-  };
-
-  useEffect(() => {
-    if (!showTooltip) return;
-    window.addEventListener("scroll", dismiss, true);
-    window.addEventListener("resize", dismiss);
-    return () => {
-      window.removeEventListener("scroll", dismiss, true);
-      window.removeEventListener("resize", dismiss);
-    };
-  }, [showTooltip, dismiss]);
-
-  useEffect(() => {
-    if (showTooltip && tooltipRef.current && entryRef.current) {
-      const tooltipRect = tooltipRef.current.getBoundingClientRect();
-      const anchorRect = entryRef.current.getBoundingClientRect();
-      const GAP = 8;
-      const EDGE = 8;
-
-      let { left: newLeft, flipped, arrowLeft } = tooltipPos;
-      let newTop: number;
-      if (!flipped) {
-        const aboveTop = anchorRect.top - tooltipRect.height - GAP;
-        if (aboveTop < EDGE) { newTop = anchorRect.bottom + GAP; flipped = true; }
-        else { newTop = aboveTop; }
-      } else { newTop = anchorRect.bottom + GAP; }
-
-      newLeft = Math.max(EDGE, Math.min(newLeft, window.innerWidth - tooltipRect.width - EDGE));
-      const anchorCenterX = anchorRect.left + anchorRect.width / 2;
-      arrowLeft = anchorCenterX - newLeft;
-      arrowLeft = Math.max(16, Math.min(arrowLeft, TOOLTIP_W - 16));
-
-      if (newLeft !== tooltipPos.left || newTop !== tooltipPos.top || flipped !== tooltipPos.flipped || arrowLeft !== tooltipPos.arrowLeft) {
-        setTooltipPos({ left: newLeft, top: newTop, flipped, arrowLeft });
-      }
-    }
-  }, [showTooltip]);
-
-  useEffect(() => {
-    return () => {
-      if (hoverTimer.current) clearTimeout(hoverTimer.current);
-      if (hideTimer.current) clearTimeout(hideTimer.current);
-    };
-  }, []);
-
   if (lane >= 2) return null;
 
   // Block label
@@ -295,10 +219,9 @@ export function CalendarEntry({ positioned, colWidth, rowHeight, viewMode, resou
   return (
     <>
       <div
-        ref={entryRef}
+        ref={refs.setReference}
         onClick={onClick}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
+        {...getReferenceProps()}
         className={cn(
           "absolute z-[6] cursor-pointer transition-all duration-150",
           "hover:brightness-95 hover:z-[7] active:scale-[0.98]",
@@ -372,117 +295,118 @@ export function CalendarEntry({ positioned, colWidth, rowHeight, viewMode, resou
         </div>
       </div>
 
-      {/* ── Rich Tooltip ── */}
-      {showTooltip && typeof document !== "undefined" && createPortal(
-        <div
-          ref={tooltipRef}
-          className="fixed z-[9999] pointer-events-none"
-          style={{ left: tooltipPos.left, top: tooltipPos.top }}
-        >
-          <div className="bg-foreground text-background rounded-xl px-4 py-3 text-[11px] leading-relaxed shadow-lg" style={{ width: TOOLTIP_W }}>
-            {/* Header: type + number + status */}
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-[10px] font-bold uppercase tracking-wider opacity-60">
-                {TYPE_LABELS[entry.type]}
-              </span>
-              {number && (
-                <span className="text-[10px] font-mono opacity-50">{number}</span>
-              )}
-              {bookingStatusInfo && (
-                <span className={cn("ml-auto text-[9px] font-bold px-2 py-0.5 rounded-full", bookingStatusInfo.bg, bookingStatusInfo.text)}>
-                  {bookingStatusInfo.label}
-                </span>
-              )}
-              {offerStatusInfo && (
-                <span className={cn("ml-auto text-[9px] font-bold px-2 py-0.5 rounded-full", offerStatusInfo.badgeCls)}>
-                  {offerStatusInfo.label}
-                </span>
-              )}
-              {entry.type === "BLOCK" && resStatus && (
-                <span className="ml-auto text-[9px] font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">
-                  {STATUS_LABELS[resStatus] || resStatus}
-                </span>
-              )}
-            </div>
-
-            {/* Client */}
-            {client && (
-              <div className="flex items-center gap-2 mb-2 pb-2 border-b border-background/10">
-                <div className="h-6 w-6 rounded-lg bg-background/15 flex items-center justify-center shrink-0">
-                  {client.companyName
-                    ? <Building2 className="h-3 w-3 opacity-70" />
-                    : <UserIcon className="h-3 w-3 opacity-70" />
-                  }
-                </div>
-                <span className="font-bold text-[12px]">{name}</span>
-              </div>
-            )}
-
-            {/* Dates */}
-            <div className="flex items-center gap-2 text-background/70">
-              <Calendar className="h-3 w-3 shrink-0" />
-              <span>{formatTooltipDate(entry.startAt)} → {formatTooltipDate(entry.endAt)}</span>
-            </div>
-
-            {/* Nights */}
-            <div className="flex items-center gap-2 text-background/70 mt-1">
-              <Clock className="h-3 w-3 shrink-0" />
-              <span>{nights} {nights === 1 ? "noc" : nights < 5 ? "noce" : "nocy"}</span>
-            </div>
-
-            {/* Multi-resource */}
-            {resourceCount > 1 && (
-              <div className="flex items-center gap-2 text-background/70 mt-1">
-                <Home className="h-3 w-3 shrink-0" />
-                <span>{resourceCount} zasobów w rezerwacji</span>
-              </div>
-            )}
-
-            {/* Block note */}
-            {entry.type === "BLOCK" && entry.note && (
-              <div className="text-background/50 mt-2 pt-2 border-t border-background/10 italic">
-                {entry.note}
-              </div>
-            )}
-
-            {/* Badges row */}
-            {entry.type === "BOOKING" && (
-              <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-background/10 flex-wrap">
-                {isCheckedIn && (
-                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-500 text-white">✓ Zameldowany</span>
-                )}
-                {needsAttention && (
-                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500 text-white">⚠ Problem</span>
-                )}
-                {isOverdue && (
-                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-red-500 text-white">! Po terminie</span>
-                )}
-                {paymentStatus === "PAID" && (
-                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-500 text-white">Opłacona</span>
-                )}
-                {paymentStatus === "PARTIAL" && (
-                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500 text-white">Częściowo</span>
-                )}
-                {paymentStatus === "UNPAID" && (
-                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gray-500 text-white">Nieopłacona</span>
-                )}
-              </div>
-            )}
-
-            {/* Arrow */}
+      {/* ── Rich Tooltip — Floating UI (ADR-20) ── */}
+      {showTooltip && (
+        <FloatingPortal>
+          <div
+            ref={refs.setFloating}
+            style={{ ...floatingStyles, zIndex: 99999, pointerEvents: "none" }}
+            {...getFloatingProps()}
+          >
             <div
-              className={cn(
-                "absolute w-0 h-0",
-                "border-l-[6px] border-r-[6px] border-l-transparent border-r-transparent",
-                tooltipPos.flipped
-                  ? "bottom-full border-b-[6px] border-b-foreground"
-                  : "top-full border-t-[6px] border-t-foreground"
+              className="text-background rounded-xl px-4 py-3 text-[11px] leading-relaxed shadow-lg relative"
+              style={{ width: TOOLTIP_W, background: TOOLTIP_BG }}
+            >
+              {/* Header: type + number + status */}
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider opacity-60">
+                  {TYPE_LABELS[entry.type]}
+                </span>
+                {number && (
+                  <span className="text-[10px] font-mono opacity-50">{number}</span>
+                )}
+                {bookingStatusInfo && (
+                  <span className={cn("ml-auto text-[9px] font-bold px-2 py-0.5 rounded-full", bookingStatusInfo.bg, bookingStatusInfo.text)}>
+                    {bookingStatusInfo.label}
+                  </span>
+                )}
+                {offerStatusInfo && (
+                  <span className={cn("ml-auto text-[9px] font-bold px-2 py-0.5 rounded-full", offerStatusInfo.badgeCls)}>
+                    {offerStatusInfo.label}
+                  </span>
+                )}
+                {entry.type === "BLOCK" && resStatus && (
+                  <span className="ml-auto text-[9px] font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">
+                    {STATUS_LABELS[resStatus] || resStatus}
+                  </span>
+                )}
+              </div>
+
+              {/* Client */}
+              {client && (
+                <div className="flex items-center gap-2 mb-2 pb-2 border-b border-background/10">
+                  <div className="h-6 w-6 rounded-lg bg-background/15 flex items-center justify-center shrink-0">
+                    {client.companyName
+                      ? <Building2 className="h-3 w-3 opacity-70" />
+                      : <UserIcon className="h-3 w-3 opacity-70" />
+                    }
+                  </div>
+                  <span className="font-bold text-[12px]">{name}</span>
+                </div>
               )}
-              style={{ left: tooltipPos.arrowLeft - 6 }}
-            />
+
+              {/* Dates */}
+              <div className="flex items-center gap-2 text-background/70">
+                <Calendar className="h-3 w-3 shrink-0" />
+                <span>{formatTooltipDate(entry.startAt)} → {formatTooltipDate(entry.endAt)}</span>
+              </div>
+
+              {/* Nights */}
+              <div className="flex items-center gap-2 text-background/70 mt-1">
+                <Clock className="h-3 w-3 shrink-0" />
+                <span>{nights} {nights === 1 ? "noc" : nights < 5 ? "noce" : "nocy"}</span>
+              </div>
+
+              {/* Multi-resource */}
+              {resourceCount > 1 && (
+                <div className="flex items-center gap-2 text-background/70 mt-1">
+                  <Home className="h-3 w-3 shrink-0" />
+                  <span>{resourceCount} zasobów w rezerwacji</span>
+                </div>
+              )}
+
+              {/* Block note */}
+              {entry.type === "BLOCK" && entry.note && (
+                <div className="text-background/50 mt-2 pt-2 border-t border-background/10 italic">
+                  {entry.note}
+                </div>
+              )}
+
+              {/* Badges row */}
+              {entry.type === "BOOKING" && (
+                <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-background/10 flex-wrap">
+                  {isCheckedIn && (
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-500 text-white">✓ Zameldowany</span>
+                  )}
+                  {needsAttention && (
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500 text-white">⚠ Problem</span>
+                  )}
+                  {isOverdue && (
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-red-500 text-white">! Po terminie</span>
+                  )}
+                  {paymentStatus === "PAID" && (
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-500 text-white">Opłacona</span>
+                  )}
+                  {paymentStatus === "PARTIAL" && (
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500 text-white">Częściowo</span>
+                  )}
+                  {paymentStatus === "UNPAID" && (
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gray-500 text-white">Nieopłacona</span>
+                  )}
+                </div>
+              )}
+
+              {/* Arrow — Floating UI managed */}
+              <FloatingArrow
+                ref={arrowRef}
+                context={context}
+                fill="hsl(var(--foreground))"
+                width={12}
+                height={6}
+              />
+            </div>
           </div>
-        </div>,
-        document.body
+        </FloatingPortal>
       )}
     </>
   );
