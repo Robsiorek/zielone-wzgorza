@@ -48,6 +48,7 @@ const menu: MenuGroup[] = [
       { title: "Zasoby", href: "/admin/resources", icon: Warehouse },
       { title: "Udogodnienia", href: "/admin/amenities", icon: Sparkles },
       { title: "Dodatki", href: "/admin/addons", icon: Package },
+      { title: "Treści obiektu", href: "/admin/property-content", icon: FileText },
       {
         title: "System cenowy", icon: DollarSign,
         children: [

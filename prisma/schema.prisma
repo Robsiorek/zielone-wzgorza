@@ -45,10 +45,13 @@ model Property {
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  resources    Resource[]
-  reservations Reservation[]
-  ratePlans    RatePlan[]
-  seasons      Season[]
+  resources       Resource[]
+  reservations    Reservation[]
+  ratePlans       RatePlan[]
+  seasons         Season[]
+  propertyContent PropertyContent?
+  trustBadges     TrustBadge[]
+  faqItems        FaqItem[]
   @@map("properties")
 }
 
@@ -1764,4 +1767,83 @@ enum WebhookLogStatus {
   SUCCESS
   FAILED
   RETRYING
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// B4: Property Content — guest-facing content (singleton per property)
+// Architectural rule: CompanySettings = operations, PropertyContent = content, Resource = product
+// ═══════════════════════════════════════════════════════════════════════
+
+model PropertyContent {
+  id                    String   @id @default(cuid())
+  propertyId            String   @unique
+
+  // Sekcja A — Hero / opis obiektu
+  heroTitle             String?
+  heroSubtitle          String?
+  shortDescription      String?  // max 300 znaków
+  fullDescription       String?  // max 10000, Markdown
+  locationDescription   String?  // max 3000
+
+  // Sekcja B — Zasady pobytu
+  checkInDescription    String?  // max 2000, opisowo (godzina w CompanySettings)
+  checkOutDescription   String?  // max 2000
+  parkingDescription    String?  // max 2000
+  petsDescription       String?  // max 2000
+  childrenDescription   String?  // max 2000
+  quietHoursDescription String?  // max 2000 — cisza nocna
+  houseRules            String?  // max 5000, Markdown
+  cancellationPolicy    String?  // max 5000, Markdown
+  paymentPolicy         String?  // max 5000, Markdown
+
+  // Sekcja C — Kontakt i lokalizacja dla gościa
+  guestContactPhone     String?
+  guestContactEmail     String?
+  guestContactWhatsapp  String?
+  guestAddressLine      String?
+  guestPostalCode       String?
+  guestCity             String?
+  guestCountry          String?  @default("PL")
+  googleMapsUrl         String?
+  directionsDescription String?  // max 3000
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  property              Property @relation(fields: [propertyId], references: [id])
+
+  @@map("property_content")
+}
+
+model TrustBadge {
+  id          String   @id @default(cuid())
+  propertyId  String
+  label       String   // max 100
+  iconKey     String   // walidacja isValidIconKey() z amenity-icons.ts
+  description String?  // max 300
+  position    Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  property    Property @relation(fields: [propertyId], references: [id])
+
+  @@index([propertyId, position])
+  @@map("trust_badges")
+}
+
+model FaqItem {
+  id         String   @id @default(cuid())
+  propertyId String
+  question   String   // max 300
+  answer     String   // max 5000, Markdown
+  position   Int      @default(0)
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  property   Property @relation(fields: [propertyId], references: [id])
+
+  @@index([propertyId, position])
+  @@map("faq_items")
 }

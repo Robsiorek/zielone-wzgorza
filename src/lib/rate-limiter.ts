@@ -111,3 +111,6 @@ export const bookLimiter = createRateLimiter({ windowMs: 60000, maxRequests: 5 }
 
 /** 60 req/min — resources catalog (read-only, cacheable) */
 export const catalogLimiter = createRateLimiter({ windowMs: 60000, maxRequests: 60 });
+
+/** 60 req/min — property content (read-only, cacheable) */
+export const propertyContentLimiter = createRateLimiter({ windowMs: 60000, maxRequests: 60 });
