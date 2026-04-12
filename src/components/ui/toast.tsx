@@ -113,7 +113,7 @@ function ToastItem({ toast: t, onDismiss }: { toast: Toast; onDismiss: (id: stri
 function Toaster({ toasts, dismiss }: { toasts: Toast[]; dismiss: (id: string) => void }) {
   if (toasts.length === 0) return null;
   return (
-    <div className="fixed bottom-5 right-5 z-[99999] flex flex-col-reverse gap-3 pointer-events-none"
+    <div className="fixed bottom-5 right-5 z-[600] flex flex-col-reverse gap-3 pointer-events-none"
       style={{ maxWidth: 400, width: "calc(100% - 40px)" }}>
       {toasts.map((t) => <ToastItem key={t.id} toast={t} onDismiss={dismiss} />)}
     </div>

@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
+import { Z, FloatingZContext } from "@/lib/z-layers";
 
 interface SlidePanelProps {
   open: boolean;
@@ -41,7 +42,7 @@ function SlidePanelContent({ open, onClose, title, children, width = 520 }: Slid
   if (!visible) return null;
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 9999 }}>
+    <div style={{ position: "fixed", inset: 0, zIndex: Z.SLIDE_PANEL }}>
       <div
         style={{
           position: "absolute", inset: 0,
@@ -70,7 +71,11 @@ function SlidePanelContent({ open, onClose, title, children, width = 520 }: Slid
             <X className="h-4 w-4" />
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto p-6">{children}</div>
+        <div className="flex-1 overflow-y-auto p-6">
+          <FloatingZContext.Provider value={Z.PANEL_DROPDOWN}>
+            {children}
+          </FloatingZContext.Provider>
+        </div>
       </div>
     </div>
   );

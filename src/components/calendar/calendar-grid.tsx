@@ -540,7 +540,7 @@ export function CalendarGrid({ resources, entries, days, today, viewMode, onEntr
       {/* ── Floating info during selection (portal) ── */}
       {phase === "selecting" && selection && selectionNights > 0 && selectionResource && typeof document !== "undefined" && createPortal(
         <div
-          className="fixed z-[9997] pointer-events-none"
+          className="fixed z-[80] pointer-events-none"
           style={{ left: mousePos.x + 16, top: mousePos.y - 40 }}
         >
           <div className="bg-foreground text-background rounded-xl px-3 py-2 text-[11px] shadow-lg whitespace-nowrap">
@@ -568,7 +568,7 @@ export function CalendarGrid({ resources, entries, days, today, viewMode, onEntr
       {showBubble && selection && typeof document !== "undefined" && createPortal(
         <div
           ref={bubbleRef}
-          className="fixed z-[9998] fade-in-scale"
+          className="fixed z-[90] fade-in-scale"
           style={{ left: bubblePos.x, top: bubblePos.y, transform: "translate(-50%, -50%)" }}
         >
           <div className="bg-card border-2 border-border rounded-2xl py-2 px-2" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12)" }}>

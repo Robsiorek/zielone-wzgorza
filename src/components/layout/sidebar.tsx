@@ -132,7 +132,7 @@ function MobileSubPage({
 }) {
   const Icon = item.icon;
   return (
-    <div className="fixed inset-0 bg-card z-[60] flex flex-col"
+    <div className="fixed inset-0 bg-card z-[250] flex flex-col"
       style={{ animation: "slideFromRight 0.25s cubic-bezier(0.16, 1, 0.3, 1) both" }}>
       <div className="flex items-center gap-3 px-5 py-5 shrink-0">
         <button onClick={onBack}

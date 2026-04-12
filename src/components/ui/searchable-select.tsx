@@ -8,6 +8,7 @@ import {
   useClick, useDismiss, useInteractions,
   autoUpdate, FloatingPortal,
 } from "@floating-ui/react";
+import { useFloatingZ } from "@/lib/z-layers";
 
 interface Option { value: string; label: string; }
 
@@ -23,6 +24,7 @@ interface SearchableSelectProps {
 export function SearchableSelect({ options, value, onChange, placeholder = "Wybierz...", label, searchable = true }: SearchableSelectProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const zIndex = useFloatingZ();
 
   const searchRef = useRef<HTMLInputElement>(null);
 
@@ -79,7 +81,7 @@ export function SearchableSelect({ options, value, onChange, placeholder = "Wybi
           {/* Outer: Floating UI positioning */}
           <div
             ref={refs.setFloating}
-            style={{ ...floatingStyles, zIndex: 99999 }}
+            style={{ ...floatingStyles, zIndex }}
             {...getFloatingProps()}
           >
             {/* Inner: visual styling (no position: absolute — Floating UI handles it) */}

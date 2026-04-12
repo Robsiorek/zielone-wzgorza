@@ -432,7 +432,7 @@ export function ReservationDetail({ bookingId }: { bookingId: string }) {
 
       {/* Cancel dialog */}
       {cancelDialog && typeof window !== "undefined" && createPortal(
-        <div style={{ position: "fixed", inset: 0, zIndex: 99999 }}>
+        <div style={{ position: "fixed", inset: 0, zIndex: 500 }}>
           <div className="absolute inset-0 bg-black/25 fade-in" style={{ backdropFilter: "blur(4px)" }}
             onClick={() => { setCancelDialog(false); setCancelReasonType(""); setCancelReason(""); }} />
           <div className="absolute inset-0 flex items-center justify-center p-6">

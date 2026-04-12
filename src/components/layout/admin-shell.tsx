@@ -33,7 +33,7 @@ export function AdminShell({ children, userName, userEmail }: { children: React.
       {isMobile && (
         <div
           className={cn(
-            "fixed inset-0 z-50 bg-card transition-transform duration-350 ease-out-expo",
+            "fixed inset-0 z-[250] bg-card transition-transform duration-350 ease-out-expo",
             mobileOpen ? "translate-x-0" : "-translate-x-full"
           )}
         >
@@ -49,7 +49,7 @@ export function AdminShell({ children, userName, userEmail }: { children: React.
       {/* Desktop: sidebar fixed left */}
       {!isMobile && (
         <div className={cn(
-          "fixed inset-y-0 left-0 z-30 transition-all duration-300 ease-out-expo",
+          "fixed inset-y-0 left-0 z-[200] transition-all duration-300 ease-out-expo",
           collapsed ? "w-[72px]" : "w-[264px]"
         )}>
           <Sidebar

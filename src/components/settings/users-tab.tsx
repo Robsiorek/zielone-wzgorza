@@ -292,7 +292,7 @@ export function UsersTab() {
 
       {/* Confirm deactivate dialog */}
       {confirmDeactivate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setConfirmDeactivate(null)}>
+        <div className="fixed inset-0 z-[500] flex items-center justify-center bg-black/50" onClick={() => setConfirmDeactivate(null)}>
           <div className="bubble mx-4 w-full max-w-[400px] p-6" onClick={e => e.stopPropagation()}>
             <h3 className="text-[16px] font-bold mb-2">
               {confirmDeactivate.isActive ? "Dezaktywuj użytkownika?" : "Aktywuj użytkownika?"}

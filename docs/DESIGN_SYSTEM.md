@@ -1049,7 +1049,36 @@ useFloatingDropdown({
 - `size()` (matchWidth / fixedWidth / maxHeight)
 - `useClick` lub `useHover` + `useFocus`
 - `useDismiss` (Escape + click outside)
-- `zIndex: 99999` na floatingStyles
+- z-index z `FloatingZContext` (domyślnie Z.DROPDOWN, w SlidePanel → Z.PANEL_DROPDOWN)
+
+**SKALA Z-INDEX — jedyne źródło prawdy: `src/lib/z-layers.ts`**
+
+| Warstwa | Token | z-index | Uwagi |
+|---------|-------|---------|-------|
+| Content | — | 0–10 | Calendar entries, sticky headers lokalne |
+| Calendar overlays | — | 80, 90 | Cursor follower, action bubble (wyjątki) |
+| Floating dropdowns | Z.DROPDOWN | 100 | Page-level: selecty, datepickery, tooltips |
+| Topbar + sidebar | Z.TOPBAR | 200 | Sticky topbar, desktop sidebar |
+| Topbar user menu | Z.TOPBAR_MENU | 210 | Dropdown profilu w topbarze |
+| Mobile sidebar | Z.SIDEBAR_MOBILE | 250 | Full-screen overlay |
+| SlidePanel | Z.SLIDE_PANEL | 300 | Overlay + panel |
+| Panel dropdowns | Z.PANEL_DROPDOWN | 400 | Dropdowny WEWNĄTRZ SlidePanel |
+| ConfirmDialog | Z.CONFIRM | 500 | Potwierdzenia, modalne dialogi |
+| Toast | Z.TOAST | 600 | Notyfikacje — zawsze widoczne |
+| Loading | Z.LOADING | 700 | App-wide loading overlay |
+
+**Kluczowy mechanizm — FloatingZContext:**
+- SlidePanel owija children w `<FloatingZContext.Provider value={Z.PANEL_DROPDOWN}>`
+- Każdy dropdown wewnątrz automatycznie dostaje z-index 400 (> panel 300)
+- Na poziomie strony domyślnie 100 (< topbar 200)
+- Zero zmian w komponentach — Context robi to za nas
+- Hook czyta z kontekstu: `const zIndex = useFloatingZ()`
+- Standalone komponenty (BubbleSelect, Tooltip) też czytają `useFloatingZ()`
+
+**ZAKAZ:**
+- ❌ Hardcoded `zIndex: 99999` — NIGDY WIĘCEJ
+- ❌ `z-[9999]`, `z-[99999]` w Tailwind — zastąpione tokenami
+- ❌ Nowe warstwy bez wpisu w z-layers.ts
 
 **Zachowanie (standard jak Booking.com):**
 - Scroll strony przy otwartym dropdownie → element SIEDZI pod triggerem

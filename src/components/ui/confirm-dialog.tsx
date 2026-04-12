@@ -38,7 +38,7 @@ export function ConfirmDialog({
   if (!open || typeof window === "undefined") return null;
 
   return createPortal(
-    <div style={{ position: "fixed", inset: 0, zIndex: 99999 }}>
+    <div style={{ position: "fixed", inset: 0, zIndex: 500 }}>
       <div
         style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.25)", backdropFilter: "blur(4px)" }}
         className="fade-in"

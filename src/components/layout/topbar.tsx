@@ -85,7 +85,7 @@ export function Topbar({ sidebarCollapsed, userName, userEmail, onMenuClick, isM
     // Full-screen loader
     const overlay = document.createElement("div");
     overlay.innerHTML = `
-      <div style="position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+      <div style="position:fixed;inset:0;z-index:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
         background:${next ? "hsl(220 15% 8%)" : "hsl(210 20% 98%)"};transition:opacity 150ms ease;">
         <div style="width:32px;height:32px;border:3px solid ${next ? "hsl(214 89% 52% / 0.2)" : "hsl(214 89% 52% / 0.2)"};
           border-top-color:hsl(214 89% 52%);border-radius:50%;animation:spin 0.6s linear infinite;"></div>
@@ -144,7 +144,7 @@ export function Topbar({ sidebarCollapsed, userName, userEmail, onMenuClick, isM
   }, []);
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b px-4 md:px-6 transition-all duration-300 bg-card/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-[200] flex h-16 items-center justify-between border-b px-4 md:px-6 transition-all duration-300 bg-card/80 backdrop-blur-xl">
 
       {/* ── Left: hamburger + breadcrumbs ── */}
       <div className="flex items-center gap-2 min-w-0 flex-shrink-0">
@@ -258,7 +258,7 @@ export function Topbar({ sidebarCollapsed, userName, userEmail, onMenuClick, isM
               borderRadius: 16,
               border: "2px solid hsl(var(--border))",
               boxShadow: "0 8px 30px rgba(0,0,0,0.08)",
-              zIndex: 50,
+              zIndex: 210,
               overflow: "hidden",
             }}>
               <div className="px-4 py-3.5" style={{ borderBottom: "1px solid hsl(var(--border) / 0.5)" }}>

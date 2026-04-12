@@ -10,6 +10,7 @@ import {
   useHover, useDismiss, useInteractions,
   autoUpdate, FloatingPortal, FloatingArrow, arrow,
 } from "@floating-ui/react";
+import { useFloatingZ } from "@/lib/z-layers";
 import type { TimelineEntry } from "@/components/calendar/calendar-content";
 
 type ViewMode = "month" | "2weeks" | "week";
@@ -144,6 +145,7 @@ export function CalendarEntry({ positioned, colWidth, rowHeight, viewMode, resou
 
   // ── Floating UI tooltip (ADR-20) ──
   const [showTooltip, setShowTooltip] = React.useState(false);
+  const zIndex = useFloatingZ();
 
   const { refs, floatingStyles, context } = useFloating({
     open: showTooltip,
@@ -300,7 +302,7 @@ export function CalendarEntry({ positioned, colWidth, rowHeight, viewMode, resou
         <FloatingPortal>
           <div
             ref={refs.setFloating}
-            style={{ ...floatingStyles, zIndex: 99999, pointerEvents: "none" }}
+            style={{ ...floatingStyles, zIndex, pointerEvents: "none" }}
             {...getFloatingProps()}
           >
             <div

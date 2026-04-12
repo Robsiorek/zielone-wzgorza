@@ -9,8 +9,11 @@
  *
  * Komponent renderuje <FloatingPortal> sam — hook daje refs i style.
  *
+ * Z-index pochodzi z FloatingZContext:
+ * - domyślnie Z.DROPDOWN (100) — poniżej topbara
+ * - wewnątrz SlidePanel → Z.PANEL_DROPDOWN (400) — powyżej panelu
+ *
  * ADR-20: Jedyny system pozycjonowania panelu.
- * Zakaz: getBoundingClientRect + ręczne top/left + createPortal(…, document.body).
  *
  * WAŻNE (Rules of Hooks): Wszystkie hooki Floating UI (useClick, useHover,
  * useFocus, useDismiss) są wywoływane ZAWSZE na top level z flagą `enabled`.
@@ -32,6 +35,7 @@ import {
   useInteractions,
   type Placement,
 } from "@floating-ui/react";
+import { useFloatingZ } from "@/lib/z-layers";
 
 export interface UseFloatingDropdownOptions {
   /** Placement relative to trigger. Default: 'bottom-start' */
@@ -77,6 +81,9 @@ export function useFloatingDropdown(options: UseFloatingDropdownOptions = {}) {
     defaultOpen = false,
     onOpenChange,
   } = options;
+
+  // ── z-index from context (Z.DROPDOWN on page, Z.PANEL_DROPDOWN in SlidePanel) ──
+  const zIndex = useFloatingZ();
 
   // ── Controlled vs uncontrolled open state ──
   const [internalOpen, setInternalOpen] = useState(defaultOpen);
@@ -160,10 +167,10 @@ export function useFloatingDropdown(options: UseFloatingDropdownOptions = {}) {
     dismiss,
   ]);
 
-  // ── Merge zIndex into floatingStyles ──
+  // ── Merge zIndex from context into floatingStyles ──
   const styles = useMemo(
-    () => ({ ...floatingStyles, zIndex: 99999 }),
-    [floatingStyles]
+    () => ({ ...floatingStyles, zIndex }),
+    [floatingStyles, zIndex]
   );
 
   return {

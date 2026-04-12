@@ -257,7 +257,7 @@ function RejectDialog({ paymentId, reason, onReasonChange, loading, onConfirm, o
   if (!paymentId) return null;
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 99999 }}>
+    <div style={{ position: "fixed", inset: 0, zIndex: 500 }}>
       <div className="absolute inset-0 bg-black/25 fade-in" style={{ backdropFilter: "blur(4px)" }}
         onClick={onCancel} />
       <div className="absolute inset-0 flex items-center justify-center p-6">
