@@ -8,7 +8,7 @@ import {
   useClick, useDismiss, useInteractions,
   autoUpdate, FloatingPortal,
 } from "@floating-ui/react";
-import { useFloatingZ } from "@/lib/z-layers";
+import { useFloatingZ, useFloatingPortalRoot } from "@/lib/z-layers";
 
 export interface SelectOption {
   value: string;
@@ -30,6 +30,7 @@ export function BubbleSelect({ options, value, onChange, placeholder = "Wybierz.
   const [open, setOpen] = useState(false);
   const selected = options.find(o => o.value === value);
   const zIndex = useFloatingZ();
+  const portalRoot = useFloatingPortalRoot();
 
   const { refs, floatingStyles, context } = useFloating({
     open,
@@ -80,10 +81,10 @@ export function BubbleSelect({ options, value, onChange, placeholder = "Wybierz.
       </button>
 
       {open && (
-        <FloatingPortal>
+        <FloatingPortal root={portalRoot}>
           <div
             ref={refs.setFloating}
-            style={{ ...floatingStyles, zIndex }}
+            style={{ ...floatingStyles, zIndex, pointerEvents: "auto" }}
             {...getFloatingProps()}
           >
             <div

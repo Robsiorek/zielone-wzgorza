@@ -8,7 +8,7 @@ import {
   useClick, useDismiss, useInteractions,
   autoUpdate, FloatingPortal,
 } from "@floating-ui/react";
-import { useFloatingZ } from "@/lib/z-layers";
+import { useFloatingZ, useFloatingPortalRoot } from "@/lib/z-layers";
 
 interface Option { value: string; label: string; }
 
@@ -25,6 +25,7 @@ export function SearchableSelect({ options, value, onChange, placeholder = "Wybi
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const zIndex = useFloatingZ();
+  const portalRoot = useFloatingPortalRoot();
 
   const searchRef = useRef<HTMLInputElement>(null);
 
@@ -77,11 +78,11 @@ export function SearchableSelect({ options, value, onChange, placeholder = "Wybi
         <ChevronDown className={cn("h-3.5 w-3.5 text-muted-foreground transition-transform duration-300 ease-out-expo", open && "rotate-180")} />
       </button>
       {open && (
-        <FloatingPortal>
+        <FloatingPortal root={portalRoot}>
           {/* Outer: Floating UI positioning */}
           <div
             ref={refs.setFloating}
-            style={{ ...floatingStyles, zIndex }}
+            style={{ ...floatingStyles, zIndex, pointerEvents: "auto" }}
             {...getFloatingProps()}
           >
             {/* Inner: visual styling (no position: absolute — Floating UI handles it) */}

@@ -417,31 +417,32 @@ export function UnifiedPanel({ open, onClose, onCreated, initialTab, prefill, mo
 
         {!editLoading && (
           <>
-            {/* ── Tabs (only in create mode) ── */}
-            {!isEdit && (
-              <div className="flex gap-2 mb-6">
-                {TABS.map(tab => {
-                  const Icon = tab.icon;
-                  const active = form.activeTab === tab.value;
-                  return (
-                    <button
-                      key={tab.value}
-                      onClick={() => form.switchTab(tab.value)}
-                      className={cn(
-                        "btn-bubble flex-1 flex items-center justify-center gap-2 py-2.5 text-[13px] font-semibold rounded-2xl transition-all",
-                        active ? "btn-primary-bubble" : "btn-secondary-bubble"
-                      )}
-                    >
-                      <Icon className={cn("h-3.5 w-3.5", !active && tab.iconColor)} />
-                      {tab.label}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-
             {/* ── Scrollable form ── */}
             <div className="flex-1 overflow-y-auto space-y-6 pb-4">
+
+              {/* ── Tabs (only in create mode) — scroll with content ── */}
+              {!isEdit && (
+                <div className="flex gap-2">
+                  {TABS.map(tab => {
+                    const Icon = tab.icon;
+                    const active = form.activeTab === tab.value;
+                    return (
+                      <button
+                        key={tab.value}
+                        onClick={() => form.switchTab(tab.value)}
+                        className={cn(
+                          "btn-bubble flex-1 flex items-center justify-center gap-2 py-2.5 text-[13px] font-semibold rounded-2xl transition-all",
+                          active ? "btn-primary-bubble" : "btn-secondary-bubble"
+                        )}
+                      >
+                        <Icon className={cn("h-3.5 w-3.5", !active && tab.iconColor)} />
+                        {tab.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
               <DatesSection
                 startDate={form.startDate} endDate={form.endDate} nights={form.nights}
                 onStartDateChange={form.setStartDate} onEndDateChange={form.setEndDate}

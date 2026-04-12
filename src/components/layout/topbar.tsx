@@ -260,6 +260,8 @@ export function Topbar({ sidebarCollapsed, userName, userEmail, onMenuClick, isM
               boxShadow: "0 8px 30px rgba(0,0,0,0.08)",
               zIndex: 210,
               overflow: "hidden",
+              animation: "scaleIn 0.15s cubic-bezier(0.16, 1, 0.3, 1) both",
+              transformOrigin: "top right",
             }}>
               <div className="px-4 py-3.5" style={{ borderBottom: "1px solid hsl(var(--border) / 0.5)" }}>
                 <p className="text-[14px] font-bold">{userName || "Admin"}</p>

@@ -44,7 +44,7 @@ export function BubbleColorPicker({ value, onChange, label }: BubbleColorPickerP
   const nativeRef = useRef<HTMLInputElement>(null);
 
   // ── Floating UI (ADR-20) ──
-  const { refs, floatingStyles, getReferenceProps, getFloatingProps, open, setOpen } =
+  const { refs, floatingStyles, getReferenceProps, getFloatingProps, open, setOpen, portalRoot } =
     useFloatingDropdown({ placement: "bottom-start", fixedWidth: 280 });
 
   // Sync hex input with value prop
@@ -82,7 +82,7 @@ export function BubbleColorPicker({ value, onChange, label }: BubbleColorPickerP
 
       {/* Color picker dropdown — Floating UI portal (ADR-20) */}
       {open && (
-        <FloatingPortal>
+        <FloatingPortal root={portalRoot}>
           <div
             ref={refs.setFloating}
             style={floatingStyles}

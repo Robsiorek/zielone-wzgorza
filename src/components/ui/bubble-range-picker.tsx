@@ -81,7 +81,7 @@ export function BubbleRangePicker({ checkIn, checkOut, onChange, min }: BubbleRa
   const [hoverDate, setHoverDate] = useState<string | null>(null);
 
   // ── Floating UI (ADR-20) — onOpenChange handles selectionPhase ──
-  const { refs, floatingStyles, getReferenceProps, getFloatingProps, open, setOpen } =
+  const { refs, floatingStyles, getReferenceProps, getFloatingProps, open, setOpen, portalRoot } =
     useFloatingDropdown({
       placement: "bottom",
       fixedWidth: 320,
@@ -207,7 +207,7 @@ export function BubbleRangePicker({ checkIn, checkOut, onChange, min }: BubbleRa
 
       {/* Calendar dropdown — Floating UI portal (ADR-20) */}
       {open && (
-        <FloatingPortal>
+        <FloatingPortal root={portalRoot}>
           <div
             ref={refs.setFloating}
             style={floatingStyles}

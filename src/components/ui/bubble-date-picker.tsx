@@ -63,7 +63,7 @@ export function BubbleDatePicker({
   max,
 }: BubbleDatePickerProps) {
   // ── Floating UI (ADR-20) ──
-  const { refs, floatingStyles, getReferenceProps, getFloatingProps, open, setOpen } =
+  const { refs, floatingStyles, getReferenceProps, getFloatingProps, open, setOpen, portalRoot } =
     useFloatingDropdown({ placement: "bottom-start", fixedWidth: 296 });
 
   // Calendar view state — initialize from value or today
@@ -191,7 +191,7 @@ export function BubbleDatePicker({
 
       {/* Calendar dropdown — Floating UI portal (ADR-20) */}
       {open && (
-        <FloatingPortal>
+        <FloatingPortal root={portalRoot}>
           <div
             ref={refs.setFloating}
             style={floatingStyles}

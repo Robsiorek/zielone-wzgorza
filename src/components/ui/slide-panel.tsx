@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
-import { Z, FloatingZContext } from "@/lib/z-layers";
+import { Z, FloatingZContext, FloatingPortalRootContext } from "@/lib/z-layers";
 
 interface SlidePanelProps {
   open: boolean;
@@ -16,6 +16,7 @@ interface SlidePanelProps {
 function SlidePanelContent({ open, onClose, title, children, width = 520 }: SlidePanelProps) {
   const [visible, setVisible] = useState(false);
   const [closing, setClosing] = useState(false);
+  const portalRootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (open) {
@@ -62,7 +63,11 @@ function SlidePanelContent({ open, onClose, title, children, width = 520 }: Slid
         }}
         className="bg-card border-l slide-in"
       >
-        <div className="flex items-center justify-between px-6 h-16 border-b shrink-0">
+        {/* Header — z-[20]: above portal root (z-[10]), above dropdowns */}
+        <div
+          className="flex items-center justify-between px-6 h-16 border-b shrink-0 bg-card"
+          style={{ position: "relative", zIndex: 20 }}
+        >
           <div className="text-[15px] font-semibold flex-1 min-w-0">{title}</div>
           <button
             onClick={handleClose}
@@ -71,11 +76,28 @@ function SlidePanelContent({ open, onClose, title, children, width = 520 }: Slid
             <X className="h-4 w-4" />
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto p-6">
+
+        {/* Content — z-[1]: below portal root */}
+        <div className="flex-1 overflow-y-auto p-6" style={{ position: "relative", zIndex: 1 }}>
           <FloatingZContext.Provider value={Z.PANEL_DROPDOWN}>
-            {children}
+            <FloatingPortalRootContext.Provider value={portalRootRef}>
+              {children}
+            </FloatingPortalRootContext.Provider>
           </FloatingZContext.Provider>
         </div>
+
+        {/* Portal root for dropdowns — z-[10]: above content, below header.
+            Dropdowns render here via FloatingPortal root={portalRootRef}.
+            pointer-events:none so scrolling passes through to content. */}
+        <div
+          ref={portalRootRef}
+          style={{
+            position: "absolute",
+            left: 0, right: 0, top: 64, bottom: 0,
+            zIndex: 10,
+            pointerEvents: "none",
+          }}
+        />
       </div>
     </div>
   );

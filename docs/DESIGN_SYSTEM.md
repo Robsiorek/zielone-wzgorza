@@ -1,5 +1,5 @@
 # DESIGN SYSTEM — Zielone Wzgórza Admin Panel
-# Wersja 1.6 | Kwiecień 2026
+# Wersja 1.7 | Kwiecień 2026
 # Ten plik jest JEDYNYM źródłem prawdy dla stylu wizualnego panelu.
 # Czytaj go na starcie KAŻDEGO czatu przed generowaniem kodu.
 
@@ -810,6 +810,24 @@ Level 1: CalendarDetailPanel (szczegóły rezerwacji)
 
 Klik w overlay zamyka bieżący panel. Strzałka ← cofa o jeden poziom.
 
+### Wewnętrzna architektura warstw (z-layers)
+
+SlidePanel: `position: fixed, inset: 0, z-index: Z.SLIDE_PANEL (300)`.
+
+Panel content div ma `transform: translateX(...)` dla animacji slide.
+To tworzy nowy containing block — `position: fixed` wewnątrz panelu
+jest relatywne do panelu, nie do viewportu. Floating UI obsługuje to poprawnie.
+
+Trzy warstwy wewnątrz panelu:
+- Header: `position: relative, z-index: 20` — przykrywa dropdowny
+- Portal root: `position: absolute, inset: 0, top: 64px, z-index: 10,
+  pointer-events: none` — tu renderują się dropdowny (FloatingPortal root)
+- Content: `position: relative, z-index: 1` — formularz, overflow-y: auto
+
+SlidePanel dostarcza `FloatingZContext` i `FloatingPortalRootContext`
+do children. Dropdowny automatycznie renderują w portal root (nie na body),
+więc header je przykrywa. Pełny opis w §28.
+
 ---
 
 ## 20. TOGGLE SWITCH (zamiast checkbox)
@@ -1057,23 +1075,49 @@ useFloatingDropdown({
 |---------|-------|---------|-------|
 | Content | — | 0–10 | Calendar entries, sticky headers lokalne |
 | Calendar overlays | — | 80, 90 | Cursor follower, action bubble (wyjątki) |
-| Floating dropdowns | Z.DROPDOWN | 100 | Page-level: selecty, datepickery, tooltips |
+| Floating dropdowns | Z.DROPDOWN | 100 | Page-level: selecty, datepickery |
 | Topbar + sidebar | Z.TOPBAR | 200 | Sticky topbar, desktop sidebar |
 | Topbar user menu | Z.TOPBAR_MENU | 210 | Dropdown profilu w topbarze |
+| Tooltips | Z.TOOLTIP | 220 | Czarne dymki — ZAWSZE na body, powyżej topbara |
 | Mobile sidebar | Z.SIDEBAR_MOBILE | 250 | Full-screen overlay |
 | SlidePanel | Z.SLIDE_PANEL | 300 | Overlay + panel |
-| Panel dropdowns | Z.PANEL_DROPDOWN | 400 | Dropdowny WEWNĄTRZ SlidePanel |
+| Panel dropdowns | Z.PANEL_DROPDOWN | 10 | LOKALNE w stacking context panelu |
 | ConfirmDialog | Z.CONFIRM | 500 | Potwierdzenia, modalne dialogi |
 | Toast | Z.TOAST | 600 | Notyfikacje — zawsze widoczne |
 | Loading | Z.LOADING | 700 | App-wide loading overlay |
 
-**Kluczowy mechanizm — FloatingZContext:**
-- SlidePanel owija children w `<FloatingZContext.Provider value={Z.PANEL_DROPDOWN}>`
-- Każdy dropdown wewnątrz automatycznie dostaje z-index 400 (> panel 300)
-- Na poziomie strony domyślnie 100 (< topbar 200)
-- Zero zmian w komponentach — Context robi to za nas
-- Hook czyta z kontekstu: `const zIndex = useFloatingZ()`
-- Standalone komponenty (BubbleSelect, Tooltip) też czytają `useFloatingZ()`
+**Tooltip vs Dropdown — dwa różne mechanizmy:**
+- Dropdowny (selecty, datepickery): Z.DROPDOWN=100, PONIŻEJ topbara (200).
+  W SlidePanel renderują przez portal root wewnątrz panelu.
+- Tooltipy (czarne dymki): Z.TOOLTIP=220, POWYŻEJ topbara (200).
+  ZAWSZE renderują na `document.body` (nigdy w portal root).
+  Tooltip NIE używa `useFloatingZ()` — ma hardcoded `Z.TOOLTIP`.
+
+**Kluczowy mechanizm — FloatingZContext + FloatingPortalRootContext:**
+
+SlidePanel dostarcza DWA contexty:
+- `FloatingZContext.Provider value={Z.PANEL_DROPDOWN}` — z-index
+- `FloatingPortalRootContext.Provider value={portalRootRef}` — portal root
+
+**SlidePanel — 3 warstwy wewnętrzne:**
+- Header: `position: relative, z-index: 20` — przykrywa dropdowny
+- Portal root: `position: absolute, z-index: 10` — tu renderują się dropdowny
+- Content: `position: relative, z-index: 1` — formularz, scrollowalny
+
+Efekt:
+- Dropdown na stronie (z-100) → PONIŻEJ topbara (z-200) ✓
+- Dropdown w SlidePanel → renderuje w portal root → PONIŻEJ headera panelu ✓
+- Tooltip (z-220) → POWYŻEJ topbara → zawsze czytelny ✓
+
+**Hook + portalRoot:**
+Hook zwraca `portalRoot` z kontekstu. Komponent przekazuje do FloatingPortal:
+```tsx
+const { refs, floatingStyles, ..., portalRoot } = useFloatingDropdown({ ... });
+// ...
+<FloatingPortal root={portalRoot}>
+```
+Na stronie: `portalRoot = undefined` → renders to body.
+W SlidePanel: `portalRoot = div wewnątrz panelu` → renders inside panel.
 
 **ZAKAZ:**
 - ❌ Hardcoded `zIndex: 99999` — NIGDY WIĘCEJ
@@ -1093,10 +1137,10 @@ useFloatingDropdown({
 - BubbleColorPicker (fixedWidth: 280)
 
 **Komponenty na Floating UI bezpośrednio:**
-- Tooltip (useHover + arrow — dedykowany komponent §16.1)
-- BubbleSelect (matchWidth)
-- SearchableSelect (matchWidth)
-- CalendarEntry tooltip (useHover + arrow, placement: 'top')
+- Tooltip (Z.TOOLTIP=220, zawsze body, useHover + arrow — §16.1)
+- CalendarEntry tooltip (Z.TOOLTIP=220, zawsze body, useHover + arrow)
+- BubbleSelect (matchWidth, useFloatingZ + useFloatingPortalRoot)
+- SearchableSelect (matchWidth, useFloatingZ + useFloatingPortalRoot)
 
 **Udokumentowane wyjątki (NIE na Floating UI):**
 
@@ -1142,4 +1186,55 @@ są osobną kategorią wyjątków:
 **Nowy dropdown = 3 kroki:**
 1. `useFloatingDropdown({ placement, fixedWidth })` w komponencie
 2. `ref={refs.setReference} {...getReferenceProps()}` na trigger
-3. `<FloatingPortal>` + `ref={refs.setFloating} style={floatingStyles}` na dropdown
+3. `<FloatingPortal root={portalRoot}>` + `ref={refs.setFloating} style={floatingStyles}` na dropdown
+
+## 29. SUMMARY SECTION — WZORZEC KOLAPSOWANEGO PODSUMOWANIA
+
+**Plik:** `src/components/unified-panel/sections/summary-section.tsx`
+
+Sticky footer w SlidePanel z kolapsowalnymi szczegółami.
+
+**Struktura:**
+- Floating pill toggle — wyśrodkowany na górnej krawędzi boxa
+- Collapsible details — lista zasobów z cenami (max-height 200px, scroll)
+- Total row — "Razem" + kwota + liczba osób (zawsze widoczne)
+- Submit button — zawsze widoczny
+
+**Floating pill toggle:**
+- Pozycja: `absolute left-1/2 -translate-x-1/2 -top-[14px]`
+- Styl: `rounded-full bg-card border-2 border-border shadow-sm`
+- Rozwinięte: `↓ zwiń` / Zwinięte: `↑ rozwiń`
+- Hover: `border-primary/30 shadow-md`
+- Font: `text-[11px] font-semibold text-muted-foreground`
+
+**Auto-collapse:** Domyślnie zwinięte gdy 3+ zasoby. useEffect śledzi
+`selectedResources.length`.
+
+**Animacja:** `maxHeight` + `opacity` transition 250ms ease-out.
+
+**Sticky footer margins:** `-mx-6 -mb-6` wyrównuje do krawędzi SlidePanel
+content area. `border-top: 2px solid border`.
+
+## 30. UNIFIED PANEL — WZORZEC FORMULARZA REZERWACJI
+
+**Plik:** `src/components/unified-panel/unified-panel.tsx`
+
+**Taby (Rezerwacja / Oferta / Blokada):**
+- Renderowane WEWNĄTRZ `overflow-y: auto` diva
+- Scrollują się z contentem — NIE są sticky
+- Tylko title bar SlidePanel ("Nowa rezerwacja") jest sticky
+- Bez `mb-6` — spacing zapewnia `space-y-6` na rodzicu
+
+**Layout w SlidePanel:**
+```
+<div flex flex-col h-full>
+  <div flex-1 overflow-y-auto space-y-6>
+    Taby (scrollowalne)
+    DatesSection
+    ClientSection
+    ResourcesSection
+    ...
+  </div>
+  SummarySection (sticky footer, §29)
+</div>
+```

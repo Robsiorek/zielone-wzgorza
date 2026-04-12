@@ -35,7 +35,7 @@ import {
   useInteractions,
   type Placement,
 } from "@floating-ui/react";
-import { useFloatingZ } from "@/lib/z-layers";
+import { useFloatingZ, useFloatingPortalRoot } from "@/lib/z-layers";
 
 export interface UseFloatingDropdownOptions {
   /** Placement relative to trigger. Default: 'bottom-start' */
@@ -84,6 +84,9 @@ export function useFloatingDropdown(options: UseFloatingDropdownOptions = {}) {
 
   // ── z-index from context (Z.DROPDOWN on page, Z.PANEL_DROPDOWN in SlidePanel) ──
   const zIndex = useFloatingZ();
+
+  // ── Portal root from context (body on page, div inside SlidePanel) ──
+  const portalRoot = useFloatingPortalRoot();
 
   // ── Controlled vs uncontrolled open state ──
   const [internalOpen, setInternalOpen] = useState(defaultOpen);
@@ -169,7 +172,7 @@ export function useFloatingDropdown(options: UseFloatingDropdownOptions = {}) {
 
   // ── Merge zIndex from context into floatingStyles ──
   const styles = useMemo(
-    () => ({ ...floatingStyles, zIndex }),
+    () => ({ ...floatingStyles, zIndex, pointerEvents: "auto" as const }),
     [floatingStyles, zIndex]
   );
 
@@ -181,5 +184,7 @@ export function useFloatingDropdown(options: UseFloatingDropdownOptions = {}) {
     getFloatingProps,
     open: isOpen,
     setOpen: handleOpenChange,
+    /** Pass to <FloatingPortal root={portalRoot}>. undefined = body. */
+    portalRoot,
   };
 }

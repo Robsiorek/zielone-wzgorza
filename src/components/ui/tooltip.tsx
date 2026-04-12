@@ -6,7 +6,7 @@ import {
   useHover, useFocus, useDismiss, useRole, useInteractions,
   autoUpdate, FloatingPortal, FloatingArrow,
 } from "@floating-ui/react";
-import { useFloatingZ } from "@/lib/z-layers";
+import { Z } from "@/lib/z-layers";
 
 type Props = {
   content: React.ReactNode;
@@ -31,7 +31,7 @@ function injectStyles() {
 export function Tooltip({ content, children, side = "top", delay = 180, disabled = false, maxWidth = 280 }: Props) {
   const [open, setOpen] = useState(false);
   const arrowRef = useRef<SVGSVGElement>(null);
-  const zIndex = useFloatingZ();
+  const zIndex = Z.TOOLTIP;
   useEffect(() => { injectStyles(); }, []);
 
   const { refs, floatingStyles, context } = useFloating({
