@@ -21,6 +21,8 @@ interface SectionCardProps {
   children: React.ReactNode;
   defaultOpen?: boolean;
   action?: React.ReactNode;
+  /** Optional callback when section is toggled. Does not change internal state management. */
+  onToggle?: (open: boolean) => void;
 }
 
 export function SectionCard({
@@ -30,25 +32,30 @@ export function SectionCard({
   children,
   defaultOpen = true,
   action,
+  onToggle,
 }: SectionCardProps) {
   const [open, setOpen] = useState(defaultOpen);
   const [overflowVisible, setOverflowVisible] = useState(defaultOpen);
 
   useEffect(() => {
     if (open) {
-      // After animation completes (300ms), allow overflow for dropdowns
       const timer = setTimeout(() => setOverflowVisible(true), 320);
       return () => clearTimeout(timer);
     } else {
-      // Immediately hide overflow when closing
       setOverflowVisible(false);
     }
   }, [open]);
 
+  const handleToggle = () => {
+    const next = !open;
+    setOpen(next);
+    onToggle?.(next);
+  };
+
   return (
     <div className="bubble" style={{ overflow: "visible" }}>
       <button
-        onClick={() => setOpen(!open)}
+        onClick={handleToggle}
         className="w-full flex items-center gap-3 px-5 py-4 hover:bg-muted/20 transition-colors rounded-2xl"
       >
         <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">

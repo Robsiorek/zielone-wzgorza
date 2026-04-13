@@ -31,6 +31,7 @@ import {
 import {
   Landmark, ScrollText, MapPin, Phone, Award, HelpCircle,
   Plus, Check, Loader2, GripVertical, Pencil, Trash2, Search, X, Info,
+  Lightbulb, Eye,
 } from "lucide-react";
 
 // ═══════════════════════════════════════════════════
@@ -186,6 +187,149 @@ function ToggleSwitch({ checked, onChange, label }: {
 }
 
 // ═══════════════════════════════════════════════════
+// Help panel — contextual info per section
+// ═══════════════════════════════════════════════════
+
+type HelpSectionKey = "hero" | "rules" | "location" | "contact" | "badges" | "faq";
+
+interface HelpContent {
+  title: string;
+  description: string;
+  tips: string[];
+  visibleIn: string[];
+}
+
+const SECTION_HELP: Record<HelpSectionKey, HelpContent> = {
+  hero: {
+    title: "Sekcja Hero",
+    description: "Te treści wyświetlają się jako pierwsze — w nagłówku strony obiektu i na karcie w wynikach wyszukiwania. Krótki opis pojawia się też w widgecie rezerwacyjnym.",
+    tips: [
+      "Tytuł hero to nazwa Twojego obiektu widoczna na samej górze strony.",
+      "Krótki opis (300 znaków) wyświetla się na kartach — pisz zwięźle i konkretnie.",
+      "Pełny opis pojawia się po kliknięciu \"Czytaj więcej\" na stronie obiektu.",
+    ],
+    visibleIn: ["Strona główna", "Widget rezerwacyjny", "Wyniki wyszukiwania"],
+  },
+  rules: {
+    title: "Zasady i regulaminy",
+    description: "Gość widzi te informacje przed dokonaniem rezerwacji. Jasne zasady budują zaufanie i zmniejszają liczbę pytań od gości.",
+    tips: [
+      "Podaj konkretne godziny zameldowania i wymeldowania.",
+      "Regulamin i polityki akceptowane są przez gościa przy rezerwacji.",
+      "Pola obsługują Markdown — możesz formatować tekst, listy i nagłówki.",
+    ],
+    visibleIn: ["Strona obiektu", "Potwierdzenie rezerwacji", "E-mail powitalny"],
+  },
+  location: {
+    title: "Lokalizacja",
+    description: "Adres i wskazówki dojazdu. Link do Google Maps otworzy się w nowej karcie u gościa. Opis dojazdu pomoże tym, którzy korzystają z nawigacji.",
+    tips: [
+      "Wklej pełny link z Google Maps — gość kliknie i otworzy nawigację.",
+      "W opisie dojazdu podaj punkty orientacyjne i zjazdy z drogi głównej.",
+      "Adres wyświetla się również w stopce e-maili wysyłanych do gości.",
+    ],
+    visibleIn: ["Strona obiektu", "E-mail z potwierdzeniem", "Stopka strony"],
+  },
+  contact: {
+    title: "Dane kontaktowe",
+    description: "Dane kontaktowe widoczne publicznie dla gości. Telefon i e-mail są klikalne — gość może od razu zadzwonić lub napisać wiadomość.",
+    tips: [
+      "Podaj numer, na który goście mogą dzwonić w sprawie rezerwacji.",
+      "WhatsApp jest opcjonalny — jeśli go używasz, goście chętnie piszą tą drogą.",
+    ],
+    visibleIn: ["Strona obiektu", "Widget rezerwacyjny", "Stopka e-maili"],
+  },
+  badges: {
+    title: "Wyróżniki obiektu",
+    description: "Małe ikony z podpisem, które na pierwszy rzut oka komunikują atuty obiektu. Goście skanują je w 2 sekundy — pomagają w szybkiej decyzji.",
+    tips: [
+      "Najlepiej 4–6 badge'ów — nie za mało, nie za dużo.",
+      "Wybierz to, co naprawdę wyróżnia Twój obiekt na tle konkurencji.",
+      "Kolejność ma znaczenie — najważniejsze wyróżniki umieść na początku.",
+    ],
+    visibleIn: ["Strona obiektu", "Karta w wynikach"],
+  },
+  faq: {
+    title: "Pytania i odpowiedzi",
+    description: "Najczęściej zadawane pytania wyświetlane jako accordion — gość klika pytanie i widzi odpowiedź. Dobre FAQ zmniejsza liczbę telefonów i maili.",
+    tips: [
+      "Dodaj pytania, które goście naprawdę zadają — nie wymyślone.",
+      "Odpowiedzi mogą być dłuższe i obsługują Markdown.",
+      "Najczęściej pytane umieść na samej górze listy.",
+    ],
+    visibleIn: ["Strona obiektu"],
+  },
+};
+
+function HelpBox({ section }: { section: HelpSectionKey }) {
+  const help = SECTION_HELP[section];
+
+  return (
+    <div
+      className="hidden xl:block w-[340px] shrink-0"
+      style={{ animation: "helpFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1)" }}
+    >
+      <div className="sticky top-6">
+        <div className="bubble overflow-hidden">
+          {/* Header */}
+          <div className="px-5 py-4 border-b border-border/50">
+            <div className="flex items-center gap-2.5 mb-2.5">
+              <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                <Lightbulb className="h-4 w-4 text-primary" />
+              </div>
+              <h4 className="text-[14px] font-semibold">{help.title}</h4>
+            </div>
+            <p className="text-[12px] text-muted-foreground leading-relaxed">
+              {help.description}
+            </p>
+          </div>
+
+          {/* Gdzie widoczne */}
+          <div className="px-5 py-3.5 border-b border-border/50">
+            <div className="flex items-center gap-1.5 mb-2.5">
+              <Eye className="h-3 w-3 text-muted-foreground" />
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                Gdzie to widać
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {help.visibleIn.map((v, i) => (
+                <span
+                  key={i}
+                  className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-primary/10 text-primary"
+                >
+                  {v}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Wskazówki */}
+          <div className="px-5 py-3.5">
+            <div className="flex items-center gap-1.5 mb-3">
+              <Info className="h-3 w-3 text-muted-foreground" />
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                Wskazówki
+              </span>
+            </div>
+            <div className="space-y-2.5">
+              {help.tips.map((tip, i) => (
+                <div key={i} className="flex gap-2.5 items-start">
+                  <div className="h-[18px] w-[18px] rounded-md bg-primary/10 flex items-center justify-center shrink-0 mt-px">
+                    <span className="text-[10px] font-bold text-primary">{i + 1}</span>
+                  </div>
+                  <p className="text-[12px] text-muted-foreground leading-relaxed">{tip}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════
 // Main component
 // ═══════════════════════════════════════════════════
 
@@ -230,6 +374,12 @@ export function PropertyContentContent() {
   // ── DnD state ──
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
+
+  // ── Help panels — track which sections are open ──
+  const [openSections, setOpenSections] = useState<Set<HelpSectionKey>>(new Set(["hero"]));
+  const toggleSection = (key: HelpSectionKey, open: boolean) => {
+    setOpenSections((prev) => { const next = new Set(prev); if (open) next.add(key); else next.delete(key); return next; });
+  };
 
   // ═══ Populate section forms from content ═══
   const populateForms = useCallback((c: PropertyContent) => {
@@ -575,23 +725,26 @@ export function PropertyContentContent() {
       {/* ── Page header ── */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold tracking-tight">Treści obiektu</h2>
+          <h2 className="text-xl font-bold tracking-tight">Informacje dla gości</h2>
           <p className="text-[13px] text-muted-foreground mt-1">
-            Informacje widoczne dla gości na stronie i w widgecie rezerwacyjnym
+            Informacje, które zobaczą Twoi goście na stronie obiektu i w widgecie rezerwacyjnym.
           </p>
         </div>
       </div>
 
-      <div className="space-y-4 mt-6 max-w-[800px]">
+      <div className="space-y-4 mt-6">
 
         {/* ════════════════════════════════════════════
             SEKCJA 1: Hero i opis obiektu
            ════════════════════════════════════════════ */}
+        <div className="flex gap-6 items-start">
+        <div className="flex-1 max-w-[800px]">
         <SectionCard
           title="Hero i opis obiektu"
           description="Główny nagłówek, opis i informacje o lokalizacji"
           icon={Landmark}
           defaultOpen={true}
+          onToggle={(open) => toggleSection("hero", open)}
         >
           <div className="space-y-5">
             <TextField
@@ -622,18 +775,24 @@ export function PropertyContentContent() {
               maxLength={3000} placeholder="Opis okolicy, atrakcji w pobliżu..."
               multiline rows={4}
             />
-            <SaveButton saving={savingHero} label="Zapisz sekcję Hero" onClick={handleSaveHero} />
+            <SaveButton saving={savingHero} label="Zapisz sekcję" onClick={handleSaveHero} />
           </div>
         </SectionCard>
+        </div>
+        {openSections.has("hero") && <HelpBox section="hero" />}
+        </div>
 
         {/* ════════════════════════════════════════════
             SEKCJA 2: Zasady pobytu
            ════════════════════════════════════════════ */}
+        <div className="flex gap-6 items-start">
+        <div className="flex-1 max-w-[800px]">
         <SectionCard
           title="Zasady pobytu"
           description="Zameldowanie, wymeldowanie, regulamin i polityki"
           icon={ScrollText}
           defaultOpen={false}
+          onToggle={(open) => toggleSection("rules", open)}
         >
           <div className="space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -696,18 +855,24 @@ export function PropertyContentContent() {
               maxLength={5000} placeholder="Informacje o płatnościach, depozytach..."
               multiline rows={4} hint="Obsługuje format Markdown"
             />
-            <SaveButton saving={savingRules} label="Zapisz zasady pobytu" onClick={handleSaveRules} />
+            <SaveButton saving={savingRules} label="Zapisz sekcję" onClick={handleSaveRules} />
           </div>
         </SectionCard>
+        </div>
+        {openSections.has("rules") && <HelpBox section="rules" />}
+        </div>
 
         {/* ════════════════════════════════════════════
             SEKCJA 3: Lokalizacja i dojazd
            ════════════════════════════════════════════ */}
+        <div className="flex gap-6 items-start">
+        <div className="flex-1 max-w-[800px]">
         <SectionCard
           title="Lokalizacja i dojazd"
           description="Adres, mapa i wskazówki dojazdu"
           icon={MapPin}
           defaultOpen={false}
+          onToggle={(open) => toggleSection("location", open)}
         >
           <div className="space-y-5">
             <TextField
@@ -743,18 +908,24 @@ export function PropertyContentContent() {
               maxLength={3000} placeholder="Jak dojechać od strony..."
               multiline rows={4}
             />
-            <SaveButton saving={savingLocation} label="Zapisz lokalizację" onClick={handleSaveLocation} />
+            <SaveButton saving={savingLocation} label="Zapisz sekcję" onClick={handleSaveLocation} />
           </div>
         </SectionCard>
+        </div>
+        {openSections.has("location") && <HelpBox section="location" />}
+        </div>
 
         {/* ════════════════════════════════════════════
             SEKCJA 4: Kontakt dla gościa
            ════════════════════════════════════════════ */}
+        <div className="flex gap-6 items-start">
+        <div className="flex-1 max-w-[800px]">
         <SectionCard
           title="Kontakt dla gościa"
           description="Telefon, e-mail i WhatsApp widoczne dla gości"
           icon={Phone}
           defaultOpen={false}
+          onToggle={(open) => toggleSection("contact", open)}
         >
           <div className="space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -774,18 +945,24 @@ export function PropertyContentContent() {
               onChange={(v) => setContactForm({ ...contactForm, guestContactWhatsapp: v })}
               maxLength={50} placeholder="+48 123 456 789"
             />
-            <SaveButton saving={savingContact} label="Zapisz dane kontaktowe" onClick={handleSaveContact} />
+            <SaveButton saving={savingContact} label="Zapisz sekcję" onClick={handleSaveContact} />
           </div>
         </SectionCard>
+        </div>
+        {openSections.has("contact") && <HelpBox section="contact" />}
+        </div>
 
         {/* ════════════════════════════════════════════
             SEKCJA 5: Trust badges
            ════════════════════════════════════════════ */}
+        <div className="flex gap-6 items-start">
+        <div className="flex-1 max-w-[800px]">
         <SectionCard
           title="Trust badges"
           description="Wyróżniki obiektu widoczne na stronie (np. WiFi, parking, plaża)"
           icon={Award}
           defaultOpen={false}
+          onToggle={(open) => toggleSection("badges", open)}
           action={
             <button onClick={openBadgeCreate} className="btn-bubble btn-primary-bubble px-3 py-1.5 text-[12px]">
               <Plus className="h-3.5 w-3.5" /> Dodaj
@@ -796,7 +973,7 @@ export function PropertyContentContent() {
             <div className="py-12 text-center">
               <Award className="h-8 w-8 text-muted-foreground/30 mx-auto mb-3" />
               <p className="text-[14px] font-medium text-muted-foreground">Brak trust badges</p>
-              <p className="text-[12px] text-muted-foreground/60 mt-1">Dodaj badge, aby wyświetlać wyróżniki na stronie obiektu</p>
+              <p className="text-[12px] text-muted-foreground/60 mt-1">Dodaj badge, aby wyświetlać wyróżniki na stronie obiektu.</p>
             </div>
           ) : (
             <>
@@ -823,7 +1000,6 @@ export function PropertyContentContent() {
                         !badge.isActive && "opacity-50",
                       )}
                     >
-                      {/* Drag handle */}
                       <div
                         draggable
                         onDragStart={(e) => {
@@ -856,15 +1032,21 @@ export function PropertyContentContent() {
             </>
           )}
         </SectionCard>
+        </div>
+        {openSections.has("badges") && <HelpBox section="badges" />}
+        </div>
 
         {/* ════════════════════════════════════════════
             SEKCJA 6: FAQ
            ════════════════════════════════════════════ */}
+        <div className="flex gap-6 items-start">
+        <div className="flex-1 max-w-[800px]">
         <SectionCard
           title="FAQ"
-          description="Często zadawane pytania wyświetlane na stronie obiektu"
+          description="Często zadawane pytania wyświetlane na stronie obiektu."
           icon={HelpCircle}
           defaultOpen={false}
+          onToggle={(open) => toggleSection("faq", open)}
           action={
             <button onClick={openFaqCreate} className="btn-bubble btn-primary-bubble px-3 py-1.5 text-[12px]">
               <Plus className="h-3.5 w-3.5" /> Dodaj
@@ -875,7 +1057,7 @@ export function PropertyContentContent() {
             <div className="py-12 text-center">
               <HelpCircle className="h-8 w-8 text-muted-foreground/30 mx-auto mb-3" />
               <p className="text-[14px] font-medium text-muted-foreground">Brak pytań FAQ</p>
-              <p className="text-[12px] text-muted-foreground/60 mt-1">Dodaj pytanie, aby ułatwić gościom znalezienie odpowiedzi</p>
+              <p className="text-[12px] text-muted-foreground/60 mt-1">Dodaj pytanie, aby ułatwić gościom znalezienie odpowiedzi.</p>
             </div>
           ) : (
             <>
@@ -902,7 +1084,6 @@ export function PropertyContentContent() {
                         !faq.isActive && "opacity-50",
                       )}
                     >
-                      {/* Drag handle */}
                       <div
                         draggable
                         onDragStart={(e) => {
@@ -930,6 +1111,9 @@ export function PropertyContentContent() {
             </>
           )}
         </SectionCard>
+        </div>
+        {openSections.has("faq") && <HelpBox section="faq" />}
+        </div>
 
       </div>
 

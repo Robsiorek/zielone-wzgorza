@@ -5,7 +5,7 @@ import {
   ChevronDown, ChevronRight, Pencil, Trash2, Eye, Plus, Search,
   Image, Save, Loader2, ExternalLink, Mail, ArrowLeft, Calendar,
   Building2, CreditCard, Settings, Clock, User, Home, Moon,
-  CheckCircle2, XCircle,
+  CheckCircle2, XCircle, Lightbulb, Info,
 } from "lucide-react";
 import { SectionBlock, PreviewRow, PreviewGroup, ReferenceBox, RulesBlock } from "../shared";
 import { BubbleSelect } from "@/components/ui/bubble-select";
@@ -26,6 +26,7 @@ export function LayoutPatternsSection() {
   const [sectionOpen, setSectionOpen] = useState(true);
   const [filterType, setFilterType] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
+  const [helpBoxVisible, setHelpBoxVisible] = useState(true);
 
   return (
     <div className="space-y-5">
@@ -380,6 +381,93 @@ export function LayoutPatternsSection() {
           never={[
             "NIGDY: {open && <div>...</div>} — łamie animację zamykania",
             "NIGDY: sekcja bez opisu",
+          ]}
+        />
+      </SectionBlock>
+
+      {/* ── HelpBox — contextual help panel ── */}
+      <SectionBlock title="HelpBox — panel kontekstowy" description="Informacyjny box po prawej stronie sekcji. Pojawia się przy rozwinięciu, chowa przy zwinięciu. Sticky.">
+        <PreviewRow label="Podgląd (kliknij przycisk, aby pokazać/ukryć)">
+          <div className="w-full">
+            <div className="flex gap-4 items-start">
+              <button
+                onClick={() => setHelpBoxVisible(!helpBoxVisible)}
+                className="btn-bubble btn-secondary-bubble px-4 py-2.5 text-[13px] shrink-0"
+              >
+                {helpBoxVisible ? "Ukryj HelpBox" : "Pokaż HelpBox"}
+              </button>
+              {helpBoxVisible && (
+                <div
+                  className="w-[340px] shrink-0"
+                  style={{ animation: "helpFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1)" }}
+                >
+                  <div className="bubble overflow-hidden">
+                    <div className="px-5 py-4 border-b border-border/50">
+                      <div className="flex items-center gap-2.5 mb-2.5">
+                        <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                          <Lightbulb className="h-4 w-4 text-primary" />
+                        </div>
+                        <h4 className="text-[14px] font-semibold">Sekcja Hero</h4>
+                      </div>
+                      <p className="text-[12px] text-muted-foreground leading-relaxed">
+                        Te treści wyświetlają się jako pierwsze — w nagłówku strony obiektu.
+                      </p>
+                    </div>
+                    <div className="px-5 py-3.5 border-b border-border/50">
+                      <div className="flex items-center gap-1.5 mb-2.5">
+                        <Eye className="h-3 w-3 text-muted-foreground" />
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Gdzie to widać</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-primary/10 text-primary">Strona główna</span>
+                        <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-primary/10 text-primary">Widget</span>
+                      </div>
+                    </div>
+                    <div className="px-5 py-3.5">
+                      <div className="flex items-center gap-1.5 mb-3">
+                        <Info className="h-3 w-3 text-muted-foreground" />
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Wskazówki</span>
+                      </div>
+                      <div className="space-y-2.5">
+                        {["Tytuł hero to nazwa obiektu widoczna na górze.", "Krótki opis wyświetla się na kartach."].map((tip, i) => (
+                          <div key={i} className="flex gap-2.5 items-start">
+                            <div className="h-[18px] w-[18px] rounded-md bg-primary/10 flex items-center justify-center shrink-0 mt-px">
+                              <span className="text-[10px] font-bold text-primary">{i + 1}</span>
+                            </div>
+                            <p className="text-[12px] text-muted-foreground leading-relaxed">{tip}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </PreviewRow>
+        <ReferenceBox items={[
+          { label: "Szerokość", value: "w-[340px] shrink-0" },
+          { label: "Pozycja", value: "sticky top-6 — podąża za scrollem" },
+          { label: "Animacja", value: "helpFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1)" },
+          { label: "Widoczność", value: "hidden xl:block — ukryty na mobile/tablet" },
+          { label: "3 bloki", value: "Header (💡 + opis) → Gdzie widać (pill tagi) → Wskazówki (numerowane)" },
+          { label: "Layout", value: "flex gap-6 items-start per sekcja: [SectionCard flex-1] + [HelpBox]" },
+          { label: "Trigger", value: "SectionCard onToggle → toggleSection() → openSections Set" },
+          { label: "Plik CSS", value: "@keyframes helpFadeIn w globals.css" },
+          { label: "Użycie", value: "/admin/property-content — 6 sekcji z kontekstową pomocą" },
+        ]} />
+        <RulesBlock
+          always={[
+            "sticky top-6 na HelpBox wewnątrz flex row",
+            "hidden xl:block — nie łamie mobile",
+            "Każda sekcja ma WŁASNY HelpBox (nie jeden globalny)",
+            "Dane help jako const obiekt SECTION_HELP na górze komponentu",
+            "Zdania w wskazówkach kończą się kropką",
+          ]}
+          never={[
+            "NIGDY: jeden wspólny panel zmieniający treść — każda sekcja osobny box",
+            "NIGDY: HelpBox bez animacji wejścia",
+            "NIGDY: hardcoded z-index na HelpBox",
           ]}
         />
       </SectionBlock>

@@ -1,5 +1,5 @@
 # DESIGN SYSTEM — Zielone Wzgórza Admin Panel
-# Wersja 1.7 | Kwiecień 2026
+# Wersja 1.8 | Kwiecień 2026
 # Ten plik jest JEDYNYM źródłem prawdy dla stylu wizualnego panelu.
 # Czytaj go na starcie KAŻDEGO czatu przed generowaniem kodu.
 
@@ -1238,3 +1238,66 @@ content area. `border-top: 2px solid border`.
   SummarySection (sticky footer, §29)
 </div>
 ```
+
+## 31. HELPBOX — KONTEKSTOWY PANEL POMOCY (B4)
+
+**Plik:** `src/components/property-content/property-content-content.tsx`
+
+Informacyjny panel po prawej stronie SectionCard, pojawiający się przy rozwinięciu
+sekcji i znikający przy zwinięciu. Każda sekcja ma WŁASNY HelpBox (nie jeden globalny).
+
+**Layout per sekcja:**
+```tsx
+<div className="flex gap-6 items-start">
+  <div className="flex-1 max-w-[800px]">
+    <SectionCard onToggle={(open) => toggleSection("hero", open)}>
+      ...
+    </SectionCard>
+  </div>
+  {openSections.has("hero") && <HelpBox section="hero" />}
+</div>
+```
+
+**Struktura HelpBox:**
+```tsx
+<div className="hidden xl:block w-[340px] shrink-0"
+  style={{ animation: "helpFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1)" }}>
+  <div className="sticky top-6">
+    <div className="bubble overflow-hidden">
+      {/* 1. Header: ikona 💡 + tytuł + opis */}
+      {/* 2. "Gdzie to widać": pill tagi bg-primary/10 */}
+      {/* 3. "Wskazówki": numerowane tipy */}
+    </div>
+  </div>
+</div>
+```
+
+**3 bloki wewnątrz:**
+
+| Blok | Styl | Zawartość |
+|------|------|-----------|
+| Header | h-8 w-8 rounded-xl bg-primary/10 + Lightbulb + text-[14px] font-semibold | Tytuł sekcji + opis text-[12px] |
+| Gdzie widać | Eye h-3 w-3 + uppercase label + pill tagi | text-[11px] font-semibold bg-primary/10 text-primary rounded-full |
+| Wskazówki | Info h-3 w-3 + uppercase label + numerowane tipy | h-[18px] w-[18px] rounded-md bg-primary/10 numerki + text-[12px] tipy |
+
+**Animacja:** `@keyframes helpFadeIn` w globals.css:
+```css
+@keyframes helpFadeIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+```
+
+**Tracking stanu:** `openSections: Set<HelpSectionKey>` + `toggleSection()` helper.
+SectionCard z `onToggle` prop (§26, backwards compatible).
+
+**Dane:** Const obiekt `SECTION_HELP` z polami: title, description, tips[], visibleIn[].
+Zdania w tips kończą się kropką.
+
+**Responsywność:** `hidden xl:block` — na ekranach < xl HelpBox znika, SectionCard zajmuje pełną szerokość.
+
+**Czego NIE robimy:**
+- ❌ Jeden wspólny panel zmieniający treść (był, zastąpiony per-section)
+- ❌ HelpBox bez animacji wejścia
+- ❌ Hardcoded z-index na HelpBox
+- ❌ HelpBox na mobile/tablet (psuje layout)
