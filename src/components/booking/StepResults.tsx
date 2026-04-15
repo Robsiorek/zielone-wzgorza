@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Home, Users, Check, Loader2, AlertCircle, ImageOff } from "lucide-react";
+import { Home, Users, Check, Loader2, AlertCircle, ImageOff, Link2 } from "lucide-react";
 import { apiFetch } from "@/lib/api-fetch";
 import { ResultsSkeleton, PriceSkeleton } from "./BookingSkeleton";
 import type { BookingDates, SelectedResource, SelectedAddon } from "./BookingWidget";
@@ -19,6 +19,7 @@ interface AvailableResource {
 interface CatalogResource {
   id: string;
   name: string;
+  slug: string;
   shortDescription: string | null;
   maxCapacity: number | null;
   images: { id: string; alt: string | null; position: number; isCover: boolean; urls: { original: string; medium: string; thumbnail: string } }[];
@@ -35,6 +36,9 @@ interface Props {
   dates: BookingDates;
   selectedResources: SelectedResource[];
   selectedAddons: SelectedAddon[];
+  /** Resource slug intent from URL params (B5a resource mode).
+   *  Phase 5 will use this for auto-select of the matching resource. */
+  resourceSlugIntent?: string | null;
   onNext: (resources: SelectedResource[], addons: SelectedAddon[]) => void;
 }
 
@@ -43,7 +47,7 @@ function formatMoney(minor: number): string {
   return val % 1 === 0 ? `${val} zł` : `${val.toFixed(2).replace(".", ",")} zł`;
 }
 
-export function StepResults({ dates, selectedResources, onNext }: Props) {
+export function StepResults({ dates, selectedResources, resourceSlugIntent, onNext }: Props) {
   const [loading, setLoading] = useState(true);
   const [resources, setResources] = useState<(AvailableResource & { catalog?: CatalogResource; minPrice?: number })[]>([]);
   const [pricesLoading, setPricesLoading] = useState(false);
@@ -51,11 +55,14 @@ export function StepResults({ dates, selectedResources, onNext }: Props) {
     new Map(selectedResources.map(r => [r.variantId, r]))
   );
   const [error, setError] = useState("");
+  /** Resource ID matched by slug intent from URL (null if no match or no intent) */
+  const [intentMatchedResourceId, setIntentMatchedResourceId] = useState<string | null>(null);
 
   // Load availability + catalog in parallel
   const loadData = useCallback(async () => {
     setLoading(true);
     setError("");
+    setIntentMatchedResourceId(null);
     try {
       const [availData, catalogData] = await Promise.all([
         apiFetch(`/api/public/availability?checkIn=${dates.checkIn}&checkOut=${dates.checkOut}&adults=${dates.adults}&children=${dates.children}`),
@@ -67,12 +74,27 @@ export function StepResults({ dates, selectedResources, onNext }: Props) {
       const catalogMap = new Map(catalog.map(c => [c.id, c]));
 
       // Merge availability with catalog data
-      const merged = availResources
+      let merged = availResources
         .filter(r => r.available && r.variants.length > 0)
         .map(r => ({
           ...r,
           catalog: catalogMap.get(r.resourceId),
         }));
+
+      // ── Resource intent: match slug, promote to top ──
+      if (resourceSlugIntent && merged.length > 0) {
+        const matchIdx = merged.findIndex(
+          r => r.catalog?.slug === resourceSlugIntent
+        );
+        if (matchIdx >= 0) {
+          setIntentMatchedResourceId(merged[matchIdx].resourceId);
+          // Promote matched resource to top of list
+          if (matchIdx > 0) {
+            const [matched] = merged.splice(matchIdx, 1);
+            merged = [matched, ...merged];
+          }
+        }
+      }
 
       setResources(merged);
 
@@ -192,6 +214,7 @@ export function StepResults({ dates, selectedResources, onNext }: Props) {
         {resources.map(resource => {
           const defaultVariant = resource.variants.find(v => v.isDefault) || resource.variants[0];
           const isSelected = defaultVariant ? selected.has(defaultVariant.variantId) : false;
+          const isIntentMatch = resource.resourceId === intentMatchedResourceId;
           const image = resource.catalog?.images?.[0];
           const desc = resource.catalog?.shortDescription;
 
@@ -202,9 +225,20 @@ export function StepResults({ dates, selectedResources, onNext }: Props) {
               className={`w-full text-left bg-card rounded-2xl border-2 transition-all duration-200 overflow-hidden ${
                 isSelected
                   ? "border-primary"
-                  : "border-border hover:border-primary/40"
+                  : isIntentMatch
+                    ? "border-primary/60"
+                    : "border-border hover:border-primary/40"
               }`}
             >
+              {/* Intent match badge */}
+              {isIntentMatch && (
+                <div className="px-4 pt-3 pb-0">
+                  <span className="inline-flex items-center gap-1 text-[11px] font-medium text-primary bg-primary/10 rounded-full px-2.5 py-0.5">
+                    <Link2 className="h-3 w-3" />
+                    Wybrany z linku
+                  </span>
+                </div>
+              )}
               <div className="p-4 flex gap-4">
                 {/* Image */}
                 <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl bg-muted flex-shrink-0 overflow-hidden">

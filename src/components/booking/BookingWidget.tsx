@@ -101,9 +101,22 @@ function Stepper({ current }: { current: number }) {
 // Main Widget
 // ═══════════════════════════════════════════
 
-export function BookingWidget() {
+interface BookingWidgetProps {
+  /** Pre-filled dates from URL params (B5a Fast Booking) */
+  initialDates?: BookingDates;
+  /** Resource slug intent from URL params (B5a resource mode).
+   *  Part of the entry contract — stored in state, passed to StepResults.
+   *  Phase 5 will use this for auto-select/pre-selection. */
+  resourceIntent?: string | null;
+  /** Callback when user wants to go back to ExploreView */
+  onBack?: () => void;
+}
+
+export function BookingWidget({ initialDates, resourceIntent, onBack }: BookingWidgetProps = {}) {
   const [step, setStep] = useState(1);
-  const [dates, setDates] = useState<BookingDates>({ checkIn: "", checkOut: "", adults: 2, children: 0 });
+  const [dates, setDates] = useState<BookingDates>(
+    initialDates || { checkIn: "", checkOut: "", adults: 2, children: 0 }
+  );
   const [selectedResources, setSelectedResources] = useState<SelectedResource[]>([]);
   const [selectedAddons, setSelectedAddons] = useState<SelectedAddon[]>([]);
   const [quote, setQuote] = useState<QuoteData | null>(null);
@@ -111,6 +124,8 @@ export function BookingWidget() {
   const [bookingResult, setBookingResult] = useState<BookingResult | null>(null);
   const [widgetTheme, setWidgetTheme] = useState<WidgetTheme | null>(null);
   const [themeLoading, setThemeLoading] = useState(true);
+  /** Resource slug intent from URL — persisted for StepResults (Phase 5: auto-select) */
+  const [resourceSlugIntent] = useState<string | null>(resourceIntent ?? null);
 
   // ── Load widget config ──
   useEffect(() => {
@@ -181,7 +196,7 @@ export function BookingWidget() {
       {/* ═══ NAVBAR: logo + login, more padding, no shadow ═══ */}
       <header className="sticky top-0 z-50 backdrop-blur-xl border-b border-border/50" style={{ backgroundColor: "hsla(var(--card), 0.8)" }}>
         <div className="max-w-4xl mx-auto px-5 sm:px-8 flex items-center justify-between" style={{ height: navHeight }}>
-          <a href="/booking" className="flex items-center flex-shrink-0" style={{ maxWidth: "70%", height: logoH }}>
+          <a href="/" className="flex items-center flex-shrink-0" style={{ maxWidth: "70%", height: logoH }}>
             {widgetTheme?.logoUrl ? (
               <img src={widgetTheme.logoUrl} alt="Logo" style={{ height: "100%", maxWidth: "100%", objectFit: "contain" }} />
             ) : (
@@ -216,7 +231,7 @@ export function BookingWidget() {
 
           {/* Steps */}
           {step === 1 && <StepDates initial={dates} onSubmit={handleDatesSubmit} />}
-          {step === 2 && <StepResults dates={dates} selectedResources={selectedResources} selectedAddons={selectedAddons} onNext={handleResourcesSelected} />}
+          {step === 2 && <StepResults dates={dates} selectedResources={selectedResources} selectedAddons={selectedAddons} resourceSlugIntent={resourceSlugIntent} onNext={handleResourcesSelected} />}
           {step === 3 && <StepQuote dates={dates} resources={selectedResources} addons={selectedAddons} onQuoteReady={handleQuoteReady} onBack={() => goTo(2)} />}
           {step === 4 && quote && <StepClient quote={quote} dates={dates} resources={selectedResources} initial={clientData} onBook={handleBookingComplete} onBack={() => goTo(3)} />}
           {step === 5 && bookingResult && <StepConfirmation result={bookingResult} dates={dates} resources={selectedResources} clientData={clientData} />}
