@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
 
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -440,4 +441,1757 @@
 }
 .section-collapse > .section-collapse-inner {
   overflow: hidden;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * ENGINE-UI DESIGN SYSTEM — INLINED
+ * ═══════════════════════════════════════════════════════════════════════════
+ * Previously lived in src/styles/engine-ui.css with `@import "./engine-ui.css"`
+ * at the top of this file. That broke in production because PostCSS in this
+ * project is not configured with `postcss-import`, so the @import directive
+ * was passed through as a literal `@import` to the browser, which failed to
+ * resolve the relative path in the Next.js build output — the engine-ui CSS
+ * never reached the browser.
+ *
+ * Fix: inline the entire engine-ui CSS into globals.css. Zero dependency
+ * changes, zero PostCSS config changes. Works unconditionally.
+ *
+ * All rules below are scoped to `.engine-root` and MUST stay that way —
+ * they are the source of truth for the public booking engine (and the
+ * internal /admin/engine-ui-lab preview).
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * engine-ui.css — Booking Engine UI Design System (Runda 1)
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * Single source of truth for visual tokens and component styles used in the
+ * public booking engine (guest-facing frontend) and the internal UI Lab.
+ *
+ * ISOLATION CONTRACT (hard):
+ *   - Every rule in this file is scoped to `.engine-root` (or a descendant).
+ *   - ZERO reuse of admin classes: bubble, btn-bubble, tabs-bubble, fade-in-up,
+ *     bubble-interactive, input-bubble. Those belong to the admin Design System
+ *     and are governed by docs/DESIGN_SYSTEM.md.
+ *   - Components in src/components/engine-ui/* MUST NOT import from
+ *     @/components/ui/* or use admin classes.
+ *   - Brand color comes from --primary (set by useWidgetTheme from
+ *     /api/public/widget-config). Do NOT hardcode brand hex values.
+ *
+ * LOADED BY: src/styles/globals.css (single @import, at the top).
+ * Do NOT import this file in layouts, pages or components.
+ *
+ * Tokens inspired by: Airbnb's public design language (elevation, motion,
+ * materials, spacing, radius scales) — values matched where appropriate.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * === TOKENS ===
+ * Visual primitives: color, spacing, radius, elevation, motion, materials.
+ * All declared on .engine-root so they cascade to all eui-* components and
+ * can be overridden per-subtree if ever needed.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+.engine-root {
+  /* ── Neutral grey scale (warm, photography-friendly) ──
+     Used for text, borders, subtle backgrounds. Independent from brand.
+     Matches Airbnb's neutral ramp: near-black foreground, soft dividers. */
+  --eui-grey-0:    #ffffff;
+  --eui-grey-50:   #f7f7f7;
+  --eui-grey-100:  #ebebeb;
+  --eui-grey-200:  #dddddd;
+  --eui-grey-300:  #c0c0c0;
+  --eui-grey-400:  #a4a4a4;
+  --eui-grey-500:  #717171;
+  --eui-grey-600:  #595959;
+  --eui-grey-700:  #404040;
+  --eui-grey-800:  #222222;
+  --eui-grey-900:  #111111;
+  --eui-grey-1000: #000000;
+
+  /* ── Semantic surface/text tokens ──
+     Kept in sync with the widget-config bridge: --background, --foreground,
+     --card, --border are applied by useWidgetTheme on .engine-root directly
+     (as HSL triplets), which means `hsl(var(--primary))` etc. also works here.
+     These aliases give engine-ui semantic names without re-declaring the
+     source variables. */
+  --eui-surface:          hsl(var(--background, 0 0% 100%));
+  --eui-surface-raised:   hsl(var(--card, 0 0% 100%));
+  --eui-text-primary:     var(--eui-grey-900);
+  --eui-text-secondary:   var(--eui-grey-500);
+  --eui-text-muted:       var(--eui-grey-400);
+  --eui-border:           var(--eui-grey-200);
+  --eui-border-strong:    var(--eui-grey-300);
+  --eui-border-focus:     hsl(var(--primary, 214 89% 52%));
+
+  /* ── Brand (derived from widget-config --primary) ──
+     Never hardcoded. A subtle brand tint for range selection etc. is built
+     via color-mix so it follows --primary automatically. */
+  --eui-brand:            hsl(var(--primary, 214 89% 52%));
+  --eui-brand-foreground: hsl(var(--primary-foreground, 0 0% 100%));
+  --eui-brand-soft:       color-mix(in srgb, hsl(var(--primary, 214 89% 52%)) 12%, var(--eui-grey-50));
+  --eui-brand-softer:     color-mix(in srgb, hsl(var(--primary, 214 89% 52%)) 6%,  var(--eui-grey-0));
+
+  /* ── Typography ──
+     Font comes from widget-config (applied to .engine-root by useWidgetTheme).
+     Scale matches Airbnb display/title/body tiers.
+     Premium signal: strong negative letter-spacing on display sizes. */
+  --eui-font-family: inherit; /* inherits the font applied by useWidgetTheme */
+  --eui-font-weight-regular:  400;
+  --eui-font-weight-medium:   500;
+  --eui-font-weight-semibold: 600;
+  --eui-font-weight-bold:     700;
+
+  --eui-font-size-xs:   12px;
+  --eui-font-size-sm:   13px;
+  --eui-font-size-base: 14px;
+  --eui-font-size-md:   16px;
+  --eui-font-size-lg:   18px;
+  --eui-font-size-xl:   22px;
+  --eui-font-size-2xl:  26px;
+  --eui-font-size-3xl:  32px;
+  --eui-font-size-4xl:  40px;
+  --eui-font-size-5xl:  48px;
+
+  --eui-line-height-tight:   1.1;
+  --eui-line-height-snug:    1.25;
+  --eui-line-height-normal:  1.5;
+  --eui-line-height-relaxed: 1.65;
+
+  --eui-tracking-display: -0.06rem;  /* -0.96px @ 16px base */
+  --eui-tracking-hero:    -0.12rem;  /* -1.92px — hero-only */
+  --eui-tracking-title:   -0.02rem;
+  --eui-tracking-normal:  0;
+
+  /* ── Spacing ──
+     Discrete scale, not fluid. All paddings/margins reference these tokens. */
+  --eui-space-0:   0;
+  --eui-space-1:   2px;
+  --eui-space-2:   4px;
+  --eui-space-3:   8px;
+  --eui-space-4:   12px;
+  --eui-space-5:   16px;
+  --eui-space-6:   24px;
+  --eui-space-7:   32px;
+  --eui-space-8:   40px;
+  --eui-space-9:   48px;
+  --eui-space-10:  64px;
+  --eui-space-11:  80px;
+
+  /* ── Radius ──
+     From crisp (4) through card (16) to circular (pill / round). */
+  --eui-radius-xs:   4px;
+  --eui-radius-sm:   8px;
+  --eui-radius-md:   12px;
+  --eui-radius-lg:   16px;
+  --eui-radius-xl:   20px;
+  --eui-radius-2xl:  24px;
+  --eui-radius-3xl:  28px;
+  --eui-radius-4xl:  32px;
+  --eui-radius-pill: 9999px;
+  --eui-radius-full: 9999px;
+
+  /* ── Elevation (5 levels) ──
+     Values from the Airbnb shadow scale. Each level combines a 1px hairline
+     ring (for crisp edges on light bg) with a soft drop shadow. */
+  --eui-elev-1: 0 0 0 1px rgba(0,0,0,0.02), 0 2px 4px 0 rgba(0,0,0,0.16);
+  --eui-elev-2: 0 0 0 1px rgba(0,0,0,0.02), 0 4px 8px 0 rgba(0,0,0,0.10), 0 2px 4px 0 rgba(0,0,0,0.08);
+  --eui-elev-3: 0 0 0 1px rgba(0,0,0,0.02), 0 8px 24px 0 rgba(0,0,0,0.10);
+  --eui-elev-4: 0 0 0 1px rgba(0,0,0,0.02), 0 4px 8px 0 rgba(0,0,0,0.08), 0 12px 30px 0 rgba(0,0,0,0.12);
+  --eui-elev-5: 0 0 0 1px rgba(0,0,0,0.02), 0 8px 16px 0 rgba(0,0,0,0.10), 0 20px 48px 0 rgba(0,0,0,0.18);
+
+  /* ── Materials (backdrop-filter) ──
+     For overlays, sticky navbars, popover scrims. */
+  --eui-material-thin-bg:     rgba(240,240,240,0.50);
+  --eui-material-thin-filter: blur(36px) saturate(1.6);
+
+  --eui-material-regular-bg:     rgba(250,250,250,0.72);
+  --eui-material-regular-filter: blur(24px) saturate(1.6);
+
+  --eui-material-thick-bg:     rgba(240,240,240,0.86);
+  --eui-material-thick-filter: blur(12px) saturate(3.00);
+
+  /* ── Motion ──
+     CSS-only for Runda 1. Written so they can be swapped to JS/spring later
+     without rewriting call sites (same names used in JS configs). */
+  --eui-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --eui-ease-enter:    cubic-bezier(0.1, 0.9, 0.2, 1);
+  --eui-ease-exit:     cubic-bezier(0.4, 0, 1, 1);
+  --eui-ease-linear:   linear;
+
+  /* Spring-like easings via cubic-bezier. Subtle, standard, bouncy. */
+  --eui-spring-fast:     cubic-bezier(0.34, 1.26, 0.64, 1);
+  --eui-spring-standard: cubic-bezier(0.28, 1.12, 0.46, 1);
+  --eui-spring-bounce:   cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  --eui-duration-instant: 100ms;
+  --eui-duration-fast:    200ms;
+  --eui-duration-base:    300ms;
+  --eui-duration-slow:    450ms;
+  --eui-duration-slower:  580ms;
+
+  /* ── Z-index scale ──
+     Kept small — engine-ui doesn't nest deeply. Popover always on top. */
+  --eui-z-base:     0;
+  --eui-z-raised:   10;
+  --eui-z-sticky:   30;
+  --eui-z-overlay:  60;
+  --eui-z-popover:  100;
+  --eui-z-toast:    200;
+
+  /* ── Focus ring ──
+     Visible, non-garish, honours brand. Never `outline: none` without this. */
+  --eui-focus-ring: 0 0 0 2px var(--eui-surface), 0 0 0 4px var(--eui-border-focus);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * === BASE ===
+ * Subtree-wide defaults. Box-sizing, font inheritance, anti-aliasing,
+ * caret color, selection color. Only what every engine-ui surface needs.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+.engine-root,
+.engine-root *,
+.engine-root *::before,
+.engine-root *::after {
+  box-sizing: border-box;
+}
+
+.engine-root {
+  color: var(--eui-text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+.engine-root ::selection {
+  background-color: color-mix(in srgb, var(--eui-brand) 25%, transparent);
+  color: var(--eui-text-primary);
+}
+
+.engine-root [class*="eui-"]:focus {
+  outline: none;
+}
+
+.engine-root [class*="eui-"]:focus-visible {
+  outline: none;
+  box-shadow: var(--eui-focus-ring);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * === TYPOGRAPHY ===
+ * Utility classes for hierarchy. Components may also inline-style font-size
+ * when needed, but these classes enforce the scale.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+.engine-root .eui-display-1 {
+  font-size: var(--eui-font-size-5xl);
+  line-height: var(--eui-line-height-tight);
+  font-weight: var(--eui-font-weight-semibold);
+  letter-spacing: var(--eui-tracking-hero);
+  color: var(--eui-text-primary);
+}
+
+.engine-root .eui-display-2 {
+  font-size: var(--eui-font-size-4xl);
+  line-height: var(--eui-line-height-tight);
+  font-weight: var(--eui-font-weight-semibold);
+  letter-spacing: var(--eui-tracking-display);
+  color: var(--eui-text-primary);
+}
+
+.engine-root .eui-title-1 {
+  font-size: var(--eui-font-size-2xl);
+  line-height: var(--eui-line-height-snug);
+  font-weight: var(--eui-font-weight-semibold);
+  letter-spacing: var(--eui-tracking-title);
+  color: var(--eui-text-primary);
+}
+
+.engine-root .eui-title-2 {
+  font-size: var(--eui-font-size-xl);
+  line-height: var(--eui-line-height-snug);
+  font-weight: var(--eui-font-weight-semibold);
+  letter-spacing: var(--eui-tracking-title);
+  color: var(--eui-text-primary);
+}
+
+.engine-root .eui-title-3 {
+  font-size: var(--eui-font-size-lg);
+  line-height: var(--eui-line-height-snug);
+  font-weight: var(--eui-font-weight-medium);
+  letter-spacing: var(--eui-tracking-normal);
+  color: var(--eui-text-primary);
+}
+
+.engine-root .eui-body-large {
+  font-size: var(--eui-font-size-md);
+  line-height: var(--eui-line-height-relaxed);
+  font-weight: var(--eui-font-weight-regular);
+  color: var(--eui-text-primary);
+}
+
+.engine-root .eui-body {
+  font-size: var(--eui-font-size-base);
+  line-height: var(--eui-line-height-normal);
+  font-weight: var(--eui-font-weight-regular);
+  color: var(--eui-text-primary);
+}
+
+.engine-root .eui-body-small {
+  font-size: var(--eui-font-size-sm);
+  line-height: var(--eui-line-height-normal);
+  font-weight: var(--eui-font-weight-regular);
+  color: var(--eui-text-secondary);
+}
+
+.engine-root .eui-caption {
+  font-size: var(--eui-font-size-xs);
+  line-height: var(--eui-line-height-normal);
+  font-weight: var(--eui-font-weight-regular);
+  color: var(--eui-text-secondary);
+}
+
+.engine-root .eui-label {
+  font-size: var(--eui-font-size-xs);
+  line-height: var(--eui-line-height-snug);
+  font-weight: var(--eui-font-weight-semibold);
+  letter-spacing: 0.01em;
+  color: var(--eui-text-primary);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * === POPOVER ===
+ * Radix Popover wrapper styling. Enter/exit animations are keyed to Radix's
+ * data-state attribute so they run without React state.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+.engine-root .eui-popover-content {
+  background: var(--eui-surface-raised);
+  border-radius: var(--eui-radius-2xl);
+  box-shadow: var(--eui-elev-4);
+  padding: var(--eui-space-5);
+  z-index: var(--eui-z-popover);
+  /* Remove Radix default border; we use elev's hairline ring instead. */
+  border: none;
+  outline: none;
+  transform-origin: var(--radix-popover-content-transform-origin);
+  will-change: transform, opacity;
+}
+
+/* Size variants. Width is enforced; height is content-sized. */
+.engine-root .eui-popover-content.eui-size-small    { width: 280px; }
+.engine-root .eui-popover-content.eui-size-medium   { width: 360px; }
+.engine-root .eui-popover-content.eui-size-large    { width: 640px; padding: 20px; }
+.engine-root .eui-popover-content.eui-size-contextual {
+  width: auto;
+  min-width: 180px;
+  max-width: 320px;
+  padding: var(--eui-space-3);
+}
+
+/* Radix state-based animations. Exit slightly faster than enter. */
+.engine-root .eui-popover-content[data-state="open"] {
+  animation: eui-popover-enter var(--eui-duration-base) var(--eui-ease-enter);
+}
+.engine-root .eui-popover-content[data-state="closed"] {
+  animation: eui-popover-exit var(--eui-duration-fast) var(--eui-ease-exit);
+}
+
+@keyframes eui-popover-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes eui-popover-exit {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.98) translateY(-2px);
+  }
+}
+
+/* Slide-in from left — used when the searchbar auto-advances from "Kiedy"
+   to "Kto". Overrides the default scale+fade so the popover visually
+   glides across instead of disappearing and reappearing. */
+.engine-root .eui-popover-content.eui-popover-slide-in[data-state="open"] {
+  animation: eui-popover-slide-in var(--eui-duration-slow) var(--eui-ease-enter);
+}
+
+@keyframes eui-popover-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(-40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Respect reduced motion: snap in/out. */
+@media (prefers-reduced-motion: reduce) {
+  .engine-root .eui-popover-content[data-state="open"],
+  .engine-root .eui-popover-content[data-state="closed"] {
+    animation: none;
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * === POPOVER-ITEM ===
+ * Generic system list item: colored icon envelope + title + optional subtitle.
+ * Used in: popover menus, search suggestions, filters (now and later).
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+.engine-root .eui-popover-item {
+  display: flex;
+  align-items: center;
+  gap: var(--eui-space-4);
+  width: 100%;
+  padding: var(--eui-space-4);
+  border-radius: var(--eui-radius-md);
+  background: transparent;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color var(--eui-duration-fast) var(--eui-ease-standard),
+    transform var(--eui-duration-fast) var(--eui-ease-standard);
+  color: var(--eui-text-primary);
+  font-family: inherit;
+}
+
+.engine-root .eui-popover-item:hover {
+  background-color: var(--eui-grey-100);
+}
+
+.engine-root .eui-popover-item:active {
+  background-color: var(--eui-grey-200);
+  transform: scale(0.99);
+}
+
+.engine-root .eui-popover-item[aria-selected="true"],
+.engine-root .eui-popover-item.eui-selected {
+  background-color: var(--eui-brand-softer);
+}
+
+.engine-root .eui-popover-item:disabled,
+.engine-root .eui-popover-item[aria-disabled="true"] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.engine-root .eui-popover-item-icon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--eui-radius-md);
+  background-color: var(--eui-grey-100);
+  color: var(--eui-text-primary);
+}
+
+.engine-root .eui-popover-item-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.engine-root .eui-popover-item-title {
+  font-size: var(--eui-font-size-base);
+  font-weight: var(--eui-font-weight-medium);
+  line-height: var(--eui-line-height-snug);
+  color: var(--eui-text-primary);
+}
+
+.engine-root .eui-popover-item-subtitle {
+  font-size: var(--eui-font-size-sm);
+  font-weight: var(--eui-font-weight-regular);
+  line-height: var(--eui-line-height-snug);
+  color: var(--eui-text-secondary);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * === STEPPER ===
+ * Generic +/- control. Reusable (not locked to GuestPicker).
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+.engine-root .eui-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--eui-space-4);
+}
+
+.engine-root .eui-stepper-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--eui-radius-pill);
+  background: transparent;
+  border: 1px solid var(--eui-border-strong);
+  color: var(--eui-text-primary);
+  cursor: pointer;
+  font-family: inherit;
+  transition:
+    border-color var(--eui-duration-fast) var(--eui-ease-standard),
+    color var(--eui-duration-fast) var(--eui-ease-standard),
+    background-color var(--eui-duration-fast) var(--eui-ease-standard),
+    transform var(--eui-duration-instant) var(--eui-ease-standard);
+}
+
+.engine-root .eui-stepper-btn:hover:not(:disabled) {
+  border-color: var(--eui-text-primary);
+  color: var(--eui-text-primary);
+}
+
+.engine-root .eui-stepper-btn:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
+.engine-root .eui-stepper-btn:disabled {
+  border-color: var(--eui-border);
+  color: var(--eui-text-muted);
+  cursor: not-allowed;
+}
+
+.engine-root .eui-stepper-value {
+  min-width: 24px;
+  text-align: center;
+  font-size: var(--eui-font-size-md);
+  font-weight: var(--eui-font-weight-medium);
+  color: var(--eui-text-primary);
+  font-variant-numeric: tabular-nums;
+  outline: none;
+  border-radius: var(--eui-radius-xs);
+  padding: 2px 4px;
+}
+
+.engine-root .eui-stepper-value:focus-visible {
+  outline: none;
+  box-shadow: var(--eui-focus-ring);
+}
+
+/* Compact size — used in sticky navbars, dense lists. */
+.engine-root .eui-stepper.eui-stepper-sm {
+  gap: var(--eui-space-3);
+}
+
+.engine-root .eui-stepper.eui-stepper-sm .eui-stepper-btn {
+  width: 26px;
+  height: 26px;
+}
+
+.engine-root .eui-stepper.eui-stepper-sm .eui-stepper-value {
+  font-size: var(--eui-font-size-sm);
+  min-width: 20px;
+}
+
+/* Global disabled state — applied when the whole stepper is disabled
+   (not just at the edge). Dims the rendered value, not just the buttons. */
+.engine-root .eui-stepper.eui-stepper-disabled .eui-stepper-value {
+  color: var(--eui-text-muted);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * === GUESTPICKER ===
+ * Rows of category (title + subtitle) + stepper on the right.
+ * Footer with Clear / Apply.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+.engine-root .eui-guestpicker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--eui-space-2);
+}
+
+.engine-root .eui-guestpicker-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--eui-space-4);
+  padding: var(--eui-space-5) 0;
+  border-bottom: 1px solid var(--eui-border);
+}
+
+.engine-root .eui-guestpicker-row:last-of-type {
+  border-bottom: none;
+}
+
+/* Icon on the left of each row. Subtle, assisting — not drawing attention.
+   Sits in a soft grey circle to give visual structure without shouting. */
+.engine-root .eui-guestpicker-icon {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 9999px;
+  background-color: var(--eui-grey-50);
+  color: var(--eui-grey-500);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.engine-root .eui-guestpicker-label {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding-right: var(--eui-space-4);
+}
+
+.engine-root .eui-guestpicker-title {
+  font-size: var(--eui-font-size-md);
+  font-weight: var(--eui-font-weight-medium);
+  line-height: var(--eui-line-height-snug);
+  color: var(--eui-text-primary);
+}
+
+.engine-root .eui-guestpicker-subtitle {
+  font-size: var(--eui-font-size-sm);
+  font-weight: var(--eui-font-weight-regular);
+  line-height: var(--eui-line-height-snug);
+  color: var(--eui-text-secondary);
+}
+
+.engine-root .eui-guestpicker-subtitle-link {
+  font-weight: var(--eui-font-weight-medium);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  color: var(--eui-text-primary);
+  transition: color var(--eui-duration-fast) var(--eui-ease-standard);
+}
+
+.engine-root .eui-guestpicker-subtitle-link:hover {
+  color: var(--eui-brand);
+}
+
+.engine-root .eui-guestpicker-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: var(--eui-space-5);
+  margin-top: var(--eui-space-3);
+  border-top: 1px solid var(--eui-border);
+}
+
+.engine-root .eui-guestpicker-link {
+  background: none;
+  border: none;
+  padding: var(--eui-space-3) var(--eui-space-2);
+  font-family: inherit;
+  font-size: var(--eui-font-size-sm);
+  font-weight: var(--eui-font-weight-semibold);
+  color: var(--eui-text-primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.engine-root .eui-guestpicker-link:hover {
+  color: var(--eui-grey-700);
+}
+
+.engine-root .eui-guestpicker-apply {
+  background: var(--eui-grey-900);
+  color: var(--eui-grey-0);
+  border: none;
+  padding: var(--eui-space-4) var(--eui-space-6);
+  border-radius: var(--eui-radius-sm);
+  font-family: inherit;
+  font-size: var(--eui-font-size-base);
+  font-weight: var(--eui-font-weight-semibold);
+  cursor: pointer;
+  transition:
+    background-color var(--eui-duration-fast) var(--eui-ease-standard),
+    transform var(--eui-duration-instant) var(--eui-ease-standard);
+}
+
+.engine-root .eui-guestpicker-apply:hover {
+  background: var(--eui-grey-1000);
+}
+
+.engine-root .eui-guestpicker-apply:active {
+  transform: scale(0.98);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * === DATEPICKER ===
+ * Two months side-by-side on desktop, one on mobile. Day grid.
+ * Range selection: start and end filled; in-between subtle brand tint.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+.engine-root .eui-datepicker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--eui-space-5);
+  min-width: 560px;
+}
+
+.engine-root .eui-datepicker-header {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--eui-space-5);
+  padding: 0 var(--eui-space-3);
+}
+
+.engine-root .eui-datepicker-nav {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--eui-radius-pill);
+  background: transparent;
+  border: none;
+  color: var(--eui-text-primary);
+  cursor: pointer;
+  transition: background-color var(--eui-duration-fast) var(--eui-ease-standard);
+}
+
+.engine-root .eui-datepicker-nav:hover:not(:disabled) {
+  background-color: var(--eui-grey-100);
+}
+
+.engine-root .eui-datepicker-nav:disabled {
+  color: var(--eui-text-muted);
+  cursor: not-allowed;
+}
+
+.engine-root .eui-datepicker-months {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--eui-space-7);
+}
+
+@media (max-width: 640px) {
+  .engine-root .eui-datepicker {
+    min-width: 0;
+  }
+  .engine-root .eui-datepicker-months {
+    grid-template-columns: 1fr;
+    gap: var(--eui-space-6);
+  }
+}
+
+.engine-root .eui-datepicker-month {
+  display: flex;
+  flex-direction: column;
+  gap: var(--eui-space-4);
+}
+
+.engine-root .eui-datepicker-month-title {
+  text-align: center;
+  font-size: var(--eui-font-size-md);
+  font-weight: var(--eui-font-weight-semibold);
+  color: var(--eui-text-primary);
+  text-transform: capitalize;
+}
+
+.engine-root .eui-datepicker-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 40px);
+  justify-content: center;
+  gap: 0;
+}
+
+.engine-root .eui-datepicker-weekday {
+  font-size: var(--eui-font-size-xs);
+  font-weight: var(--eui-font-weight-semibold);
+  color: var(--eui-text-secondary);
+  text-align: center;
+  padding: var(--eui-space-2) 0;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.engine-root .eui-datepicker-days {
+  display: grid;
+  grid-template-columns: repeat(7, 40px);
+  justify-content: center;
+  gap: 0;
+  /* Position sentinel so ::before on range cells can extend edge-to-edge. */
+  position: relative;
+}
+
+.engine-root .eui-datepicker-day {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: var(--eui-font-size-sm);
+  font-weight: var(--eui-font-weight-medium);
+  color: var(--eui-text-primary);
+  cursor: pointer;
+  position: relative;
+  transition: color var(--eui-duration-instant) var(--eui-ease-standard);
+}
+
+.engine-root .eui-datepicker-day-inner {
+  position: relative;
+  z-index: 1;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--eui-radius-pill);
+  transition:
+    background-color var(--eui-duration-fast) var(--eui-ease-standard),
+    color var(--eui-duration-fast) var(--eui-ease-standard);
+}
+
+.engine-root .eui-datepicker-day:hover:not(:disabled) .eui-datepicker-day-inner {
+  background-color: var(--eui-grey-100);
+}
+
+.engine-root .eui-datepicker-day.eui-day-selected {
+  color: var(--eui-grey-0);
+}
+.engine-root .eui-datepicker-day.eui-day-selected .eui-datepicker-day-inner {
+  background-color: var(--eui-grey-900);
+  color: var(--eui-grey-0);
+}
+.engine-root .eui-datepicker-day.eui-day-selected:hover:not(:disabled) .eui-datepicker-day-inner {
+  background-color: var(--eui-grey-1000);
+}
+
+/* In-range fill (not the endpoints). A solid brand-tinted band spanning the row.
+   Implemented via ::before so it crosses cell boundaries seamlessly. */
+.engine-root .eui-datepicker-day.eui-day-in-range::before {
+  content: "";
+  position: absolute;
+  inset: 4px 0;
+  background-color: var(--eui-brand-soft);
+  z-index: 0;
+}
+
+/* Range endpoints: round only the outer edge, keep inner edge flush with band. */
+.engine-root .eui-datepicker-day.eui-day-range-start::before {
+  content: "";
+  position: absolute;
+  inset: 4px 0 4px 50%;
+  background-color: var(--eui-brand-soft);
+  z-index: 0;
+}
+.engine-root .eui-datepicker-day.eui-day-range-end::before {
+  content: "";
+  position: absolute;
+  inset: 4px 50% 4px 0;
+  background-color: var(--eui-brand-soft);
+  z-index: 0;
+}
+
+/* Hover preview — lighter tint, fades cleanly. */
+.engine-root .eui-datepicker-day.eui-day-preview-range::before {
+  content: "";
+  position: absolute;
+  inset: 4px 0;
+  background-color: var(--eui-brand-softer);
+  z-index: 0;
+  opacity: 0.8;
+}
+
+.engine-root .eui-datepicker-day:disabled {
+  color: var(--eui-grey-300);
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+.engine-root .eui-datepicker-day:disabled:hover .eui-datepicker-day-inner {
+  background-color: transparent;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * === SEARCHBAR ===
+ * ONE component with variant: hero | compact. Shared segment logic; the
+ * variant only controls scale, paddings, height and pill tightness.
+ *
+ * Segment = clickable region (Where/When/Guests). Active segment gets a
+ * raised white "button" feel; the rest of the bar dims slightly so attention
+ * flows to the open segment. Exactly like Airbnb's pill.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+.engine-root .eui-searchbar {
+  display: inline-flex;
+  align-items: center;
+  background-color: var(--eui-surface-raised);
+  border-radius: var(--eui-radius-pill);
+  box-shadow: var(--eui-elev-1);
+  position: relative;
+  /* Inner padding on the right so the submit button has symmetric
+     breathing room (top = bottom = right = this padding). */
+  padding: var(--eui-space-2);
+  transition:
+    box-shadow var(--eui-duration-base) var(--eui-ease-standard),
+    background-color var(--eui-duration-base) var(--eui-ease-standard);
+}
+
+.engine-root .eui-searchbar:hover {
+  box-shadow: var(--eui-elev-3);
+}
+
+.engine-root .eui-searchbar.eui-searchbar-open {
+  box-shadow: var(--eui-elev-4);
+  background-color: var(--eui-grey-100);
+}
+
+/* Segments — the clickable regions. */
+.engine-root .eui-searchbar-segment {
+  position: relative;
+  flex: 1 1 0;
+  /* full height of the bar — so hover bg covers the whole white area */
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: var(--eui-space-4) var(--eui-space-6);
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  border-radius: var(--eui-radius-pill);
+  transition:
+    background-color var(--eui-duration-base) var(--eui-ease-standard),
+    box-shadow var(--eui-duration-base) var(--eui-ease-standard),
+    transform var(--eui-duration-instant) var(--eui-ease-standard);
+  font-family: inherit;
+  color: var(--eui-text-primary);
+  min-width: 0;
+}
+
+/* The searchbar itself acts as the raised surface for the active segment
+   via CSS variables: when a segment is active, peers fade via the parent
+   having .eui-searchbar-open, and the active segment stays white. */
+.engine-root .eui-searchbar-open .eui-searchbar-segment {
+  background-color: transparent;
+}
+
+/* Hover: soft grey covering the full segment height. Airbnb-level subtle —
+   not grey-200 (too strong) because the bar itself is white and strong
+   hover tint looks like an error state. */
+.engine-root .eui-searchbar-segment:hover {
+  background-color: var(--eui-grey-100);
+}
+
+.engine-root .eui-searchbar-segment.eui-segment-active {
+  background-color: var(--eui-surface-raised);
+  box-shadow: var(--eui-elev-2);
+}
+.engine-root .eui-searchbar-segment.eui-segment-active:hover {
+  background-color: var(--eui-surface-raised);
+}
+
+.engine-root .eui-searchbar-segment-label {
+  font-size: var(--eui-font-size-xs);
+  font-weight: var(--eui-font-weight-semibold);
+  color: var(--eui-text-primary);
+  line-height: 1;
+}
+
+.engine-root .eui-searchbar-segment-value {
+  font-size: var(--eui-font-size-sm);
+  font-weight: var(--eui-font-weight-regular);
+  color: var(--eui-text-primary);
+  line-height: 1.3;
+  margin-top: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.engine-root .eui-searchbar-segment-value.eui-placeholder {
+  color: var(--eui-text-secondary);
+}
+
+/* Guest summary with inline chips for infants/pets — compact so it fits in
+   a narrow segment. Main label + icon+count chip per category. */
+.engine-root .eui-searchbar-guest-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--eui-space-3);
+  min-width: 0;
+}
+
+.engine-root .eui-searchbar-guest-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  background-color: var(--eui-grey-100);
+  color: var(--eui-text-primary);
+  font-size: var(--eui-font-size-xs);
+  font-weight: var(--eui-font-weight-medium);
+  line-height: 1.3;
+}
+
+.engine-root .eui-searchbar-guest-chip svg {
+  color: var(--eui-grey-500);
+}
+
+/* Divider between inactive, neighbouring segments (Airbnb's thin vertical rule).
+   Hidden when: a neighbouring segment is active (JS class), OR when any
+   neighbour is hovered (CSS :has — fades the "|" right when the user is
+   interacting with a segment, so there's no visible rule next to a hovered
+   pill). */
+.engine-root .eui-searchbar-divider {
+  width: 1px;
+  align-self: center;
+  height: 32px;
+  background-color: var(--eui-border);
+  flex-shrink: 0;
+  transition: opacity var(--eui-duration-fast) var(--eui-ease-standard);
+}
+
+.engine-root .eui-searchbar-divider.eui-divider-hidden {
+  opacity: 0;
+}
+
+/* :has() — fade divider when either neighbour is hovered. */
+.engine-root .eui-searchbar-segment:hover + .eui-searchbar-divider,
+.engine-root .eui-searchbar-divider:has(+ .eui-searchbar-segment:hover) {
+  opacity: 0;
+}
+
+/* Submit button. Brand-colored, pill. The bar itself owns vertical and
+   right padding (via --eui-space-2 = 8px inset). Submit adds its own
+   left margin to separate from the preceding segment — without it the
+   button kisses the segment's right edge. Result: symmetric 8px breathing
+   room on top, bottom, right, AND a visible 8px gap on the left.
+   `box-sizing: border-box` is explicit so the declared height is the
+   final height — no padding or border sneaks extra pixels. */
+.engine-root .eui-searchbar-submit {
+  flex-shrink: 0;
+  align-self: center;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--eui-space-3);
+  background-color: var(--eui-brand);
+  color: var(--eui-brand-foreground);
+  border: none;
+  border-radius: var(--eui-radius-pill);
+  font-family: inherit;
+  font-weight: var(--eui-font-weight-semibold);
+  cursor: pointer;
+  margin: 0 0 0 var(--eui-space-2);
+  overflow: hidden;
+  white-space: nowrap;
+  transition:
+    background-color var(--eui-duration-fast) var(--eui-ease-standard),
+    transform var(--eui-duration-instant) var(--eui-ease-standard),
+    box-shadow var(--eui-duration-fast) var(--eui-ease-standard),
+    padding-right var(--eui-duration-base) var(--eui-ease-standard);
+}
+
+.engine-root .eui-searchbar-submit:hover {
+  background-color: color-mix(in srgb, var(--eui-brand) 88%, black);
+  box-shadow: var(--eui-elev-2);
+}
+
+.engine-root .eui-searchbar-submit:active {
+  transform: scale(0.97);
+}
+
+/* ── Variant: hero ── */
+.engine-root .eui-searchbar.eui-variant-hero {
+  width: 100%;
+  max-width: 860px;
+  min-height: 60px;
+}
+
+.engine-root .eui-searchbar.eui-variant-hero .eui-searchbar-segment {
+  padding: var(--eui-space-4) var(--eui-space-7);
+}
+
+.engine-root .eui-searchbar.eui-variant-hero .eui-searchbar-submit {
+  height: 44px;
+  min-height: 44px;
+  max-height: 44px;
+  width: 44px;
+  padding: 0;
+  font-size: var(--eui-font-size-md);
+  line-height: 1;
+  gap: 0;
+  transition:
+    background-color var(--eui-duration-fast) var(--eui-ease-standard),
+    transform var(--eui-duration-instant) var(--eui-ease-standard),
+    box-shadow var(--eui-duration-fast) var(--eui-ease-standard),
+    width var(--eui-duration-base) var(--eui-ease-standard),
+    padding var(--eui-duration-base) var(--eui-ease-standard),
+    gap var(--eui-duration-base) var(--eui-ease-standard);
+}
+
+.engine-root .eui-searchbar.eui-variant-hero .eui-searchbar-submit > svg {
+  flex-shrink: 0;
+  display: block;
+}
+
+.engine-root .eui-searchbar.eui-variant-hero .eui-searchbar-submit > span {
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  line-height: 1;
+  transition:
+    max-width var(--eui-duration-base) var(--eui-ease-standard),
+    opacity var(--eui-duration-fast) var(--eui-ease-standard);
+}
+
+.engine-root .eui-searchbar.eui-variant-hero .eui-searchbar-submit:hover,
+.engine-root .eui-searchbar.eui-variant-hero .eui-searchbar-submit:focus-visible {
+  width: 140px;
+  padding: 0 var(--eui-space-6);
+  gap: var(--eui-space-3);
+}
+
+.engine-root .eui-searchbar.eui-variant-hero .eui-searchbar-submit:hover > span,
+.engine-root .eui-searchbar.eui-variant-hero .eui-searchbar-submit:focus-visible > span {
+  max-width: 80px;
+  opacity: 1;
+}
+
+/* Legacy iconOnly variant (still supported for callers passing
+   submitIconOnly=true explicitly). No expand-on-hover — always a circle. */
+.engine-root .eui-searchbar.eui-variant-hero .eui-searchbar-submit.eui-submit-compact {
+  width: 44px;
+  padding: 0;
+}
+.engine-root .eui-searchbar.eui-variant-hero .eui-searchbar-submit.eui-submit-compact:hover {
+  width: 44px;
+  padding: 0;
+}
+.engine-root .eui-searchbar.eui-variant-hero .eui-searchbar-submit.eui-submit-compact > span {
+  display: none;
+}
+
+/* ── Variant: compact ── */
+.engine-root .eui-searchbar.eui-variant-compact {
+  min-height: 48px;
+}
+
+.engine-root .eui-searchbar.eui-variant-compact .eui-searchbar-segment {
+  padding: var(--eui-space-3) var(--eui-space-5);
+}
+
+.engine-root .eui-searchbar.eui-variant-compact .eui-searchbar-segment-label {
+  font-size: 11px;
+}
+
+.engine-root .eui-searchbar.eui-variant-compact .eui-searchbar-segment-value {
+  font-size: var(--eui-font-size-xs);
+  margin-top: 2px;
+}
+
+.engine-root .eui-searchbar.eui-variant-compact .eui-searchbar-submit {
+  height: 36px;
+  width: 36px;
+  padding: 0;
+  margin: var(--eui-space-2);
+}
+
+.engine-root .eui-searchbar.eui-variant-compact .eui-searchbar-divider {
+  height: 24px;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * === LAB-ONLY STYLES ===
+ * Layout and chrome for /admin/engine-ui-lab. These classes never appear in
+ * the public booking engine — they exist only to scaffold the internal
+ * documentation/preview surface.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Lab chrome (layout, sidebar positioning, topbar) ──
+ *
+ * NOTE: these rules live OUTSIDE `.engine-root`. The lab chrome is part
+ * of admin DOM, so it uses admin tokens (`hsl(var(--background))`,
+ * `hsl(var(--card))`, `hsl(var(--border))`) and automatically adapts to
+ * admin's light/dark mode. Only sections inside `.engine-root .eui-lab-preview`
+ * use engine-ui tokens. */
+
+.eui-lab-shell {
+  min-height: calc(100vh - 64px);
+  display: grid;
+  grid-template-columns: 272px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .eui-lab-shell {
+    grid-template-columns: 1fr;
+  }
+}
+
+.eui-lab-sidebar {
+  position: sticky;
+  /* Admin topbar is 64px. Park sidebar right under it + 20px breathing. */
+  top: 84px;
+  align-self: start;
+  max-height: calc(100vh - 84px - 20px);
+  overflow-y: auto;
+}
+
+@media (max-width: 1024px) {
+  .eui-lab-sidebar {
+    position: static;
+    max-height: none;
+  }
+}
+
+.eui-lab-main {
+  min-width: 0; /* needed so grid children can shrink below content */
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.eui-lab-topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background-color: hsl(var(--card));
+  border: 1px solid hsl(var(--border) / 0.6);
+  border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+}
+
+.eui-lab-topbar-title {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: hsl(var(--foreground));
+  margin: 0;
+}
+
+.eui-lab-topbar-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: hsl(var(--muted-foreground));
+  background-color: hsl(var(--muted));
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+/* ── Lab preview area ──
+ *
+ * Everything below here is scoped to `.engine-root .eui-lab-preview` —
+ * this is where engine-ui components are rendered with engine-ui tokens.
+ * The light grey background keeps showcase cards (white bg-card) visually
+ * separate from the preview frame. */
+
+.engine-root.eui-lab-preview {
+  padding: 24px;
+  border-radius: 16px;
+  background-color: var(--eui-grey-50);
+  border: 1px solid hsl(var(--border) / 0.6);
+  display: flex;
+  flex-direction: column;
+  gap: 64px;
+}
+
+@media (max-width: 640px) {
+  .engine-root.eui-lab-preview {
+    padding: 16px;
+    gap: 48px;
+  }
+}
+
+.engine-root .eui-lab-section {
+  /* 64px admin topbar + breathing room so the section heading sits below
+     the sticky navbar after an anchor click. */
+  scroll-margin-top: calc(64px + var(--eui-space-5));
+  display: flex;
+  flex-direction: column;
+  gap: var(--eui-space-6);
+}
+
+.engine-root .eui-lab-section-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--eui-space-3);
+}
+
+.engine-root .eui-lab-section-title {
+  font-size: var(--eui-font-size-2xl);
+  font-weight: var(--eui-font-weight-semibold);
+  letter-spacing: var(--eui-tracking-title);
+  color: var(--eui-text-primary);
+}
+
+.engine-root .eui-lab-section-description {
+  font-size: var(--eui-font-size-md);
+  line-height: var(--eui-line-height-relaxed);
+  color: var(--eui-text-secondary);
+  max-width: 680px;
+}
+
+.engine-root .eui-lab-showcase {
+  background-color: var(--eui-surface-raised);
+  border: 1px solid var(--eui-border);
+  border-radius: var(--eui-radius-lg);
+  padding: var(--eui-space-8);
+  display: flex;
+  flex-direction: column;
+  gap: var(--eui-space-5);
+}
+
+.engine-root .eui-lab-showcase-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-bottom: var(--eui-space-4);
+  border-bottom: 1px solid var(--eui-border);
+}
+
+.engine-root .eui-lab-showcase-title {
+  font-size: var(--eui-font-size-md);
+  font-weight: var(--eui-font-weight-semibold);
+  color: var(--eui-text-primary);
+}
+
+.engine-root .eui-lab-showcase-caption {
+  font-size: var(--eui-font-size-sm);
+  color: var(--eui-text-secondary);
+  line-height: var(--eui-line-height-normal);
+}
+
+.engine-root .eui-lab-showcase-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
+  padding: var(--eui-space-6);
+  background-color: var(--eui-grey-50);
+  border-radius: var(--eui-radius-md);
+}
+
+.engine-root .eui-lab-showcase-stage.eui-stage-transparent {
+  background-color: transparent;
+  padding: 0;
+}
+
+.engine-root .eui-lab-code {
+  background-color: var(--eui-grey-900);
+  color: var(--eui-grey-50);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: var(--eui-font-size-xs);
+  line-height: var(--eui-line-height-relaxed);
+  padding: var(--eui-space-5) var(--eui-space-6);
+  border-radius: var(--eui-radius-sm);
+  overflow-x: auto;
+  white-space: pre;
+}
+
+/* Foundations section helpers: swatches, spec rows, motion demos. */
+.engine-root .eui-lab-swatch-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: var(--eui-space-4);
+}
+
+.engine-root .eui-lab-swatch {
+  display: flex;
+  flex-direction: column;
+  gap: var(--eui-space-2);
+}
+
+.engine-root .eui-lab-swatch-chip {
+  height: 72px;
+  border-radius: var(--eui-radius-md);
+  border: 1px solid var(--eui-border);
+}
+
+.engine-root .eui-lab-swatch-name {
+  font-size: var(--eui-font-size-xs);
+  font-weight: var(--eui-font-weight-semibold);
+  color: var(--eui-text-primary);
+}
+
+.engine-root .eui-lab-swatch-value {
+  font-size: var(--eui-font-size-xs);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--eui-text-secondary);
+}
+
+.engine-root .eui-lab-spec-row {
+  display: grid;
+  grid-template-columns: 160px 1fr 100px;
+  align-items: center;
+  gap: var(--eui-space-5);
+  padding: var(--eui-space-3) 0;
+  border-bottom: 1px solid var(--eui-border);
+}
+
+.engine-root .eui-lab-spec-row:last-child {
+  border-bottom: none;
+}
+
+.engine-root .eui-lab-spec-name {
+  font-size: var(--eui-font-size-sm);
+  font-weight: var(--eui-font-weight-medium);
+  color: var(--eui-text-primary);
+}
+
+.engine-root .eui-lab-spec-visual {
+  display: flex;
+  align-items: center;
+  gap: var(--eui-space-3);
+}
+
+.engine-root .eui-lab-spec-bar {
+  height: 8px;
+  background-color: var(--eui-grey-900);
+  border-radius: var(--eui-radius-xs);
+}
+
+.engine-root .eui-lab-spec-box {
+  background-color: var(--eui-grey-100);
+  border: 1px solid var(--eui-border-strong);
+}
+
+.engine-root .eui-lab-spec-value {
+  font-size: var(--eui-font-size-xs);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--eui-text-secondary);
+  text-align: right;
+}
+
+.engine-root .eui-lab-elev-card {
+  background-color: var(--eui-surface-raised);
+  border-radius: var(--eui-radius-md);
+  padding: var(--eui-space-5);
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--eui-font-size-sm);
+  font-weight: var(--eui-font-weight-medium);
+  color: var(--eui-text-primary);
+}
+
+.engine-root .eui-lab-motion-box {
+  width: 64px;
+  height: 64px;
+  background-color: var(--eui-grey-900);
+  border-radius: var(--eui-radius-md);
+  transform-origin: left center;
+  transition-property: transform;
+  transition-duration: var(--eui-duration-slow);
+  /* Explicit starting position — otherwise some browsers can get confused
+     between transform: none and an unset transform during the first tick. */
+  transform: translateX(0);
+}
+
+.engine-root .eui-lab-motion-box.eui-motion-running {
+  /* Desktop: traveluje 280px. Track na mobile jest węższy, więc używamy
+     --eui-motion-travel variable który CSS nadpisze na mobile. */
+  transform: translateX(var(--eui-motion-travel, 280px));
+}
+
+.engine-root .eui-lab-motion-track {
+  position: relative;
+  height: 64px;
+  /* At least box (64) + travel (280) + a bit of padding so the box has
+     somewhere to move without being clipped. */
+  min-width: 360px;
+  background: linear-gradient(to right, var(--eui-grey-100), transparent 50%);
+  border-radius: var(--eui-radius-md);
+  overflow: hidden;
+  /* Desktop default — box travel 280px (mieści się w tracku showcase). */
+  --eui-motion-travel: 280px;
+}
+
+/* Mobile: track jest węższy niż 344px (box 64 + 280 translate), więc
+   skracamy dystans do ~60% szerokości tracka. `calc(100% - 64px - 16px)`
+   = szerokość tracka minus box size minus niewielka rezerwa, co zawsze
+   utrzyma box w środku viewportu. */
+@media (max-width: 640px) {
+  .engine-root .eui-lab-motion-track {
+    min-width: 0;
+    --eui-motion-travel: calc(100% - 64px - 16px);
+  }
+}
+
+/* Code snippet block with toolbar */
+.engine-root .eui-lab-code-wrap {
+  position: relative;
+  background-color: var(--eui-grey-900);
+  border-radius: var(--eui-radius-sm);
+  overflow: hidden;
+}
+
+.engine-root .eui-lab-code-wrap .eui-lab-code {
+  background-color: transparent;
+  margin: 0;
+}
+
+.engine-root .eui-lab-code-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--eui-space-3) var(--eui-space-5);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.engine-root .eui-lab-code-lang {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  font-weight: var(--eui-font-weight-semibold);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--eui-grey-300);
+}
+
+.engine-root .eui-lab-code-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--eui-space-2);
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: var(--eui-grey-100);
+  font-family: inherit;
+  font-size: var(--eui-font-size-xs);
+  font-weight: var(--eui-font-weight-medium);
+  padding: 4px 10px;
+  border-radius: var(--eui-radius-xs);
+  cursor: pointer;
+  transition: background-color var(--eui-duration-fast) var(--eui-ease-standard);
+}
+
+.engine-root .eui-lab-code-copy:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.engine-root .eui-lab-code-copy:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--eui-grey-900), 0 0 0 4px var(--eui-border-focus);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * MOBILE RESPONSYWNOŚĆ (engine-ui + lab layout)
+ * ═══════════════════════════════════════════════════════════════════════════
+ * Do tej pory ustawiliśmy tylko kilka punktowych media queries. Tutaj
+ * pełny, spójny zestaw reguł dla ekranów ≤ 768px:
+ *
+ *   - SearchBar hero → składa się w pionie (where/when/guests jeden pod
+ *     drugim), submit na całą szerokość, full-width pill
+ *   - SearchBar compact → też pionowo (bo ≤ 48px × 3 segmenty to i tak OK),
+ *     submit na pełną szerokość
+ *   - Popover content → nigdy nie przekracza szerokości viewportu;
+ *     `eui-size-large` staje się max 92vw (bo 640px > 375px iPhone)
+ *   - GuestPicker / DatePicker popovery → pełna szerokość karty
+ *   - Lab content → mniej padding, ładniejsza typografia mobile
+ *
+ * Nic co tu jest nie wpływa na warianty desktop — wszystkie reguły
+ * znajdują się wewnątrz @media (max-width: 768px) lub mniejszych.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  /* ── Searchbar: pionowo, full width ──
+   *
+   * On mobile the pill-shape becomes a vertical stack. `overflow: hidden`
+   * is essential: it clips every child (active segment bg, hover bg) to
+   * the rounded border of the parent bar. Without it, a segment's
+   * `bg-grey-100` hover/active state renders as a sharp rectangle that
+   * pokes outside the rounded corners — the "white rectangle overflow"
+   * bug visible on phone. */
+  .engine-root .eui-searchbar {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 100%;
+    border-radius: var(--eui-radius-2xl);
+    align-items: stretch;
+    padding: 0;
+    overflow: hidden;
+  }
+  .engine-root .eui-searchbar.eui-variant-hero {
+    min-height: 0;
+  }
+  .engine-root .eui-searchbar.eui-variant-compact {
+    min-height: 0;
+  }
+  .engine-root .eui-searchbar-segment {
+    width: 100%;
+    border-radius: 0;
+    padding: var(--eui-space-4) var(--eui-space-5);
+    border-bottom: 1px solid var(--eui-border);
+    align-self: auto;
+  }
+  .engine-root .eui-searchbar-segment:last-of-type {
+    border-bottom: none;
+  }
+  .engine-root .eui-searchbar-segment.eui-segment-active {
+    box-shadow: none;
+    background-color: var(--eui-grey-100);
+  }
+  /* Dividers są niepotrzebne w pionowym układzie */
+  .engine-root .eui-searchbar-divider {
+    display: none;
+  }
+  /* Submit: full-width, centered, pod segmentami. Override margin-left
+     z wersji desktop która zostawała 8px. */
+  .engine-root .eui-searchbar-submit {
+    width: calc(100% - var(--eui-space-5));
+    align-self: center;
+    margin: var(--eui-space-4) var(--eui-space-3) var(--eui-space-3);
+  }
+  /* Mobile: przywracamy stary wygląd hero — pełny przycisk z napisem
+     Szukaj zawsze widocznym. Expand-on-hover jest gestem desktop'owym;
+     na telefonie bez kursora nie ma sensu. */
+  .engine-root .eui-searchbar.eui-variant-hero .eui-searchbar-submit {
+    height: 48px;
+    min-height: 48px;
+    max-height: 48px;
+    width: calc(100% - var(--eui-space-5));
+    padding: 0 var(--eui-space-5);
+  }
+  .engine-root .eui-searchbar.eui-variant-hero .eui-searchbar-submit:hover,
+  .engine-root .eui-searchbar.eui-variant-hero .eui-searchbar-submit:focus-visible {
+    width: calc(100% - var(--eui-space-5));
+    padding: 0 var(--eui-space-5);
+  }
+  .engine-root .eui-searchbar.eui-variant-hero .eui-searchbar-submit > span {
+    max-width: none;
+    opacity: 1;
+    overflow: visible;
+  }
+  .engine-root .eui-searchbar.eui-variant-compact .eui-searchbar-submit {
+    height: 44px;
+    width: calc(100% - var(--eui-space-5));
+    padding: 0 var(--eui-space-5);
+  }
+
+  /* ── Popover content: nie wywala się poza viewport ── */
+  .engine-root .eui-popover-content {
+    max-width: calc(100vw - 16px);
+    width: auto;
+  }
+  .engine-root .eui-popover-content.eui-size-large {
+    /* 640px jest większe niż iPhone (375px) — zmieniamy na niemal-full */
+    width: calc(100vw - 16px);
+    max-width: calc(100vw - 16px);
+  }
+  .engine-root .eui-popover-content.eui-size-medium {
+    width: min(360px, calc(100vw - 16px));
+  }
+  .engine-root .eui-popover-content.eui-size-small {
+    width: min(280px, calc(100vw - 16px));
+  }
+
+  /* ── Datepicker na mobile: jeden miesiąc, węższe komórki opcjonalnie ── */
+  .engine-root .eui-datepicker {
+    min-width: 0;
+    width: 100%;
+  }
+  .engine-root .eui-datepicker-weekdays,
+  .engine-root .eui-datepicker-days {
+    grid-template-columns: repeat(7, minmax(36px, 1fr));
+    justify-content: stretch;
+  }
+  .engine-root .eui-datepicker-day,
+  .engine-root .eui-datepicker-day-inner {
+    width: 100%;
+  }
+
+  /* ── GuestPicker / Stepper skala ── */
+  .engine-root .eui-guestpicker-title {
+    font-size: var(--eui-font-size-base);
+  }
+
+  /* ── Lab preview area: więcej oddechu, mniej padding ── */
+  .engine-root.eui-lab-preview {
+    padding: 16px;
+    gap: 48px;
+  }
+  .engine-root .eui-lab-showcase {
+    padding: var(--eui-space-5);
+  }
+  .engine-root .eui-lab-showcase-stage {
+    padding: var(--eui-space-4);
+  }
+  /* Lab topbar (admin DOM — no `.engine-root` prefix) */
+  .eui-lab-topbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 14px 16px;
+  }
+  .eui-lab-topbar-title {
+    font-size: 18px;
+  }
+  .engine-root .eui-lab-section-title {
+    font-size: var(--eui-font-size-xl);
+  }
+  .engine-root .eui-lab-spec-row {
+    /* Ściślejsze kolumny, żeby bar i value się mieściły */
+    grid-template-columns: 100px 1fr 80px;
+    gap: var(--eui-space-3);
+  }
+  .engine-root .eui-display-1 {
+    font-size: var(--eui-font-size-3xl);
+    letter-spacing: var(--eui-tracking-display);
+  }
+  .engine-root .eui-display-2 {
+    font-size: var(--eui-font-size-2xl);
+  }
+}
+
+/* Wąski ekran — bardziej agresywne oszczędzanie miejsca */
+@media (max-width: 480px) {
+  .engine-root .eui-datepicker-weekdays,
+  .engine-root .eui-datepicker-days {
+    grid-template-columns: repeat(7, 1fr);
+  }
+  .engine-root .eui-datepicker-day {
+    height: 36px;
+    font-size: var(--eui-font-size-xs);
+  }
+  .engine-root .eui-datepicker-day-inner {
+    width: 36px;
+    height: 36px;
+  }
+  .engine-root .eui-lab-swatch-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .engine-root .eui-lab-spec-row {
+    grid-template-columns: 90px 1fr 60px;
+    font-size: var(--eui-font-size-xs);
+  }
 }

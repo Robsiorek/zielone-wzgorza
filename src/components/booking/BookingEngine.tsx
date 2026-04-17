@@ -3,21 +3,22 @@
 /**
  * BookingEngine.tsx — Root orchestrator for the booking engine.
  *
- * B5a: Parses URL params → determines mode → delegates to view.
- * - explore:  ExploreView (resource catalog) — Phase 3
- * - results:  BookingWidget with pre-filled dates (auto-skip: Phase 5)
- * - resource: BookingWidget with pre-filled dates + slug stored (auto-skip: Phase 5)
+ * B5a Phase 3: Routes between ExploreView and BookingWidget based on URL params.
+ * - explore:  ExploreView (resource catalog)
+ * - results:  Loading overlay → BookingWidget with pre-filled dates
+ * - resource: Loading overlay → BookingWidget with pre-filled dates + resourceIntent
  *
- * Phase 2 behavior: dates are pre-filled in StepDates form, user still clicks
- * "Szukaj" to proceed. Full auto-skip to StepResults/StepQuote is Phase 5.
- *
- * Design: thin orchestration layer — no fetching, no heavy UI.
- * Uses parseBookingParams() which returns mode + fallbackReason in one call.
+ * Loading overlay contract:
+ *   hideOverlay = minTimeElapsed && contentReady
+ *   - minTimeElapsed: ~600ms anti-flash timer
+ *   - contentReady: BookingWidget signals via onReady callback
+ *   Overlay resets on mode change (explore ↔ results/resource).
  */
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect, useCallback } from "react";
 import { parseBookingParams } from "@/lib/booking-params";
 import { BookingWidget } from "./BookingWidget";
+import { ExploreView } from "./ExploreView";
 
 // ═══════════════════════════════════════════
 // Types
@@ -28,19 +29,34 @@ interface Props {
 }
 
 // ═══════════════════════════════════════════
-// Explore View placeholder (Phase 3)
+// Loading Overlay (results/resource entry)
 // ═══════════════════════════════════════════
 
-function ExploreViewPlaceholder() {
+const OVERLAY_MESSAGES = [
+  "Wczytujemy Twoje zapytanie...",
+  "Sprawdzamy dostępność domków...",
+];
+
+function LoadingOverlay() {
+  const [messageIdx, setMessageIdx] = useState(0);
+
+  useEffect(() => {
+    const msgTimer = setTimeout(() => setMessageIdx(1), 800);
+    return () => clearTimeout(msgTimer);
+  }, []);
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-5">
-      <div className="text-center space-y-3 max-w-md">
-        <div className="text-4xl">🏡</div>
-        <h1 className="text-2xl font-bold text-foreground">
-          Zielone Wzgórza
-        </h1>
-        <p className="text-[14px] text-muted-foreground">
-          Silnik rezerwacyjny — widok katalogu w przygotowaniu (Faza 3)
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center animate-in fade-in duration-150">
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" />
+      {/* Card */}
+      <div className="relative bg-card rounded-[20px] px-8 py-7 flex flex-col items-center gap-4"
+        style={{ boxShadow: "0 8px 40px rgba(0,0,0,0.12)", minWidth: 260 }}>
+        {/* Spinner */}
+        <div className="h-8 w-8 rounded-full border-[3px] border-muted border-t-primary animate-spin" />
+        {/* Message */}
+        <p className="text-[14px] font-medium text-foreground text-center transition-opacity duration-200">
+          {OVERLAY_MESSAGES[messageIdx]}
         </p>
       </div>
     </div>
@@ -57,23 +73,52 @@ export function BookingEngine({ searchParams }: Props) {
     [searchParams]
   );
 
-  // ── Explore: no valid dates → show catalog (Phase 3 will replace placeholder) ──
+  const needsOverlay = parsed.mode === "results" || parsed.mode === "resource";
+
+  // Overlay state: both conditions must be true to dismiss
+  const [minTimePassed, setMinTimePassed] = useState(false);
+  const [contentReady, setContentReady] = useState(false);
+
+  // Reset overlay state when mode changes (explore ↔ results/resource)
+  useEffect(() => {
+    if (needsOverlay) {
+      setMinTimePassed(false);
+      setContentReady(false);
+      const timer = setTimeout(() => setMinTimePassed(true), 600);
+      return () => clearTimeout(timer);
+    } else {
+      // Explore mode: no overlay needed
+      setMinTimePassed(true);
+      setContentReady(true);
+    }
+  }, [needsOverlay, parsed.checkIn, parsed.checkOut, parsed.resourceSlug]);
+
+  // Stable callback for BookingWidget onReady
+  const handleContentReady = useCallback(() => {
+    setContentReady(true);
+  }, []);
+
+  const showOverlay = needsOverlay && !(minTimePassed && contentReady);
+
+  // ── Explore: no valid dates → show catalog ──
   if (parsed.mode === "explore") {
-    return <ExploreViewPlaceholder />;
+    return <ExploreView />;
   }
 
-  // ── Results / Resource: pass pre-filled dates to BookingWidget ──
-  // Phase 2: dates pre-filled in StepDates, user clicks "Szukaj" manually.
-  // Phase 5: auto-skip to StepResults (results) or StepQuote (resource).
+  // ── Results / Resource: overlay until ready, then BookingWidget ──
   return (
-    <BookingWidget
-      initialDates={{
-        checkIn: parsed.checkIn!,
-        checkOut: parsed.checkOut!,
-        adults: parsed.guests,
-        children: 0,
-      }}
-      resourceIntent={parsed.mode === "resource" ? parsed.resourceSlug : null}
-    />
+    <>
+      {showOverlay && <LoadingOverlay />}
+      <BookingWidget
+        initialDates={{
+          checkIn: parsed.checkIn!,
+          checkOut: parsed.checkOut!,
+          adults: parsed.guests,
+          children: 0,
+        }}
+        resourceIntent={parsed.mode === "resource" ? parsed.resourceSlug : null}
+        onReady={handleContentReady}
+      />
+    </>
   );
 }
