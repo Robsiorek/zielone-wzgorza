@@ -26,6 +26,7 @@ import {
   CalendarRange,
   Users,
   SearchIcon,
+  LayoutList,
 } from "lucide-react";
 
 import { useWidgetTheme } from "@/components/engine-ui/hooks/useWidgetTheme";
@@ -36,6 +37,7 @@ import { PopoverSection } from "./sections/PopoverSection";
 import { DatePickerSection } from "./sections/DatePickerSection";
 import { GuestPickerSection } from "./sections/GuestPickerSection";
 import { SearchBarSection } from "./sections/SearchBarSection";
+import { ResultsSection } from "./sections/ResultsSection";
 
 const SIDEBAR_ITEMS = [
   { id: "foundations", label: "Fundamenty",        icon: <Palette size={16} aria-hidden="true" /> },
@@ -44,6 +46,7 @@ const SIDEBAR_ITEMS = [
   { id: "datepicker",  label: "Picker dat",        icon: <CalendarRange size={16} aria-hidden="true" /> },
   { id: "guestpicker", label: "Picker gości",      icon: <Users size={16} aria-hidden="true" /> },
   { id: "searchbar",   label: "Pasek wyszukiwania", icon: <SearchIcon size={16} aria-hidden="true" /> },
+  { id: "results",     label: "Warstwa wyników",    icon: <LayoutList size={16} aria-hidden="true" /> },
 ];
 
 export function EngineUiLab() {
@@ -78,6 +81,7 @@ export function EngineUiLab() {
           <DatePickerSection />
           <GuestPickerSection />
           <SearchBarSection />
+          <ResultsSection />
         </div>
       </div>
     </div>

@@ -63,7 +63,7 @@ export function PopoverSection() {
       {/* ── Size variants ── */}
       <ComponentShowcase
         title="Warianty rozmiaru"
-        caption="Small (280), Medium (360), Large (520), Contextual (auto)."
+        caption="Small (280), Medium (360), Large (640), Contextual (auto)."
       >
         <div style={{ display: "flex", gap: 16, flexWrap: "wrap", justifyContent: "center" }}>
           <Popover>
@@ -103,7 +103,7 @@ export function PopoverSection() {
               <div>
                 <h4 className="eui-title-3" style={{ marginBottom: 8 }}>Duży rozmiar</h4>
                 <p className="eui-body-small" style={{ margin: 0 }}>
-                  520 px. Do picker'a dat z dwoma miesiącami obok siebie, gęstszej
+                  640 px. Do picker'a dat z dwoma miesiącami obok siebie, gęstszej
                   zawartości. Mieści co najmniej dwa kolumnowe widoki bok przy boku.
                 </p>
               </div>

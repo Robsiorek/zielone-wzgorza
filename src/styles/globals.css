@@ -881,7 +881,7 @@
 
 .engine-root .eui-popover-item:active {
   background-color: var(--eui-grey-200);
-  transform: scale(0.99);
+  filter: brightness(0.88);
 }
 
 .engine-root .eui-popover-item[aria-selected="true"],
@@ -966,7 +966,7 @@
 }
 
 .engine-root .eui-stepper-btn:active:not(:disabled) {
-  transform: scale(0.94);
+  filter: brightness(0.88);
 }
 
 .engine-root .eui-stepper-btn:disabled {
@@ -1035,7 +1035,9 @@
   border-bottom: 1px solid var(--eui-border);
 }
 
-.engine-root .eui-guestpicker-row:last-of-type {
+/* :last-of-type won't work because footer is also a <div>, so
+   the last-of-type is the footer, not the last row. Use :has(). */
+.engine-root .eui-guestpicker-row:has(+ .eui-guestpicker-footer) {
   border-bottom: none;
 }
 
@@ -1077,10 +1079,11 @@
 }
 
 .engine-root .eui-guestpicker-subtitle-link {
+  font-size: var(--eui-font-size-xs);
   font-weight: var(--eui-font-weight-medium);
   text-decoration: underline;
   text-underline-offset: 2px;
-  color: var(--eui-text-primary);
+  color: var(--eui-text-secondary);
   transition: color var(--eui-duration-fast) var(--eui-ease-standard);
 }
 
@@ -1094,7 +1097,6 @@
   justify-content: space-between;
   padding-top: var(--eui-space-5);
   margin-top: var(--eui-space-3);
-  border-top: 1px solid var(--eui-border);
 }
 
 .engine-root .eui-guestpicker-link {
@@ -1112,6 +1114,10 @@
 
 .engine-root .eui-guestpicker-link:hover {
   color: var(--eui-grey-700);
+}
+
+.engine-root .eui-guestpicker-link:active {
+  filter: brightness(0.88);
 }
 
 .engine-root .eui-guestpicker-apply {
@@ -1134,7 +1140,7 @@
 }
 
 .engine-root .eui-guestpicker-apply:active {
-  transform: scale(0.98);
+  filter: brightness(0.88);
 }
 
 
@@ -1151,15 +1157,16 @@
   min-width: 560px;
 }
 
-.engine-root .eui-datepicker-header {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: var(--eui-space-5);
-  padding: 0 var(--eui-space-3);
+/* Body wraps arrows + months. Arrows are positioned absolutely at
+   the level of month titles — Airbnb pattern. */
+.engine-root .eui-datepicker-body {
+  position: relative;
 }
 
 .engine-root .eui-datepicker-nav {
+  position: absolute;
+  top: 0;
+  z-index: 2;
   width: 36px;
   height: 36px;
   display: flex;
@@ -1173,8 +1180,15 @@
   transition: background-color var(--eui-duration-fast) var(--eui-ease-standard);
 }
 
+.engine-root .eui-datepicker-nav-prev { left: 0; }
+.engine-root .eui-datepicker-nav-next { right: 0; }
+
 .engine-root .eui-datepicker-nav:hover:not(:disabled) {
   background-color: var(--eui-grey-100);
+}
+
+.engine-root .eui-datepicker-nav:active:not(:disabled) {
+  filter: brightness(0.88);
 }
 
 .engine-root .eui-datepicker-nav:disabled {
@@ -1210,6 +1224,10 @@
   font-weight: var(--eui-font-weight-semibold);
   color: var(--eui-text-primary);
   text-transform: capitalize;
+  /* Height matches nav arrows (36px) for vertical alignment. */
+  line-height: 36px;
+  /* Padding so absolute-positioned arrows don't overlap the text. */
+  padding: 0 var(--eui-space-5);
 }
 
 .engine-root .eui-datepicker-weekdays {
@@ -1327,6 +1345,288 @@
 }
 .engine-root .eui-datepicker-day:disabled:hover .eui-datepicker-day-inner {
   background-color: transparent;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * === SEGMENTED CONTROL ===
+ * Pill-shaped tab switcher with a sliding indicator. Used by DatePickerTabs
+ * ("Dokładne / Elastyczne") and future filter components.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+.engine-root .eui-segmented-control {
+  display: inline-flex;
+  position: relative;
+  background-color: var(--eui-grey-100);
+  border-radius: var(--eui-radius-pill);
+  padding: 4px;
+}
+
+/* Sliding indicator — sits behind buttons via z-index layering. */
+.engine-root .eui-segmented-indicator {
+  position: absolute;
+  top: 4px;
+  left: 0;
+  height: calc(100% - 8px);
+  background-color: var(--eui-surface-raised);
+  border-radius: var(--eui-radius-pill);
+  box-shadow: var(--eui-elev-1);
+  transition: transform var(--eui-duration-base) var(--eui-ease-standard),
+              width var(--eui-duration-base) var(--eui-ease-standard);
+  z-index: 0;
+}
+
+.engine-root .eui-segmented-option {
+  position: relative;
+  z-index: 1;
+  padding: 10px 24px;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: var(--eui-font-size-sm);
+  font-weight: var(--eui-font-weight-medium);
+  color: var(--eui-text-secondary);
+  cursor: pointer;
+  border-radius: var(--eui-radius-pill);
+  transition: color var(--eui-duration-fast) var(--eui-ease-standard);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.engine-root .eui-segmented-option.eui-segmented-active {
+  color: var(--eui-text-primary);
+  font-weight: var(--eui-font-weight-semibold);
+}
+
+.engine-root .eui-segmented-option:hover:not(.eui-segmented-active) {
+  color: var(--eui-text-primary);
+}
+
+.engine-root .eui-segmented-option:active {
+  filter: brightness(0.88);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * === FLEXIBLE DATE PICKER ===
+ * "Elastyczne" mode: duration pills + month carousel.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+.engine-root .eui-flexible-picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--eui-space-7);
+}
+
+.engine-root .eui-flexible-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--eui-space-5);
+}
+
+.engine-root .eui-flexible-title {
+  font-size: var(--eui-font-size-lg);
+  font-weight: var(--eui-font-weight-semibold);
+  color: var(--eui-text-primary);
+  text-align: center;
+  margin: 0;
+}
+
+/* Duration pills — horizontal row of selectable pills. */
+.engine-root .eui-flexible-durations {
+  display: flex;
+  justify-content: center;
+  gap: var(--eui-space-3);
+  flex-wrap: wrap;
+}
+
+.engine-root .eui-flexible-pill {
+  padding: 10px 24px;
+  border: 2px solid var(--eui-border);
+  background: transparent;
+  border-radius: var(--eui-radius-pill);
+  font-family: inherit;
+  font-size: var(--eui-font-size-sm);
+  font-weight: var(--eui-font-weight-medium);
+  color: var(--eui-text-primary);
+  cursor: pointer;
+  transition:
+    border-color var(--eui-duration-fast) var(--eui-ease-standard),
+    background-color var(--eui-duration-fast) var(--eui-ease-standard),
+    color var(--eui-duration-fast) var(--eui-ease-standard);
+  user-select: none;
+}
+
+.engine-root .eui-flexible-pill:hover {
+  border-color: var(--eui-text-primary);
+}
+
+.engine-root .eui-flexible-pill-active {
+  border-color: var(--eui-text-primary);
+  background-color: var(--eui-text-primary);
+  color: var(--eui-surface-raised);
+}
+
+.engine-root .eui-flexible-pill:active {
+  filter: brightness(0.88);
+}
+
+/* Month carousel — horizontal scroll with snap. */
+.engine-root .eui-flexible-carousel {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.engine-root .eui-flexible-carousel-nav {
+  position: absolute;
+  z-index: 2;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--eui-radius-pill);
+  background: var(--eui-surface-raised);
+  border: 1px solid var(--eui-border);
+  box-shadow: var(--eui-elev-2);
+  color: var(--eui-text-primary);
+  cursor: pointer;
+  transition: box-shadow var(--eui-duration-fast) var(--eui-ease-standard);
+}
+
+.engine-root .eui-flexible-carousel-prev { left: -8px; }
+.engine-root .eui-flexible-carousel-next { right: -8px; }
+
+.engine-root .eui-flexible-carousel-nav:hover {
+  box-shadow: var(--eui-elev-3);
+}
+
+.engine-root .eui-flexible-carousel-nav:active {
+  filter: brightness(0.88);
+}
+
+/* Month cards scroll track. */
+.engine-root .eui-flexible-months {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  padding: 4px 28px;
+  /* Hide scrollbar for a clean look. */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.engine-root .eui-flexible-months::-webkit-scrollbar {
+  display: none;
+}
+
+/* Individual month card. */
+.engine-root .eui-flexible-month-card {
+  flex-shrink: 0;
+  scroll-snap-align: start;
+  width: 120px;
+  padding: 20px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  border: 2px solid var(--eui-border);
+  border-radius: var(--eui-radius-lg);
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+  transition:
+    border-color var(--eui-duration-fast) var(--eui-ease-standard),
+    box-shadow var(--eui-duration-fast) var(--eui-ease-standard);
+  user-select: none;
+}
+
+.engine-root .eui-flexible-month-card:hover {
+  border-color: var(--eui-grey-400);
+  box-shadow: var(--eui-elev-1);
+}
+
+.engine-root .eui-flexible-month-active {
+  border-color: var(--eui-text-primary);
+  border-width: 2px;
+  box-shadow: var(--eui-elev-2);
+}
+
+.engine-root .eui-flexible-month-card:active {
+  filter: brightness(0.88);
+}
+
+.engine-root .eui-flexible-month-icon {
+  color: var(--eui-grey-500);
+}
+
+.engine-root .eui-flexible-month-active .eui-flexible-month-icon {
+  color: var(--eui-text-primary);
+}
+
+.engine-root .eui-flexible-month-name {
+  font-size: var(--eui-font-size-sm);
+  font-weight: var(--eui-font-weight-semibold);
+  color: var(--eui-text-primary);
+  text-transform: capitalize;
+}
+
+.engine-root .eui-flexible-month-year {
+  font-size: var(--eui-font-size-xs);
+  font-weight: var(--eui-font-weight-regular);
+  color: var(--eui-text-secondary);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * === DATE PICKER TABS ===
+ * Wrapper: SegmentedControl ("Dokładne / Elastyczne") + panel body.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+.engine-root .eui-datepicker-tabs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--eui-space-6);
+}
+
+.engine-root .eui-datepicker-tabs-header {
+  display: flex;
+  justify-content: center;
+}
+
+.engine-root .eui-datepicker-tabs-body {
+  position: relative;
+}
+
+/* Each panel uses CSS grid row collapse for smooth height animation.
+   grid-template-rows: 0fr → 1fr animates cleanly because the browser
+   interpolates between 0 and the content's intrinsic height. */
+.engine-root .eui-datepicker-tabs-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows var(--eui-duration-slow) var(--eui-ease-standard),
+    opacity var(--eui-duration-base) var(--eui-ease-standard);
+}
+
+.engine-root .eui-datepicker-tabs-panel.eui-panel-active {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+/* Inner wrapper clips content during collapse. Required for grid-rows
+   animation — without overflow:hidden the content would remain visible
+   even when the row is 0fr. */
+.engine-root .eui-datepicker-tabs-panel-inner {
+  overflow: hidden;
+}
+
+@keyframes eui-panel-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 
@@ -1483,10 +1783,9 @@
 }
 
 /* Submit button. Brand-colored, pill. The bar itself owns vertical and
-   right padding (via --eui-space-2 = 8px inset). Submit adds its own
-   left margin to separate from the preceding segment — without it the
-   button kisses the segment's right edge. Result: symmetric 8px breathing
-   room on top, bottom, right, AND a visible 8px gap on the left.
+   right padding (via --eui-space-2 = 4px inset). Submit adds its own
+   left margin to separate from the preceding segment. Result: symmetric
+   4px breathing room on top, bottom, right, AND a visible 4px gap left.
    `box-sizing: border-box` is explicit so the declared height is the
    final height — no padding or border sneaks extra pixels. */
 .engine-root .eui-searchbar-submit {
@@ -1520,7 +1819,7 @@
 }
 
 .engine-root .eui-searchbar-submit:active {
-  transform: scale(0.97);
+  filter: brightness(0.88);
 }
 
 /* ── Variant: hero ── */
@@ -1535,10 +1834,14 @@
 }
 
 .engine-root .eui-searchbar.eui-variant-hero .eui-searchbar-submit {
-  height: 44px;
-  min-height: 44px;
-  max-height: 44px;
-  width: 44px;
+  /* stretch = submit fills inner height of bar, just like segments.
+     Padding kontenera = jedyne źródło spacingu (top = bottom = right).
+     width: 57px = segment natural height (12+12+4+17+12) → circle. */
+  align-self: stretch;
+  height: auto;
+  min-height: 0;
+  max-height: none;
+  width: 57px;
   padding: 0;
   font-size: var(--eui-font-size-md);
   line-height: 1;
@@ -1569,7 +1872,7 @@
 
 .engine-root .eui-searchbar.eui-variant-hero .eui-searchbar-submit:hover,
 .engine-root .eui-searchbar.eui-variant-hero .eui-searchbar-submit:focus-visible {
-  width: 140px;
+  width: 148px;
   padding: 0 var(--eui-space-6);
   gap: var(--eui-space-3);
 }
@@ -1583,11 +1886,11 @@
 /* Legacy iconOnly variant (still supported for callers passing
    submitIconOnly=true explicitly). No expand-on-hover — always a circle. */
 .engine-root .eui-searchbar.eui-variant-hero .eui-searchbar-submit.eui-submit-compact {
-  width: 44px;
+  width: 57px;
   padding: 0;
 }
 .engine-root .eui-searchbar.eui-variant-hero .eui-searchbar-submit.eui-submit-compact:hover {
-  width: 44px;
+  width: 57px;
   padding: 0;
 }
 .engine-root .eui-searchbar.eui-variant-hero .eui-searchbar-submit.eui-submit-compact > span {
@@ -1597,6 +1900,9 @@
 /* ── Variant: compact ── */
 .engine-root .eui-searchbar.eui-variant-compact {
   min-height: 48px;
+  /* Stable width prevents content-driven resize when dates/guests fill in. */
+  width: 100%;
+  max-width: 480px;
 }
 
 .engine-root .eui-searchbar.eui-variant-compact .eui-searchbar-segment {
@@ -1616,11 +1922,852 @@
   height: 36px;
   width: 36px;
   padding: 0;
-  margin: var(--eui-space-2);
+  margin: 0 0 0 var(--eui-space-2);
 }
 
 .engine-root .eui-searchbar.eui-variant-compact .eui-searchbar-divider {
   height: 24px;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * === RESULTS LAYER ===
+ * Airbnb-style result cards: carousel, heart, badge, rating, price
+ * popover, amenities modal, empty state, skeleton.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Results grid layout ── */
+.engine-root .eui-results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--eui-space-6);
+}
+
+
+/* ── ImageCarousel ── */
+.engine-root .eui-carousel {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--eui-radius-xl);
+  overflow: hidden;
+  background-color: var(--eui-grey-100);
+}
+
+.engine-root .eui-carousel-track {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.engine-root .eui-carousel-track::-webkit-scrollbar { display: none; }
+
+.engine-root .eui-carousel-slide {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  scroll-snap-align: start;
+}
+
+.engine-root .eui-carousel-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  user-select: none;
+}
+
+.engine-root .eui-carousel-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--eui-grey-300);
+}
+
+/* Arrows — visible on card hover only */
+.engine-root .eui-carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  border-radius: 9999px;
+  background: var(--eui-surface-raised);
+  border: none;
+  box-shadow: var(--eui-elev-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--eui-text-primary);
+  opacity: 0;
+  transition: opacity var(--eui-duration-fast) var(--eui-ease-standard);
+  z-index: 2;
+}
+.engine-root .eui-carousel-prev { left: 8px; }
+.engine-root .eui-carousel-next { right: 8px; }
+
+.engine-root .eui-card:hover .eui-carousel-arrow {
+  opacity: 1;
+}
+
+.engine-root .eui-carousel-arrow:hover {
+  box-shadow: var(--eui-elev-3);
+}
+
+.engine-root .eui-carousel-arrow:active {
+  filter: brightness(0.88);
+}
+
+/* Dots */
+.engine-root .eui-carousel-dots {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 5px;
+  z-index: 2;
+}
+
+.engine-root .eui-carousel-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background-color: rgba(255, 255, 255, 0.5);
+  transition: background-color var(--eui-duration-fast) var(--eui-ease-standard);
+}
+
+.engine-root .eui-carousel-dot-active {
+  background-color: rgba(255, 255, 255, 1);
+}
+
+
+/* ── FavoriteButton ── */
+.engine-root .eui-favorite-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 9999px;
+  border: none;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.85);
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.3));
+  transition: transform var(--eui-duration-fast) var(--eui-ease-standard);
+  z-index: 3;
+}
+
+.engine-root .eui-favorite-btn:hover {
+  transform: scale(1.1);
+}
+
+.engine-root .eui-favorite-active {
+  color: #ff385c;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.2));
+}
+
+.engine-root .eui-favorite-active:hover {
+  transform: scale(1.1);
+}
+
+
+/* ── ResultCard (Airbnb style) ── */
+.engine-root .eui-card {
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  border-radius: var(--eui-radius-xl);
+  outline: none;
+}
+
+.engine-root .eui-card:focus-visible {
+  box-shadow: 0 0 0 3px var(--eui-brand);
+  border-radius: var(--eui-radius-xl);
+}
+
+.engine-root .eui-card-unavailable {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Image area */
+.engine-root .eui-card-image {
+  position: relative;
+}
+
+.engine-root .eui-card-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 3;
+  padding: 6px 12px;
+  border-radius: var(--eui-radius-pill);
+  background: var(--eui-surface-raised);
+  font-size: var(--eui-font-size-xs);
+  font-weight: var(--eui-font-weight-semibold);
+  color: var(--eui-text-primary);
+  box-shadow: var(--eui-elev-2);
+  pointer-events: none;
+}
+
+.engine-root .eui-card-favorite {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+
+/* Content area */
+.engine-root .eui-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 4px 4px;
+}
+
+.engine-root .eui-card-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--eui-space-3);
+}
+
+.engine-root .eui-card-name {
+  font-size: var(--eui-font-size-md);
+  font-weight: var(--eui-font-weight-semibold);
+  color: var(--eui-text-primary);
+  margin: 0;
+  line-height: 1.3;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.engine-root .eui-card-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: var(--eui-font-size-sm);
+  font-weight: var(--eui-font-weight-medium);
+  color: var(--eui-text-primary);
+  flex-shrink: 0;
+}
+
+.engine-root .eui-card-rating svg {
+  color: var(--eui-text-primary);
+}
+
+.engine-root .eui-card-rating-count {
+  font-weight: var(--eui-font-weight-regular);
+  color: var(--eui-text-secondary);
+}
+
+.engine-root .eui-card-subtitle {
+  font-size: var(--eui-font-size-sm);
+  color: var(--eui-text-secondary);
+  margin: 0;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Bottom: price + amenities link */
+.engine-root .eui-card-bottom {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--eui-space-3);
+  margin-top: 6px;
+}
+
+/* Price trigger */
+.engine-root .eui-card-price-area {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.engine-root .eui-card-price-trigger {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.engine-root .eui-card-price-amount {
+  font-size: var(--eui-font-size-base);
+  font-weight: var(--eui-font-weight-semibold);
+  color: var(--eui-text-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-color: var(--eui-grey-300);
+}
+
+.engine-root .eui-card-price-trigger:hover .eui-card-price-amount {
+  text-decoration-color: var(--eui-text-primary);
+}
+
+.engine-root .eui-card-price-unit {
+  font-size: var(--eui-font-size-xs);
+  font-weight: var(--eui-font-weight-regular);
+  color: var(--eui-text-secondary);
+}
+
+.engine-root .eui-card-price-total-hint {
+  font-size: 12px;
+  color: var(--eui-text-secondary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-color: var(--eui-grey-200);
+}
+
+/* Price detail popover */
+.engine-root .eui-card-price-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.engine-root .eui-card-price-detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: var(--eui-space-4);
+  border-bottom: 1px solid var(--eui-border);
+  margin-bottom: var(--eui-space-3);
+}
+
+.engine-root .eui-card-price-detail-title {
+  font-size: var(--eui-font-size-md);
+  font-weight: var(--eui-font-weight-semibold);
+  color: var(--eui-text-primary);
+}
+
+.engine-root .eui-card-price-detail-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 9999px;
+  border: none;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--eui-text-primary);
+  transition: background-color var(--eui-duration-fast) var(--eui-ease-standard);
+}
+
+.engine-root .eui-card-price-detail-close:hover {
+  background-color: var(--eui-grey-100);
+}
+
+.engine-root .eui-card-price-detail-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--eui-space-5);
+  font-size: var(--eui-font-size-base);
+  font-weight: var(--eui-font-weight-regular);
+  color: var(--eui-text-primary);
+}
+
+.engine-root .eui-card-price-total {
+  padding-top: 8px;
+  border-top: 1px solid var(--eui-border);
+  font-weight: var(--eui-font-weight-semibold);
+}
+
+.engine-root .eui-card-price-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--eui-font-size-sm);
+  font-weight: var(--eui-font-weight-semibold);
+  color: #16a34a;
+  margin-top: 6px;
+}
+
+/* Amenities link */
+.engine-root .eui-card-amenities-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: var(--eui-font-size-xs);
+  font-weight: var(--eui-font-weight-medium);
+  color: var(--eui-text-secondary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color var(--eui-duration-fast) var(--eui-ease-standard);
+}
+
+.engine-root .eui-card-amenities-link:hover {
+  color: var(--eui-text-primary);
+}
+
+
+/* ── Modal ── */
+.engine-root .eui-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  animation: eui-modal-backdrop-in var(--eui-duration-base) var(--eui-ease-enter);
+  padding: var(--eui-space-6);
+}
+
+@keyframes eui-modal-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.engine-root .eui-modal-panel {
+  width: 100%;
+  background: var(--eui-surface-raised);
+  border-radius: var(--eui-radius-xl);
+  box-shadow: var(--eui-elev-5);
+  overflow: hidden;
+  animation: eui-modal-enter var(--eui-duration-slow) var(--eui-ease-enter);
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 48px);
+}
+
+@keyframes eui-modal-enter {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.engine-root .eui-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--eui-space-4);
+  padding: var(--eui-space-5) var(--eui-space-6);
+  border-bottom: 1px solid var(--eui-border);
+  flex-shrink: 0;
+}
+
+.engine-root .eui-modal-close {
+  width: 36px;
+  height: 36px;
+  border-radius: 9999px;
+  border: none;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--eui-text-primary);
+  transition: background-color var(--eui-duration-fast) var(--eui-ease-standard);
+  flex-shrink: 0;
+}
+
+.engine-root .eui-modal-close:hover {
+  background-color: var(--eui-grey-100);
+}
+
+.engine-root .eui-modal-close:active {
+  filter: brightness(0.88);
+}
+
+.engine-root .eui-modal-title {
+  font-size: var(--eui-font-size-md);
+  font-weight: var(--eui-font-weight-semibold);
+  color: var(--eui-text-primary);
+  margin: 0;
+  line-height: 1.3;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.engine-root .eui-modal-body {
+  padding: var(--eui-space-6);
+  overflow-y: auto;
+  flex: 1;
+}
+
+
+/* ── Amenities list (inside modal) ── */
+.engine-root .eui-amenities-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--eui-space-7);
+}
+
+.engine-root .eui-amenities-category {
+  display: flex;
+  flex-direction: column;
+  gap: var(--eui-space-4);
+}
+
+.engine-root .eui-amenities-cat-name {
+  font-size: var(--eui-font-size-md);
+  font-weight: var(--eui-font-weight-semibold);
+  color: var(--eui-text-primary);
+  margin: 0;
+}
+
+.engine-root .eui-amenities-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--eui-space-3);
+}
+
+.engine-root .eui-amenities-item {
+  font-size: var(--eui-font-size-base);
+  font-weight: var(--eui-font-weight-regular);
+  color: var(--eui-text-secondary);
+  padding-left: var(--eui-space-3);
+  position: relative;
+}
+
+.engine-root .eui-amenities-item::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 9999px;
+  background-color: var(--eui-grey-300);
+}
+
+
+/* ── AvailabilityBadge (kept for future use) ── */
+.engine-root .eui-avail-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--eui-font-size-xs);
+  font-weight: var(--eui-font-weight-medium);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.engine-root .eui-avail-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  flex-shrink: 0;
+}
+
+.engine-root .eui-avail-available { color: #16a34a; }
+.engine-root .eui-avail-available .eui-avail-dot { background-color: #16a34a; }
+.engine-root .eui-avail-limited { color: #d97706; }
+.engine-root .eui-avail-limited .eui-avail-dot { background-color: #d97706; }
+.engine-root .eui-avail-unavailable { color: var(--eui-grey-400); }
+.engine-root .eui-avail-unavailable .eui-avail-dot { background-color: var(--eui-grey-400); }
+
+
+/* ── PriceBlock (standalone — used outside cards too) ── */
+.engine-root .eui-price-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.engine-root .eui-price-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: var(--eui-font-weight-semibold);
+  color: #16a34a;
+  margin-bottom: 2px;
+}
+
+.engine-root .eui-price-main {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.engine-root .eui-price-amount {
+  font-size: var(--eui-font-size-lg);
+  font-weight: var(--eui-font-weight-semibold);
+  color: var(--eui-text-primary);
+  line-height: 1.2;
+}
+
+.engine-root .eui-price-unit {
+  font-size: var(--eui-font-size-xs);
+  color: var(--eui-text-secondary);
+}
+
+.engine-root .eui-price-total {
+  font-size: var(--eui-font-size-xs);
+  color: var(--eui-text-secondary);
+}
+
+
+/* ── FeatureChips (kept for amenities / future use) ── */
+.engine-root .eui-feature-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.engine-root .eui-feature-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: var(--eui-radius-pill);
+  background-color: var(--eui-grey-50);
+  font-size: var(--eui-font-size-xs);
+  font-weight: var(--eui-font-weight-medium);
+  color: var(--eui-text-secondary);
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.engine-root .eui-feature-chip svg {
+  color: var(--eui-grey-400);
+  flex-shrink: 0;
+}
+
+.engine-root .eui-feature-overflow {
+  background-color: var(--eui-grey-100);
+  color: var(--eui-grey-500);
+}
+
+
+/* ── ResultsHeader ── */
+.engine-root .eui-results-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--eui-space-5);
+  padding-bottom: var(--eui-space-5);
+}
+
+.engine-root .eui-results-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.engine-root .eui-results-count {
+  font-size: var(--eui-font-size-xl);
+  font-weight: var(--eui-font-weight-semibold);
+  color: var(--eui-text-primary);
+  margin: 0;
+  line-height: 1.3;
+}
+
+.engine-root .eui-results-subtitle {
+  font-size: var(--eui-font-size-sm);
+  color: var(--eui-text-secondary);
+  margin: 0;
+}
+
+.engine-root .eui-results-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--eui-space-3);
+}
+
+/* Sort info trigger */
+.engine-root .eui-results-sort-info {
+  margin-top: 6px;
+}
+
+.engine-root .eui-results-sort-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: var(--eui-font-size-xs);
+  font-weight: var(--eui-font-weight-medium);
+  color: var(--eui-text-secondary);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-color: var(--eui-grey-300);
+  transition: color var(--eui-duration-fast) var(--eui-ease-standard);
+}
+
+.engine-root .eui-results-sort-trigger:hover {
+  color: var(--eui-text-primary);
+  text-decoration-color: var(--eui-text-primary);
+}
+
+.engine-root .eui-results-sort-popover {
+  display: flex;
+  flex-direction: column;
+  gap: var(--eui-space-4);
+}
+
+.engine-root .eui-results-sort-text {
+  font-size: var(--eui-font-size-sm);
+  color: var(--eui-text-secondary);
+  line-height: var(--eui-line-height-relaxed);
+  margin: 0;
+}
+
+.engine-root .eui-results-sort-link {
+  font-size: var(--eui-font-size-xs);
+  font-weight: var(--eui-font-weight-semibold);
+  color: var(--eui-brand);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+
+/* ── ResultsEmptyState ── */
+.engine-root .eui-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--eui-space-5);
+  padding: var(--eui-space-10) var(--eui-space-6);
+}
+
+.engine-root .eui-empty-icon { color: var(--eui-grey-300); }
+
+.engine-root .eui-empty-title {
+  font-size: var(--eui-font-size-xl);
+  font-weight: var(--eui-font-weight-semibold);
+  color: var(--eui-text-primary);
+  margin: 0;
+}
+
+.engine-root .eui-empty-message {
+  font-size: var(--eui-font-size-base);
+  color: var(--eui-text-secondary);
+  max-width: 400px;
+  line-height: var(--eui-line-height-relaxed);
+  margin: 0;
+}
+
+.engine-root .eui-empty-action {
+  padding: 12px 28px;
+  background-color: var(--eui-grey-900);
+  color: var(--eui-grey-0);
+  border: none;
+  border-radius: var(--eui-radius-pill);
+  font-family: inherit;
+  font-size: var(--eui-font-size-sm);
+  font-weight: var(--eui-font-weight-semibold);
+  cursor: pointer;
+  transition: background-color var(--eui-duration-fast) var(--eui-ease-standard);
+}
+
+.engine-root .eui-empty-action:hover {
+  background-color: var(--eui-grey-800);
+}
+
+.engine-root .eui-empty-action:active {
+  filter: brightness(0.88);
+}
+
+
+/* ── ResultsSkeleton ── */
+.engine-root .eui-results-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--eui-space-6);
+}
+
+.engine-root .eui-skeleton-card {
+  pointer-events: none;
+  cursor: default;
+}
+
+.engine-root .eui-skeleton-card:hover {
+  transform: none;
+}
+
+.engine-root .eui-skeleton-card .eui-card-image {
+  aspect-ratio: 4 / 3;
+  border-radius: var(--eui-radius-xl);
+  overflow: hidden;
+}
+
+.engine-root .eui-skeleton-box {
+  background: linear-gradient(
+    90deg,
+    var(--eui-grey-100) 25%,
+    var(--eui-grey-50) 50%,
+    var(--eui-grey-100) 75%
+  );
+  background-size: 200% 100%;
+  animation: eui-shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--eui-radius-sm);
+}
+
+@keyframes eui-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.engine-root .eui-skeleton-image {
+  width: 100%;
+  height: 100%;
+  border-radius: var(--eui-radius-xl);
+}
+
+.engine-root .eui-skeleton-name {
+  height: 18px;
+  width: 65%;
+}
+
+.engine-root .eui-skeleton-rating {
+  height: 16px;
+  width: 60px;
+}
+
+.engine-root .eui-skeleton-subtitle {
+  height: 14px;
+  width: 50%;
+}
+
+.engine-root .eui-skeleton-price {
+  height: 18px;
+  width: 90px;
+  margin-top: 4px;
+}
+
+.engine-root .eui-skeleton-header {
+  pointer-events: none;
+}
+
+.engine-root .eui-skeleton-header-count {
+  height: 24px;
+  width: 120px;
+}
+
+.engine-root .eui-skeleton-header-sub {
+  height: 16px;
+  width: 180px;
+  margin-top: 4px;
 }
 
 
@@ -1906,45 +3053,38 @@
 }
 
 .engine-root .eui-lab-motion-box {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 64px;
   height: 64px;
   background-color: var(--eui-grey-900);
   border-radius: var(--eui-radius-md);
-  transform-origin: left center;
-  transition-property: transform;
+  /* Use `left` not `translateX` — in translateX, percentages resolve
+     relative to the element itself (useless). In `left`, percentages
+     resolve relative to the containing block (track). */
+  transition-property: left;
   transition-duration: var(--eui-duration-slow);
-  /* Explicit starting position — otherwise some browsers can get confused
-     between transform: none and an unset transform during the first tick. */
-  transform: translateX(0);
 }
 
 .engine-root .eui-lab-motion-box.eui-motion-running {
-  /* Desktop: traveluje 280px. Track na mobile jest węższy, więc używamy
-     --eui-motion-travel variable który CSS nadpisze na mobile. */
-  transform: translateX(var(--eui-motion-travel, 280px));
+  left: calc(50% - 32px);   /* center of track minus half box (64/2) */
 }
 
 .engine-root .eui-lab-motion-track {
   position: relative;
   height: 64px;
-  /* At least box (64) + travel (280) + a bit of padding so the box has
-     somewhere to move without being clipped. */
-  min-width: 360px;
+  min-width: 200px;
   background: linear-gradient(to right, var(--eui-grey-100), transparent 50%);
   border-radius: var(--eui-radius-md);
   overflow: hidden;
-  /* Desktop default — box travel 280px (mieści się w tracku showcase). */
-  --eui-motion-travel: 280px;
 }
 
-/* Mobile: track jest węższy niż 344px (box 64 + 280 translate), więc
-   skracamy dystans do ~60% szerokości tracka. `calc(100% - 64px - 16px)`
-   = szerokość tracka minus box size minus niewielka rezerwa, co zawsze
-   utrzyma box w środku viewportu. */
+/* Mobile: remove min-width so track fits narrow viewport.
+   Box uses left: calc(50% - 32px) which adapts automatically. */
 @media (max-width: 640px) {
   .engine-root .eui-lab-motion-track {
     min-width: 0;
-    --eui-motion-travel: calc(100% - 64px - 16px);
   }
 }
 
@@ -2059,7 +3199,7 @@
   }
   .engine-root .eui-searchbar-segment.eui-segment-active {
     box-shadow: none;
-    background-color: var(--eui-grey-100);
+    background-color: var(--eui-surface-raised);
   }
   /* Dividers są niepotrzebne w pionowym układzie */
   .engine-root .eui-searchbar-divider {
@@ -2076,6 +3216,7 @@
      Szukaj zawsze widocznym. Expand-on-hover jest gestem desktop'owym;
      na telefonie bez kursora nie ma sensu. */
   .engine-root .eui-searchbar.eui-variant-hero .eui-searchbar-submit {
+    align-self: center;       /* reset stretch z desktop */
     height: 48px;
     min-height: 48px;
     max-height: 48px;
@@ -2094,8 +3235,9 @@
   }
   .engine-root .eui-searchbar.eui-variant-compact .eui-searchbar-submit {
     height: 44px;
-    width: calc(100% - var(--eui-space-5));
+    width: calc(100% - var(--eui-space-7));
     padding: 0 var(--eui-space-5);
+    margin: var(--eui-space-3) auto var(--eui-space-4);
   }
 
   /* ── Popover content: nie wywala się poza viewport ── */
@@ -2130,9 +3272,53 @@
     width: 100%;
   }
 
+  /* ── SegmentedControl na mobile ── */
+  .engine-root .eui-segmented-option {
+    padding: 8px 18px;
+    font-size: var(--eui-font-size-xs);
+  }
+
+  /* ── FlexibleDatePicker na mobile ── */
+  .engine-root .eui-flexible-title {
+    font-size: var(--eui-font-size-md);
+  }
+  .engine-root .eui-flexible-pill {
+    padding: 8px 18px;
+    font-size: var(--eui-font-size-xs);
+  }
+  .engine-root .eui-flexible-month-card {
+    width: 100px;
+    padding: 16px 8px;
+  }
+  .engine-root .eui-flexible-months {
+    padding: 4px 8px;
+  }
+  .engine-root .eui-flexible-carousel-prev { left: -4px; }
+  .engine-root .eui-flexible-carousel-next { right: -4px; }
+  .engine-root .eui-flexible-carousel-nav {
+    width: 32px;
+    height: 32px;
+  }
+
   /* ── GuestPicker / Stepper skala ── */
   .engine-root .eui-guestpicker-title {
     font-size: var(--eui-font-size-base);
+  }
+
+  /* ── Results Layer mobile ── */
+  .engine-root .eui-results-grid {
+    grid-template-columns: 1fr;
+  }
+  .engine-root .eui-results-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--eui-space-3);
+  }
+  .engine-root .eui-modal-panel {
+    max-height: calc(100vh - 32px);
+  }
+  .engine-root .eui-modal-overlay {
+    padding: var(--eui-space-4);
   }
 
   /* ── Lab preview area: więcej oddechu, mniej padding ── */

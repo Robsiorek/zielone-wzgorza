@@ -3,11 +3,8 @@
 /**
  * SearchBarSection — SearchBar showcase
  * ────────────────────────────────────────────────────────────────────────
- * Both variants, each with its own independent state. The hero variant
- * is the big pill for the landing page; the compact variant is what will
- * sit in the sticky navbar on the results view.
- *
- * Both demos log onSearch to confirm the submit wiring works.
+ * Both variants, each with its own independent state using the
+ * BookingSearchCriteria discriminated union.
  */
 
 import * as React from "react";
@@ -15,15 +12,7 @@ import { LabSection } from "../LabSection";
 import { ComponentShowcase } from "../ComponentShowcase";
 import { SearchBar } from "@/components/engine-ui/SearchBar";
 import type { BookingSearchCriteria } from "@/lib/booking-params";
-
-const INITIAL_CRITERIA: BookingSearchCriteria = {
-  checkIn: "",
-  checkOut: "",
-  adults: 2,
-  children: 0,
-  infants: 0,
-  pets: 0,
-};
+import { DEFAULT_SEARCH_CRITERIA } from "@/lib/booking-params";
 
 function SearchBarDemo({
   variant,
@@ -32,7 +21,9 @@ function SearchBarDemo({
   variant: "hero" | "compact";
   caption: string;
 }) {
-  const [criteria, setCriteria] = React.useState<BookingSearchCriteria>(INITIAL_CRITERIA);
+  const [criteria, setCriteria] = React.useState<BookingSearchCriteria>({
+    ...DEFAULT_SEARCH_CRITERIA,
+  });
   const [submissions, setSubmissions] = React.useState<BookingSearchCriteria[]>([]);
 
   return (
@@ -58,6 +49,7 @@ function SearchBarDemo({
           value={criteria}
           onChange={setCriteria}
           onSearch={(c) => setSubmissions((prev) => [...prev, c])}
+          petsPolicyHref="https://zielonewzgorza.eu/warunki-pobytu-ze-zwierzeciem"
         />
 
         <div
@@ -83,6 +75,11 @@ function SearchBarDemo({
           <div style={{ marginTop: 6 }}>
             <strong>onSearch wywołań:</strong> {submissions.length}
           </div>
+          {submissions.length > 0 && (
+            <div style={{ marginTop: 4 }}>
+              <strong>ostatni submit:</strong> {JSON.stringify(submissions[submissions.length - 1])}
+            </div>
+          )}
         </div>
       </div>
     </ComponentShowcase>
@@ -94,11 +91,11 @@ export function SearchBarSection() {
     <LabSection
       id="searchbar"
       title="Pasek wyszukiwania"
-      description="Jeden komponent z dwoma wariantami (hero | compact). Segmenty Kiedy i Kto, każdy z własnym popoverem. Po wybraniu pełnego zakresu dat popover automatycznie przechodzi do wyboru gości (guest-first flow)."
+      description="Jeden komponent z dwoma wariantami (hero | compact). Segmenty Kiedy i Kto, każdy z własnym popoverem. Kiedy zawiera tryb Dokładne (kalendarz) i Elastyczne (czas pobytu + miesiąc). Jeden kontrakt danych: BookingSearchCriteria."
     >
       <SearchBarDemo
         variant="hero"
-        caption="Pill-shape, 68 px wysokości, duże cele dotyku. Landing page — centralny element hero."
+        caption="Pill-shape, 60 px min. wysokości, duże cele dotyku. Landing page — centralny element hero."
       />
       <SearchBarDemo
         variant="compact"

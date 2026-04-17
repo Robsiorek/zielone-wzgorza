@@ -127,21 +127,84 @@ export interface BookingParty {
   pets: number;
 }
 
+// ═══════════════════════════════════════════
+// Flexible search types
+// ═══════════════════════════════════════════
+
 /**
- * Full search criteria for the booking engine.
- *
- * This is the target shape for the URL contract. For now the parser only
- * reads `adults` (via the existing `guests` param); `infants` and `pets`
- * are captured only in-memory by the new components. Nothing breaks.
+ * Duration presets for flexible date search.
+ * Domain type — lives here (not in UI) because it's part of the search
+ * contract, URL schema, and future backend API.
  */
-export interface BookingSearchCriteria {
-  checkIn: string;
-  checkOut: string;
-  adults: number;
-  children: number;
-  infants: number;
-  pets: number;
+export type FlexibleDuration = "weekend" | "5days" | "week";
+
+/** All valid duration values, for runtime validation. */
+const FLEXIBLE_DURATIONS: FlexibleDuration[] = ["weekend", "5days", "week"];
+
+/** Runtime check: is the value a valid FlexibleDuration? */
+export function isFlexibleDuration(val: unknown): val is FlexibleDuration {
+  return typeof val === "string" && FLEXIBLE_DURATIONS.includes(val as FlexibleDuration);
 }
+
+/** Parse a raw string into a FlexibleDuration, or return fallback. */
+export function parseFlexibleDuration(raw: string | null | undefined): FlexibleDuration {
+  if (raw && isFlexibleDuration(raw)) return raw;
+  return "weekend";
+}
+
+/** YYYY-MM regex for month validation. */
+const YEAR_MONTH_REGEX = /^\d{4}-(0[1-9]|1[0-2])$/;
+
+/**
+ * Validate a YYYY-MM string. Checks format AND that the month is real
+ * (no 2026-13). Does NOT check if the month is in the past — that's
+ * a business rule, not a format rule.
+ */
+export function isValidYearMonth(val: string): boolean {
+  return YEAR_MONTH_REGEX.test(val);
+}
+
+// ═══════════════════════════════════════════
+// BookingSearchCriteria — discriminated union
+// ═══════════════════════════════════════════
+
+/**
+ * Full search criteria for the booking engine — the ONE contract that
+ * SearchBar, URL, and future backend API all share.
+ *
+ * Discriminated on `mode`:
+ *   - "exact"    → user picked concrete check-in / check-out dates
+ *   - "flexible" → user picked a duration preset + a target month
+ *
+ * Guest composition (BookingParty) is shared across both modes.
+ */
+export type ExactSearchCriteria = BookingParty & {
+  mode: "exact";
+  checkIn: string;   // "YYYY-MM-DD" or "" if not yet selected
+  checkOut: string;   // "YYYY-MM-DD" or "" if not yet selected
+};
+
+export type FlexibleSearchCriteria = BookingParty & {
+  mode: "flexible";
+  duration: FlexibleDuration;
+  month: string;      // "YYYY-MM" or "" if not yet selected
+};
+
+export type BookingSearchCriteria = ExactSearchCriteria | FlexibleSearchCriteria;
+
+/**
+ * Default search criteria. Exact mode, empty dates, 2 adults.
+ * Used as initial state in SearchBar and demo components.
+ */
+export const DEFAULT_SEARCH_CRITERIA: ExactSearchCriteria = {
+  mode: "exact",
+  checkIn: "",
+  checkOut: "",
+  adults: 2,
+  children: 0,
+  infants: 0,
+  pets: 0,
+};
 
 /**
  * Post-submit default party. When a guest opens the engine for the first
@@ -425,78 +488,67 @@ export function normalizeGuests(raw: unknown): number {
 /**
  * Criteria accepted by `buildBookingUrl`.
  *
- * Kept separate from `BookingSearchCriteria` because URL building has
- * different nullability: `resourceSlug` is genuinely optional at the URL
- * level (omit → results mode; present → resource mode), and `infants`/
- * `pets` are optional because the current production flow doesn't pass
- * them yet (§16 migration strategy — helpers prepared, flow unchanged).
+ * Now supports both exact and flexible modes. For exact mode, the URL
+ * stays backward-compatible (no `mode=exact` param). For flexible mode,
+ * `mode=flexible` is explicitly added.
+ *
+ * Kept as a separate type from `BookingSearchCriteria` because URL
+ * building adds `resourceSlug` and `basePath` which aren't part of
+ * the search criteria contract.
  */
-export interface BuildBookingUrlInput {
-  checkIn: string;
-  checkOut: string;
-  guests: number;
-  /** When present + valid dates, the URL activates "resource" mode. */
-  resourceSlug?: string;
-  /** §16: accepted for future entry contract; skipped in URL if `0`. */
-  infants?: number;
-  /** §16: accepted for future entry contract; skipped in URL if `0`. */
-  pets?: number;
-  /**
-   * Path prefix for the engine. Defaults to `/` (root of the public
-   * booking engine at booking.zielonewzgorza.eu). Callers can override
-   * for local/preview environments, but should almost never need to.
-   */
-  basePath?: string;
-}
+export type BuildBookingUrlInput =
+  | (ExactSearchCriteria & {
+      resourceSlug?: string;
+      basePath?: string;
+    })
+  | (FlexibleSearchCriteria & {
+      basePath?: string;
+    });
 
 /**
  * Build a booking engine URL from a criteria object.
  *
- * Inverse of `parseBookingParams` for the three supported modes:
- *   - explore  → `/` (no params)       — only reachable via empty criteria
- *   - results  → `/?checkIn=…&checkOut=…&guests=…`
- *   - resource → `/?checkIn=…&checkOut=…&guests=…&resource=slug`
+ * Exact mode: backward-compatible URL, no `mode` param.
+ *   → `/?checkIn=…&checkOut=…&adults=…`
  *
- * Guest count is normalized to the allowed range before serialization.
- * Non-positive infants/pets are dropped from the URL to keep it clean.
+ * Flexible mode: explicit `mode=flexible` branch.
+ *   → `/?mode=flexible&duration=weekend&month=2026-07&adults=…`
  *
- * The returned string is a path+query (e.g. `"/?checkIn=2026-06-10&…"`),
- * not an absolute URL — the caller passes it to `router.push()` or an
- * anchor href. No origin is assumed.
+ * Guest fields (adults, children, infants, pets) are always serialized.
+ * Non-positive infants/pets are dropped to keep URLs clean.
  */
 export function buildBookingUrl(input: BuildBookingUrlInput): string {
-  const {
-    checkIn,
-    checkOut,
-    guests,
-    resourceSlug,
-    infants,
-    pets,
-    basePath = "/",
-  } = input;
-
+  const basePath = input.basePath ?? "/";
   const params = new URLSearchParams();
-  if (checkIn) params.set("checkIn", checkIn);
-  if (checkOut) params.set("checkOut", checkOut);
-  params.set("guests", String(normalizeGuests(guests)));
-  if (resourceSlug && resourceSlug.trim()) {
-    params.set("resource", resourceSlug.trim());
-  }
-  // §16 future fields: only serialize when non-zero so URLs stay tidy
-  // for the common case (no infants/pets).
-  if (typeof infants === "number" && infants > 0) {
-    params.set("infants", String(Math.max(0, Math.floor(infants))));
-  }
-  if (typeof pets === "number" && pets > 0) {
-    params.set("pets", String(Math.max(0, Math.floor(pets))));
+
+  // ── Mode-specific params ──
+  if (input.mode === "flexible") {
+    params.set("mode", "flexible");
+    params.set("duration", input.duration);
+    if (input.month) params.set("month", input.month);
+    // Flexible: new format — individual guest fields.
+    params.set("adults", String(normalizeGuests(input.adults)));
+    if (input.children > 0) {
+      params.set("children", String(Math.max(0, Math.floor(input.children))));
+    }
+    if (input.infants > 0) {
+      params.set("infants", String(Math.max(0, Math.floor(input.infants))));
+    }
+    if (input.pets > 0) {
+      params.set("pets", String(Math.max(0, Math.floor(input.pets))));
+    }
+  } else {
+    // Exact: backward-compatible — emit "guests" (not "adults").
+    if (input.checkIn) params.set("checkIn", input.checkIn);
+    if (input.checkOut) params.set("checkOut", input.checkOut);
+    params.set("guests", String(normalizeGuests(effectiveGuests(input))));
+    if ("resourceSlug" in input && input.resourceSlug?.trim()) {
+      params.set("resource", input.resourceSlug.trim());
+    }
   }
 
   const qs = params.toString();
-  // If there are no params at all (shouldn't really happen in practice,
-  // but guard so we don't emit `"/?"`), return the bare basePath.
   if (!qs) return basePath;
-
-  // Ensure we don't duplicate the separator if basePath already has "?".
   const sep = basePath.includes("?") ? "&" : "?";
   return `${basePath}${sep}${qs}`;
 }

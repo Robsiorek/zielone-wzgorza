@@ -48,6 +48,11 @@ export {
 // ── System components ─────────────────────────────────────────
 export { PopoverItem, type PopoverItemProps } from "./PopoverItem";
 export { Stepper, type StepperProps, type StepperSize } from "./Stepper";
+export {
+  SegmentedControl,
+  type SegmentedControlProps,
+  type SegmentedControlOption,
+} from "./SegmentedControl";
 
 // ── Domain components ─────────────────────────────────────────
 export {
@@ -61,11 +66,87 @@ export {
 } from "./DateRangePicker";
 
 export {
+  FlexibleDatePicker,
+  type FlexibleDatePickerProps,
+  type FlexibleDateSelection,
+} from "./FlexibleDatePicker";
+
+export {
+  DatePickerTabs,
+  type DatePickerTabsProps,
+} from "./DatePickerTabs";
+
+export {
   SearchBar,
   type SearchBarProps,
   type SearchBarVariant,
   type SearchBarSegment,
 } from "./SearchBar";
+
+// ── Results layer ──────────────────────────────────────────────
+export {
+  type AvailabilityStatus,
+  type AvailabilityInfo,
+  type PriceInfo,
+  type FeatureIconName,
+  type FeatureChip,
+  type ResultImage,
+  type ResultCardData,
+  type ResultsListData,
+  type ResultRating,
+  type AmenityItem,
+  type AmenityCategory,
+} from "./results-types";
+
+export {
+  AvailabilityBadge,
+  type AvailabilityBadgeProps,
+} from "./AvailabilityBadge";
+
+export {
+  PriceBlock,
+  type PriceBlockProps,
+} from "./PriceBlock";
+
+export {
+  FeatureChips,
+  type FeatureChipsProps,
+} from "./FeatureChips";
+
+export {
+  ImageCarousel,
+  type ImageCarouselProps,
+} from "./ImageCarousel";
+
+export {
+  FavoriteButton,
+  type FavoriteButtonProps,
+} from "./FavoriteButton";
+
+export {
+  Modal,
+  type ModalProps,
+} from "./Modal";
+
+export {
+  ResultCard,
+  type ResultCardProps,
+} from "./ResultCard";
+
+export {
+  ResultsHeader,
+  type ResultsHeaderProps,
+} from "./ResultsHeader";
+
+export {
+  ResultsEmptyState,
+  type ResultsEmptyStateProps,
+} from "./ResultsEmptyState";
+
+export {
+  ResultsSkeleton,
+  type ResultsSkeletonProps,
+} from "./ResultsSkeleton";
 
 // ── Hooks ──────────────────────────────────────────────────────
 export {
@@ -91,7 +172,13 @@ export {
 export {
   type BookingParty,
   type BookingSearchCriteria,
+  type ExactSearchCriteria,
+  type FlexibleSearchCriteria,
   type DateRange,
   DEFAULT_BOOKING_PARTY,
+  DEFAULT_SEARCH_CRITERIA,
   effectiveGuests,
+  isFlexibleDuration,
+  isValidYearMonth,
+  parseFlexibleDuration,
 } from "@/lib/booking-params";

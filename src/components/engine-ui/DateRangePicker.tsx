@@ -365,31 +365,33 @@ export function DateRangePicker({
 
   return (
     <div className={rootClass}>
-      <div className="eui-datepicker-header">
+      {/* Arrows + months in a single row. Arrows are positioned absolutely
+          at the level of month titles (Airbnb pattern). */}
+      <div className="eui-datepicker-body">
         <button
           type="button"
-          className="eui-datepicker-nav"
+          className="eui-datepicker-nav eui-datepicker-nav-prev"
           onClick={handlePrev}
           disabled={!canGoPrev}
           aria-label="Poprzedni miesiąc"
         >
           <ChevronLeft size={20} aria-hidden="true" />
         </button>
-        <div aria-hidden="true" />
+
+        <div className="eui-datepicker-months">
+          {renderMonth(leftMonth)}
+          {months === 2 && renderMonth(rightMonth)}
+        </div>
+
         <button
           type="button"
-          className="eui-datepicker-nav"
+          className="eui-datepicker-nav eui-datepicker-nav-next"
           onClick={handleNext}
           disabled={!canGoNext}
           aria-label="Następny miesiąc"
         >
           <ChevronRight size={20} aria-hidden="true" />
         </button>
-      </div>
-
-      <div className="eui-datepicker-months">
-        {renderMonth(leftMonth)}
-        {months === 2 && renderMonth(rightMonth)}
       </div>
     </div>
   );

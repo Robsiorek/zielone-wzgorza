@@ -1,11 +1,11 @@
 "use client";
 
 /**
- * DatePickerSection — DateRangePicker showcase
+ * DatePickerSection — DatePickerTabs showcase
  * ────────────────────────────────────────────────────────────────────────
- * Shows the date picker inside a Popover (its native habitat). The state
- * is controlled locally so the user can play with it. Logs `onComplete`
- * to the subtitle for verification of idempotency.
+ * Demonstrates the full "Dokładne / Elastyczne" date picker using a
+ * single BookingSearchCriteria discriminated union. The mode field
+ * determines which tab is active — no separate mode state.
  */
 
 import * as React from "react";
@@ -16,49 +16,64 @@ import {
   PopoverTrigger,
   PopoverContent,
 } from "@/components/engine-ui/primitives/Popover";
-import { DateRangePicker } from "@/components/engine-ui/DateRangePicker";
-import type { DateRange } from "@/lib/booking-params";
+import { DatePickerTabs } from "@/components/engine-ui/DatePickerTabs";
+import {
+  type BookingSearchCriteria,
+  DEFAULT_SEARCH_CRITERIA,
+} from "@/lib/booking-params";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 
-function formatRange(range: DateRange): string {
-  if (!range.checkIn && !range.checkOut) return "Wybierz daty";
-  const fmt = (iso: string | null) => {
-    if (!iso) return "…";
-    const [y, m, d] = iso.split("-").map(Number);
-    return format(new Date(y, m - 1, d), "d MMM yyyy", { locale: pl });
-  };
-  return `${fmt(range.checkIn)} – ${fmt(range.checkOut)}`;
+const DURATION_LABELS: Record<string, string> = {
+  weekend: "Weekend",
+  "5days": "5 dni",
+  week: "Tydzień",
+};
+
+function formatDisplay(criteria: BookingSearchCriteria): string {
+  if (criteria.mode === "exact") {
+    if (!criteria.checkIn && !criteria.checkOut) return "Wybierz daty";
+    const fmt = (iso: string) => {
+      if (!iso) return "…";
+      const [y, m, d] = iso.split("-").map(Number);
+      return format(new Date(y, m - 1, d), "d MMM yyyy", { locale: pl });
+    };
+    return `${fmt(criteria.checkIn)} – ${fmt(criteria.checkOut)}`;
+  }
+  // flexible
+  const dur = DURATION_LABELS[criteria.duration] ?? criteria.duration;
+  if (!criteria.month) return `${dur} — wybierz miesiąc`;
+  const [y, m] = criteria.month.split("-").map(Number);
+  const monthName = format(new Date(y, m - 1, 1), "LLLL yyyy", { locale: pl });
+  return `${dur} · ${monthName}`;
 }
 
 export function DatePickerSection() {
-  const [range, setRange] = React.useState<DateRange>({ checkIn: null, checkOut: null });
+  const [criteria, setCriteria] = React.useState<BookingSearchCriteria>({
+    ...DEFAULT_SEARCH_CRITERIA,
+  });
   const [completeCount, setCompleteCount] = React.useState(0);
-  const [lastComplete, setLastComplete] = React.useState<string | null>(null);
   const [open, setOpen] = React.useState(false);
 
-  const handleComplete = (next: Required<DateRange>) => {
+  const handleComplete = () => {
     setCompleteCount((c) => c + 1);
-    setLastComplete(`${next.checkIn} → ${next.checkOut}`);
-    // Let the user see the filled state briefly, then close.
     window.setTimeout(() => setOpen(false), 280);
   };
 
   const handleReset = () => {
-    setRange({ checkIn: null, checkOut: null });
+    setCriteria({ ...DEFAULT_SEARCH_CRITERIA });
     setCompleteCount(0);
-    setLastComplete(null);
   };
 
   return (
     <LabSection
       id="datepicker"
       title="Picker dat"
-      description="Dwa miesiące obok siebie, kliknij dzień rozpoczęcia, potem dzień zakończenia. Najechanie kursorem pokazuje podgląd zakresu. Klawiatura: Enter/Space na komórkach dni, Tab między dniami."
+      description="Dwa tryby: Dokładne (kalendarz) i Elastyczne (czas pobytu + miesiąc). Jeden kontrakt danych: BookingSearchCriteria (discriminated union). Przełączanie tabów zachowuje dane obu trybów."
     >
       <ComponentShowcase
-        title="Picker dat w popoverze"
-        caption="Kliknij trigger, wybierz zakres. Licznik onComplete sprawdza, że callback odpala się dokładnie raz na pełne wybranie zakresu."
+        title="Picker dat — Dokładne / Elastyczne"
+        caption="Kliknij trigger, przełączaj tryby. Jeden value, jeden onChange. Mode = tab."
       >
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 20 }}>
           <Popover open={open} onOpenChange={setOpen}>
@@ -78,14 +93,14 @@ export function DatePickerSection() {
                   minWidth: 280,
                 }}
               >
-                {formatRange(range)}
+                {formatDisplay(criteria)}
               </button>
             </PopoverTrigger>
             <PopoverContent size="large" align="center" side="bottom" sideOffset={12}>
-              <DateRangePicker
-                value={range}
-                onChange={setRange}
-                onComplete={handleComplete}
+              <DatePickerTabs
+                value={criteria}
+                onChange={setCriteria}
+                onExactComplete={handleComplete}
               />
             </PopoverContent>
           </Popover>
@@ -100,18 +115,13 @@ export function DatePickerSection() {
               backgroundColor: "var(--eui-grey-50)",
               fontSize: 13,
               color: "var(--eui-text-secondary)",
-              maxWidth: 360, width: "100%", wordBreak: "break-all", boxSizing: "border-box",
+              maxWidth: 400, width: "100%", wordBreak: "break-all", boxSizing: "border-box",
               textAlign: "center",
+              fontFamily: "ui-monospace, Menlo, monospace",
             }}
           >
-            <div>
-              <strong>onComplete wywołań:</strong> {completeCount}
-            </div>
-            {lastComplete && (
-              <div style={{ fontFamily: "ui-monospace, Menlo, monospace" }}>
-                ostatni: {lastComplete}
-              </div>
-            )}
+            <div><strong>value:</strong> {JSON.stringify(criteria)}</div>
+            <div><strong>onComplete:</strong> {completeCount}</div>
           </div>
 
           <button

@@ -92,7 +92,7 @@ export function ExploreView() {
 
   // ── Navigation: QuickDateForm → search results ──
   const handleSearch = useCallback((checkIn: string, checkOut: string, guests: number) => {
-    const url = buildBookingUrl({ checkIn, checkOut, guests });
+    const url = buildBookingUrl({ mode: "exact", checkIn, checkOut, adults: guests, children: 0, infants: 0, pets: 0 });
     router.push(url);
   }, [router]);
 
@@ -101,10 +101,10 @@ export function ExploreView() {
     const dates = currentDatesRef.current;
     // If dates are filled and look valid → navigate with resource slug
     if (dates && dates.checkIn && dates.checkOut && dates.checkOut > dates.checkIn) {
-      const url = buildBookingUrl({
+      const url = buildBookingUrl({ mode: "exact",
         checkIn: dates.checkIn,
         checkOut: dates.checkOut,
-        guests: dates.guests,
+        adults: dates.guests, children: 0, infants: 0, pets: 0,
         resourceSlug,
       });
       router.push(url);

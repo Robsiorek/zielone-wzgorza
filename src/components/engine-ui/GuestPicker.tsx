@@ -225,7 +225,7 @@ export function GuestPicker({
     rows.push({
       key: "pets",
       title: "Zwierzęta",
-      subtitle: "Warunki pobytu ze zwierzęciem",
+      subtitle: "Przyjeżdżasz ze zwierzęciem?",
       subtitleHref: petsPolicyHref,
       min: 0,
       max: maxPets,

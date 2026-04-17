@@ -28,15 +28,87 @@ import * as React from "react";
 import * as RadixPopover from "@radix-ui/react-popover";
 
 // ═══════════════════════════════════════════
+// Popover Root — with scroll-dismiss
+// ═══════════════════════════════════════════
+
+/**
+ * Scroll-dismiss threshold in pixels. Scrolls below this amount are
+ * ignored (prevents closing on micro-scrolls from touch jitter).
+ */
+const SCROLL_DISMISS_PX = 10;
+
+export interface PopoverProps extends RadixPopover.PopoverProps {
+  /**
+   * Close the popover when the page scrolls. Default `true`.
+   *
+   * Radix recalculates popover position on every scroll frame via
+   * @floating-ui. With `position: absolute` (Radix default), there's a
+   * 1-frame lag that makes the popover visibly jitter — especially on
+   * mobile. Closing on scroll eliminates the jitter entirely and matches
+   * the Airbnb pattern (scroll = dismiss).
+   */
+  closeOnScroll?: boolean;
+}
+
+export function Popover({
+  closeOnScroll = true,
+  open: openProp,
+  onOpenChange: onOpenChangeProp,
+  children,
+  ...rest
+}: PopoverProps) {
+  // Support both controlled (open/onOpenChange provided by parent) and
+  // uncontrolled (Radix manages internally via defaultOpen) modes.
+  const isControlled = openProp !== undefined;
+  const [uncontrolledOpen, setUncontrolledOpen] = React.useState(false);
+
+  const isOpen = isControlled ? openProp : uncontrolledOpen;
+
+  const handleOpenChange = React.useCallback(
+    (next: boolean) => {
+      if (!isControlled) setUncontrolledOpen(next);
+      onOpenChangeProp?.(next);
+    },
+    [isControlled, onOpenChangeProp]
+  );
+
+  // ── Scroll-dismiss ──
+  React.useEffect(() => {
+    if (!closeOnScroll || !isOpen) return;
+    if (typeof window === "undefined") return;
+
+    const startY = window.scrollY;
+    let dismissed = false;
+
+    const onScroll = () => {
+      if (dismissed) return;
+      if (Math.abs(window.scrollY - startY) > SCROLL_DISMISS_PX) {
+        dismissed = true;
+        handleOpenChange(false);
+      }
+    };
+
+    // capture: true — scroll events don't bubble, capture is the only
+    // way to catch scroll on nested containers (admin layout, modals).
+    window.addEventListener("scroll", onScroll, { passive: true, capture: true });
+    return () => window.removeEventListener("scroll", onScroll, { capture: true } as EventListenerOptions);
+  }, [closeOnScroll, isOpen, handleOpenChange]);
+
+  return (
+    <RadixPopover.Root open={isOpen} onOpenChange={handleOpenChange} {...rest}>
+      {children}
+    </RadixPopover.Root>
+  );
+}
+
+// ═══════════════════════════════════════════
 // Re-exports (pass-through)
 // ═══════════════════════════════════════════
 
-export const Popover = RadixPopover.Root;
 export const PopoverTrigger = RadixPopover.Trigger;
 export const PopoverAnchor = RadixPopover.Anchor;
 export const PopoverClose = RadixPopover.Close;
 
-export type PopoverProps = RadixPopover.PopoverProps;
 export type PopoverTriggerProps = RadixPopover.PopoverTriggerProps;
 export type PopoverAnchorProps = RadixPopover.PopoverAnchorProps;
 export type PopoverCloseProps = RadixPopover.PopoverCloseProps;
@@ -50,7 +122,7 @@ export type PopoverCloseProps = RadixPopover.PopoverCloseProps;
  *
  * - "small"       = 280px (compact menus, short lists)
  * - "medium"      = 360px (default; guest picker, simple forms)
- * - "large"       = 520px (date picker, dense content)
+ * - "large"       = 640px (date picker, dense content)
  * - "contextual"  = content-sized (tooltips, inline hints)
  */
 export type PopoverSize = "small" | "medium" | "large" | "contextual";
