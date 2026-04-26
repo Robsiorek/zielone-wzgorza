@@ -1,37 +1,29 @@
 "use client";
 
 /**
- * LabSection — top-level section wrapper in UI Lab
- * ────────────────────────────────────────────────────────────────────────
- * Provides:
- *   - an anchor `id` (for sidebar smooth-scroll navigation)
- *   - a header (title + short description)
- *   - a body region that children fill with ComponentShowcase cards
- *
- * Accessibility:
- *   - Each section is a <section> with aria-labelledby tying it to the
- *     title, so screen readers navigate the page by section correctly.
+ * LabSection — top-level section wrapper in UI Lab.
+ * Now supports an optional icon displayed alongside the title,
+ * matching the sidebar navigation icons.
  */
 
 import * as React from "react";
 
 export interface LabSectionProps {
-  /** Anchor id used by the sidebar. Must be unique on the page. */
   id: string;
-  /** Section title (large). */
   title: string;
-  /** Optional short description under the title. */
   description?: React.ReactNode;
-  /** Showcase cards and other content. */
+  /** Optional icon matching sidebar nav. Displayed left of title. */
+  icon?: React.ReactNode;
   children: React.ReactNode;
 }
 
-export function LabSection({ id, title, description, children }: LabSectionProps) {
+export function LabSection({ id, title, description, icon, children }: LabSectionProps) {
   const headingId = `${id}-heading`;
   return (
     <section id={id} className="eui-lab-section" aria-labelledby={headingId}>
       <header className="eui-lab-section-header">
         <h2 id={headingId} className="eui-lab-section-title">
+          {icon && <span className="eui-lab-section-icon" aria-hidden="true">{icon}</span>}
           {title}
         </h2>
         {description && (

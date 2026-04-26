@@ -16,6 +16,7 @@
  */
 
 import * as React from "react";
+import { Palette } from "lucide-react";
 import { LabSection } from "../LabSection";
 import { ComponentShowcase } from "../ComponentShowcase";
 import type { WidgetTheme } from "@/components/engine-ui/hooks/useWidgetTheme";
@@ -75,12 +76,13 @@ const ELEVATIONS = [
 export function FoundationsSection({ theme }: FoundationsSectionProps) {
   const brand = theme?.theme.primaryColor ?? "#2d7df6";
   const brandFg = theme?.theme.primaryForeground ?? "#ffffff";
-  const font = theme?.fontFamily ?? "Plus Jakarta Sans";
+  const font = theme?.fontFamily ?? "Manrope";
 
   return (
     <LabSection
       id="foundations"
       title="Fundamenty"
+      icon={<Palette />}
       description="Tokeny wizualne — kolory, typografia, odstępy, zaokrąglenia, cienie, materiały. Kolor marki i font pochodzą z konfiguracji widgetu w panelu admina."
     >
       {/* ── Colors ── */}
@@ -240,7 +242,6 @@ export function FoundationsSection({ theme }: FoundationsSectionProps) {
       <ComponentShowcase
         title="Materiały"
         caption="Trzy warianty backdrop-filter. Widoczne dzięki treści tła pod spodem."
-        stage="transparent"
       >
         <div
           style={{

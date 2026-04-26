@@ -9,6 +9,7 @@
  */
 
 import * as React from "react";
+import { Waves } from "lucide-react";
 import { LabSection } from "../LabSection";
 import { ComponentShowcase } from "../ComponentShowcase";
 
@@ -144,6 +145,7 @@ export function MotionSection() {
     <LabSection
       id="motion"
       title="Ruch"
+      icon={<Waves />}
       description="Krzywe ease i czasy tranzycji. Spring easings dają subtelny overshoot — to jest sygnał premium. Kliknij Odtwórz, by zobaczyć różnice."
     >
       <ComponentShowcase

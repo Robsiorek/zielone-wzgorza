@@ -1,65 +1,43 @@
 "use client";
 
 /**
- * ComponentShowcase — individual component preview card
+ * ComponentShowcase — two-zone preview card for UI Lab.
  * ────────────────────────────────────────────────────────────────────────
- * One card per variant/state/demo. Typical shape:
+ * Zone 1 — Preview (white bg): ONLY the component. Nothing else.
+ * Zone 2 — Info (grey bg): Specimen meta, DebugPanel, usage notes.
  *
  *   ┌─────────────────────────────────┐
  *   │ Title                            │
- *   │ Caption (what this demonstrates) │
+ *   │ Caption                          │
  *   ├─────────────────────────────────┤
- *   │                                  │
- *   │       [live component]           │
- *   │                                  │
+ *   │ ░░░░░░░░ WHITE BG ░░░░░░░░░░░░ │
+ *   │         [component]              │
  *   ├─────────────────────────────────┤
- *   │ <code snippet (optional)>        │
+ *   │ ▒▒▒▒▒▒▒ GREY BG ▒▒▒▒▒▒▒▒▒▒▒▒ │
+ *   │ ID · hint · debug panel          │
  *   └─────────────────────────────────┘
- *
- * The stage has two sub-variants:
- *   - "default"      — padded grey box, good for most demos
- *   - "transparent"  — no background, for components whose own canvas
- *                      matters (e.g. SearchBar variants on their own bg)
  */
 
 import * as React from "react";
-import { CodeSnippet } from "./CodeSnippet";
-
-export type ShowcaseStageVariant = "default" | "transparent";
 
 export interface ComponentShowcaseProps {
-  /** Card title. */
   title: string;
-  /** Optional description under the title. */
   caption?: React.ReactNode;
-  /** Stage background variant. Default `"default"`. */
-  stage?: ShowcaseStageVariant;
-  /** The live component(s) to render in the stage. */
+  /** The live component(s) — rendered on white background. */
   children: React.ReactNode;
-  /** Optional code sample shown below the stage. */
-  code?: string;
-  /** Optional language label for the code block. */
-  codeLanguage?: string;
-  /** Extra className merged onto the root. */
+  /** Metadata: Specimen badges, DebugPanel, usage info — rendered on grey background below preview. */
+  info?: React.ReactNode;
+  /** Extra className on root. */
   className?: string;
 }
 
 export function ComponentShowcase({
   title,
   caption,
-  stage = "default",
   children,
-  code,
-  codeLanguage = "tsx",
+  info,
   className,
 }: ComponentShowcaseProps) {
-  const stageClass = [
-    "eui-lab-showcase-stage",
-    stage === "transparent" && "eui-stage-transparent",
-  ]
-    .filter(Boolean)
-    .join(" ");
-
   const rootClass = ["eui-lab-showcase", className].filter(Boolean).join(" ");
 
   return (
@@ -68,8 +46,16 @@ export function ComponentShowcase({
         <h3 className="eui-lab-showcase-title">{title}</h3>
         {caption && <p className="eui-lab-showcase-caption">{caption}</p>}
       </header>
-      <div className={stageClass}>{children}</div>
-      {code && <CodeSnippet code={code} language={codeLanguage} />}
+
+      <div className="eui-lab-showcase-preview">
+        {children}
+      </div>
+
+      {info && (
+        <div className="eui-lab-showcase-info">
+          {info}
+        </div>
+      )}
     </div>
   );
 }

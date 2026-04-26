@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap');
 
 
 @tailwind base;
@@ -80,7 +80,8 @@
   body {
     overflow-y: scroll;
     @apply bg-background text-foreground antialiased;
-    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    letter-spacing: -0.011em; /* Airbnb-style tight tracking — the "missing piece" */
   }
 
   ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -530,6 +531,18 @@
      via color-mix so it follows --primary automatically. */
   --eui-brand:            hsl(var(--primary, 214 89% 52%));
   --eui-brand-foreground: hsl(var(--primary-foreground, 0 0% 100%));
+  --eui-danger:           #dc2626;
+  --eui-danger-foreground: #ffffff;
+  --eui-danger-bg-soft:   #fef2f2;
+  --eui-success:          #16a34a;
+  --eui-success-foreground: #ffffff;
+  --eui-success-bg-soft:  #f0fdf4;
+  --eui-warning:          #d97706;
+  --eui-warning-foreground: #ffffff;
+  --eui-warning-bg-soft:  #fffbeb;
+  --eui-info:             #2563eb;
+  --eui-info-foreground:  #ffffff;
+  --eui-info-bg-soft:     #eff6ff;
   --eui-brand-soft:       color-mix(in srgb, hsl(var(--primary, 214 89% 52%)) 12%, var(--eui-grey-50));
   --eui-brand-softer:     color-mix(in srgb, hsl(var(--primary, 214 89% 52%)) 6%,  var(--eui-grey-0));
 
@@ -561,8 +574,8 @@
 
   --eui-tracking-display: -0.06rem;  /* -0.96px @ 16px base */
   --eui-tracking-hero:    -0.12rem;  /* -1.92px — hero-only */
-  --eui-tracking-title:   -0.02rem;
-  --eui-tracking-normal:  0;
+  --eui-tracking-title:   -0.025rem; /* tightened from -0.02 for Airbnb feel */
+  --eui-tracking-normal:  -0.011em;  /* NEW — was 0, this was the missing piece */
 
   /* ── Spacing ──
      Discrete scale, not fluid. All paddings/margins reference these tokens. */
@@ -776,9 +789,9 @@
   box-shadow: var(--eui-elev-4);
   padding: var(--eui-space-5);
   z-index: var(--eui-z-popover);
-  /* Remove Radix default border; we use elev's hairline ring instead. */
   border: none;
   outline: none;
+  overflow: visible;
   transform-origin: var(--radix-popover-content-transform-origin);
   will-change: transform, opacity;
 }
@@ -1476,6 +1489,7 @@
   position: relative;
   display: flex;
   align-items: center;
+  overflow: visible;
 }
 
 .engine-root .eui-flexible-carousel-nav {
@@ -1495,8 +1509,8 @@
   transition: box-shadow var(--eui-duration-fast) var(--eui-ease-standard);
 }
 
-.engine-root .eui-flexible-carousel-prev { left: -8px; }
-.engine-root .eui-flexible-carousel-next { right: -8px; }
+.engine-root .eui-flexible-carousel-prev { left: 4px; }
+.engine-root .eui-flexible-carousel-next { right: 4px; }
 
 .engine-root .eui-flexible-carousel-nav:hover {
   box-shadow: var(--eui-elev-3);
@@ -1929,6 +1943,548 @@
   height: 24px;
 }
 
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * === INTERACTION LAYER (Pressable) ===
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * INTERACTION LAYER — rules for Pressable and its states
+ * ═══════════════════════════════════════════════════════════════════════════
+ * These rules must be present in globals.css (inline inside the engine-ui
+ * section). They are referenced by the Pressable component and every
+ * interactive primitive that composes from it.
+ *
+ * Do NOT duplicate these rules in individual components. Pressable owns
+ * the interaction visual contract.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+.engine-root .eui-pressable {
+  /* Default cursor is overridden inline by Pressable based on state. */
+  font-family: inherit;
+  color: inherit;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  text-align: inherit;
+  text-decoration: none;
+  /* Prevent text selection on interactive elements — feels bad when
+     a button highlights on drag. Inputs/content keep selection via
+     `user-select: text` on those specific primitives. */
+  user-select: none;
+  -webkit-user-select: none;
+  /* Tap highlight color on mobile — remove the default blue flash. */
+  -webkit-tap-highlight-color: transparent;
+  /* Touch manipulation — prevents double-tap zoom on mobile for
+     interactive elements. */
+  touch-action: manipulation;
+}
+
+.engine-root .eui-pressable:focus {
+  /* Default focus has no outline — focus-visible is painted by JS via
+     .eui-focus-ring class. This prevents the ring flashing on mouse
+     clicks, which feels noisy. */
+  outline: none;
+}
+
+.engine-root .eui-focus-ring {
+  /* Keyboard-focused state. 2px brand-colored ring with 2px offset from
+     the element via a white "gap" ring. Works on any background. */
+  outline: none;
+  box-shadow:
+    0 0 0 2px var(--eui-surface-raised),
+    0 0 0 4px var(--eui-brand);
+  /* The ring must appear instantly — waiting for transition makes
+     keyboard nav feel laggy. */
+  transition: none;
+}
+
+.engine-root .eui-focus-ring-inverse {
+  /* For dark surfaces (e.g. brand-colored button already dark). */
+  box-shadow:
+    0 0 0 2px var(--eui-grey-900),
+    0 0 0 4px var(--eui-grey-0);
+}
+
+.engine-root .eui-disabled {
+  opacity: 0.4;
+  cursor: not-allowed !important;
+  pointer-events: none;
+}
+
+.engine-root .eui-loading {
+  cursor: wait !important;
+  pointer-events: none;
+  /* Slightly dimmed but not as much as disabled — user should still
+     feel the button is "there", just working. */
+  opacity: 0.85;
+}
+
+/* Respect reduced motion — remove press scale for users who opted out. */
+@media (prefers-reduced-motion: reduce) {
+  .engine-root .eui-pressable {
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * BUTTON — styles for Button component (and IconButton where shared).
+ * ═══════════════════════════════════════════════════════════════════════════
+ * Paste into globals.css inside the engine-ui section, after Pressable
+ * rules. These rules assume `.engine-root .eui-pressable` has already
+ * established the baseline (cursor, user-select, focus reset).
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ──── Base ──── */
+
+.engine-root .eui-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--eui-space-3); /* override per size below */
+  box-sizing: border-box;
+  border-radius: var(--eui-radius-sm);
+  font-family: inherit;
+  white-space: nowrap;
+  /* Default transition — variants override property list if needed. */
+  transition:
+    background-color var(--eui-duration-fast) var(--eui-ease-standard),
+    color var(--eui-duration-fast) var(--eui-ease-standard),
+    box-shadow var(--eui-duration-base) var(--eui-ease-standard),
+    transform var(--eui-duration-instant) var(--eui-ease-standard);
+}
+
+.engine-root .eui-button-rounded {
+  border-radius: var(--eui-radius-md);
+}
+
+.engine-root .eui-button-pill {
+  border-radius: var(--eui-radius-pill);
+}
+
+.engine-root .eui-button-full-width {
+  width: 100%;
+}
+
+/* ──── Sizes ──── */
+
+.engine-root .eui-button-size-xs {
+  height: 28px;
+  min-height: 28px;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 500;
+  gap: 6px;
+}
+.engine-root .eui-button-size-xs .eui-button-icon-left > svg,
+.engine-root .eui-button-size-xs .eui-button-icon-right > svg {
+  width: 14px;
+  height: 14px;
+}
+
+.engine-root .eui-button-size-sm {
+  height: 36px;
+  min-height: 36px;
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 500;
+  gap: 8px;
+}
+.engine-root .eui-button-size-sm .eui-button-icon-left > svg,
+.engine-root .eui-button-size-sm .eui-button-icon-right > svg {
+  width: 16px;
+  height: 16px;
+}
+
+.engine-root .eui-button-size-md {
+  height: 44px;
+  min-height: 44px;
+  padding: 0 20px;
+  font-size: 14px;
+  font-weight: 500;
+  gap: 8px;
+}
+.engine-root .eui-button-size-md .eui-button-icon-left > svg,
+.engine-root .eui-button-size-md .eui-button-icon-right > svg {
+  width: 16px;
+  height: 16px;
+}
+
+.engine-root .eui-button-size-lg {
+  height: 52px;
+  min-height: 52px;
+  padding: 0 24px;
+  font-size: 16px;
+  font-weight: 600;
+  gap: 10px;
+}
+.engine-root .eui-button-size-lg .eui-button-icon-left > svg,
+.engine-root .eui-button-size-lg .eui-button-icon-right > svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ──── Variants ──── */
+
+/* Primary — brand CTA. Only ONE per view. */
+.engine-root .eui-button-variant-primary {
+  background-color: var(--eui-brand);
+  color: var(--eui-brand-foreground);
+  box-shadow: var(--eui-elev-1);
+}
+.engine-root .eui-button-variant-primary:hover:not(.eui-disabled):not(.eui-loading) {
+  background-color: color-mix(in srgb, var(--eui-brand) 92%, black);
+  box-shadow: var(--eui-elev-2);
+}
+
+/* Secondary — dark neutral, secondary actions. */
+.engine-root .eui-button-variant-secondary {
+  background-color: var(--eui-grey-900);
+  color: var(--eui-grey-0);
+  box-shadow: var(--eui-elev-1);
+}
+.engine-root .eui-button-variant-secondary:hover:not(.eui-disabled):not(.eui-loading) {
+  background-color: var(--eui-grey-800);
+  box-shadow: var(--eui-elev-2);
+}
+
+/* Ghost — transparent, subtle hover. */
+.engine-root .eui-button-variant-ghost {
+  background-color: transparent;
+  color: var(--eui-grey-900);
+}
+.engine-root .eui-button-variant-ghost:hover:not(.eui-disabled):not(.eui-loading) {
+  background-color: var(--eui-grey-100);
+}
+
+/* Subtle — soft grey bg, quiet CTA. */
+.engine-root .eui-button-variant-subtle {
+  background-color: var(--eui-grey-100);
+  color: var(--eui-grey-900);
+}
+.engine-root .eui-button-variant-subtle:hover:not(.eui-disabled):not(.eui-loading) {
+  background-color: var(--eui-grey-200);
+}
+
+/* Danger — destructive only. */
+.engine-root .eui-button-variant-danger {
+  background-color: var(--eui-danger);
+  color: var(--eui-grey-0);
+  box-shadow: var(--eui-elev-1);
+}
+.engine-root .eui-button-variant-danger:hover:not(.eui-disabled):not(.eui-loading) {
+  background-color: color-mix(in srgb, var(--eui-danger) 88%, black);
+  box-shadow: var(--eui-elev-2);
+}
+
+/* Link — text-like button, no background. Underline on hover. */
+.engine-root .eui-button-variant-link {
+  background-color: transparent;
+  color: var(--eui-grey-900);
+  padding: 0;
+  height: auto;
+  min-height: 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1.5px;
+  text-decoration-color: var(--eui-grey-300);
+}
+.engine-root .eui-button-variant-link:hover:not(.eui-disabled):not(.eui-loading) {
+  color: var(--eui-brand);
+  text-decoration-color: var(--eui-brand);
+}
+
+/* ──── Inner slots ──── */
+
+.engine-root .eui-button-label {
+  display: inline-block;
+  line-height: 1;
+}
+
+.engine-root .eui-button-icon-left,
+.engine-root .eui-button-icon-right {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Loading spinner reuses icon-left slot. Rotate via CSS animation. */
+.engine-root .eui-button-spinner {
+  animation: eui-spin 0.8s linear infinite;
+}
+
+.engine-root .eui-loading .eui-button-label {
+  opacity: 0.6;
+}
+
+@keyframes eui-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * ICON BUTTON — styles for IconButton component.
+ * ═══════════════════════════════════════════════════════════════════════════
+ * Paste into globals.css inside the engine-ui section, after Button rules.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+.engine-root .eui-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border-radius: var(--eui-radius-pill);
+  line-height: 1;
+  flex-shrink: 0;
+  transition:
+    background-color var(--eui-duration-fast) var(--eui-ease-standard),
+    color var(--eui-duration-fast) var(--eui-ease-standard),
+    box-shadow var(--eui-duration-base) var(--eui-ease-standard),
+    border-color var(--eui-duration-fast) var(--eui-ease-standard),
+    transform var(--eui-duration-instant) var(--eui-ease-standard);
+}
+
+.engine-root .eui-icon-button-square {
+  border-radius: var(--eui-radius-md);
+}
+
+/* ──── Sizes ──── */
+
+.engine-root .eui-icon-button-size-xs {
+  width: 24px;
+  height: 24px;
+}
+.engine-root .eui-icon-button-size-xs .eui-icon-button-icon > svg,
+.engine-root .eui-icon-button-size-xs > .eui-icon-button-spinner {
+  width: 14px;
+  height: 14px;
+}
+
+.engine-root .eui-icon-button-size-sm {
+  width: 32px;
+  height: 32px;
+}
+.engine-root .eui-icon-button-size-sm .eui-icon-button-icon > svg,
+.engine-root .eui-icon-button-size-sm > .eui-icon-button-spinner {
+  width: 16px;
+  height: 16px;
+}
+
+.engine-root .eui-icon-button-size-md {
+  width: 40px;
+  height: 40px;
+}
+.engine-root .eui-icon-button-size-md .eui-icon-button-icon > svg,
+.engine-root .eui-icon-button-size-md > .eui-icon-button-spinner {
+  width: 18px;
+  height: 18px;
+}
+
+.engine-root .eui-icon-button-size-lg {
+  width: 48px;
+  height: 48px;
+}
+.engine-root .eui-icon-button-size-lg .eui-icon-button-icon > svg,
+.engine-root .eui-icon-button-size-lg > .eui-icon-button-spinner {
+  width: 20px;
+  height: 20px;
+}
+
+/* ──── Variants ──── */
+
+/* Ghost — transparent, background appears on hover. */
+.engine-root .eui-icon-button-variant-ghost {
+  background-color: transparent;
+  color: var(--eui-grey-700);
+}
+.engine-root
+  .eui-icon-button-variant-ghost:hover:not(.eui-disabled):not(.eui-loading) {
+  background-color: var(--eui-grey-100);
+  color: var(--eui-grey-900);
+}
+
+/* Soft — grey-100 resting, darker on hover. Gives a clear "clickable
+   thing" affordance even when not hovered. */
+.engine-root .eui-icon-button-variant-soft {
+  background-color: var(--eui-grey-100);
+  color: var(--eui-grey-900);
+}
+.engine-root
+  .eui-icon-button-variant-soft:hover:not(.eui-disabled):not(.eui-loading) {
+  background-color: var(--eui-grey-200);
+}
+
+/* Solid — dark filled. For strong CTA icons, often paired with primary
+   buttons (e.g. info-icon next to "Sprawdź"). */
+.engine-root .eui-icon-button-variant-solid {
+  background-color: var(--eui-grey-900);
+  color: var(--eui-grey-0);
+  box-shadow: var(--eui-elev-1);
+}
+.engine-root
+  .eui-icon-button-variant-solid:hover:not(.eui-disabled):not(.eui-loading) {
+  background-color: var(--eui-grey-800);
+  box-shadow: var(--eui-elev-2);
+}
+
+/* Inverse — white with subtle border and shadow. Designed to "float"
+   on top of photos and colored backgrounds. Gallery arrows, favorite
+   hearts on MediaFrame. */
+.engine-root .eui-icon-button-variant-inverse {
+  background-color: var(--eui-grey-0);
+  color: var(--eui-grey-900);
+  box-shadow: var(--eui-elev-1);
+  border: 1px solid var(--eui-grey-100);
+}
+.engine-root
+  .eui-icon-button-variant-inverse:hover:not(.eui-disabled):not(.eui-loading) {
+  box-shadow: var(--eui-elev-2);
+  border-color: var(--eui-grey-200);
+}
+
+/* ──── Inner ──── */
+
+.engine-root .eui-icon-button-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.engine-root .eui-icon-button-spinner {
+  animation: eui-spin 0.8s linear infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * BUTTON GROUP — styles for ButtonGroup + ToggleButton.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+.engine-root .eui-button-group {
+  display: inline-flex;
+  align-items: stretch;
+}
+
+.engine-root .eui-button-group-orient-horizontal {
+  flex-direction: row;
+}
+.engine-root .eui-button-group-orient-vertical {
+  flex-direction: column;
+}
+
+/* ──── Separated — independent buttons with gap ──── */
+
+.engine-root .eui-button-group-separated {
+  gap: 8px;
+}
+.engine-root .eui-button-group-separated.eui-button-group-size-lg {
+  gap: 12px;
+}
+
+/* ──── Joined — shared-shape look ──── */
+/* Children buttons get their individual border-radius stripped on
+   interior edges and applied only to outer edges. The parent provides
+   a subtle background to hold the group together visually. */
+
+.engine-root .eui-button-group-joined {
+  background-color: var(--eui-grey-100);
+  border-radius: var(--eui-radius-pill);
+  padding: 4px;
+  gap: 4px;
+}
+
+.engine-root .eui-button-group-joined > .eui-button,
+.engine-root .eui-button-group-joined > .eui-toggle-button {
+  border-radius: var(--eui-radius-pill);
+  /* Joined buttons need to fill the parent's inner height. */
+  box-shadow: none;
+}
+
+/* Remove shadow inside joined groups — container provides the look. */
+.engine-root .eui-button-group-joined > .eui-button-variant-primary,
+.engine-root .eui-button-group-joined > .eui-button-variant-secondary {
+  box-shadow: none;
+}
+
+/* ──── Toggle — sliding indicator ──── */
+
+.engine-root .eui-button-group-toggle {
+  position: relative;
+  background-color: var(--eui-grey-100);
+  border-radius: var(--eui-radius-pill);
+  padding: 4px;
+  gap: 0;
+}
+
+/* Sliding pill indicator — absolutely positioned, measured by JS */
+.engine-root .eui-toggle-indicator {
+  position: absolute;
+  top: 4px;
+  left: 0;
+  height: calc(100% - 8px);
+  background-color: var(--eui-grey-0);
+  border-radius: var(--eui-radius-pill);
+  box-shadow: var(--eui-elev-1);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Transitions enabled only after first paint (prevents slide from 0,0) */
+.engine-root .eui-button-group-animated .eui-toggle-indicator {
+  transition:
+    transform 240ms cubic-bezier(0.2, 0, 0, 1),
+    width 240ms cubic-bezier(0.2, 0, 0, 1),
+    opacity 150ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.engine-root .eui-toggle-button {
+  position: relative;
+  z-index: 1;
+  background-color: transparent;
+  color: var(--eui-grey-700);
+  border-radius: var(--eui-radius-pill);
+  transition: color var(--eui-duration-fast) var(--eui-ease-standard);
+}
+
+.engine-root .eui-toggle-button:hover:not(.eui-disabled) {
+  color: var(--eui-grey-900);
+}
+
+/* Active toggle — only text color changes, bg comes from indicator */
+.engine-root .eui-toggle-button-active {
+  color: var(--eui-grey-900);
+}
+
+.engine-root .eui-toggle-button-active:hover:not(.eui-disabled) {
+  color: var(--eui-grey-900);
+}
+
+/* Vertical orientation adjustments — toggle indicator fills row width
+   instead of naturally stretching. */
+.engine-root .eui-button-group-orient-vertical.eui-button-group-toggle {
+  align-items: stretch;
+}
+.engine-root .eui-button-group-orient-vertical .eui-toggle-button {
+  justify-content: flex-start;
+}
+
+/* ── FavoriteButton pulse ── */
+.engine-root .eui-favorite-pulse {
+  animation: eui-fav-pulse 280ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes eui-fav-pulse {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
 
 /* ═══════════════════════════════════════════════════════════════════════════
  * === RESULTS LAYER ===
@@ -2899,6 +3455,22 @@
   font-weight: var(--eui-font-weight-semibold);
   letter-spacing: var(--eui-tracking-title);
   color: var(--eui-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.engine-root .eui-lab-section-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--eui-grey-500);
+  flex-shrink: 0;
+}
+
+.engine-root .eui-lab-section-icon > svg {
+  width: 22px;
+  height: 22px;
 }
 
 .engine-root .eui-lab-section-description {
@@ -2938,19 +3510,160 @@
   line-height: var(--eui-line-height-normal);
 }
 
-.engine-root .eui-lab-showcase-stage {
+/* Preview zone — white bg, ONLY the component */
+.engine-root .eui-lab-showcase-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  min-height: 80px;
+  padding: var(--eui-space-8);
+  background-color: var(--eui-grey-0);
+}
+
+/* Info zone — grey bg, metadata + debug */
+.engine-root .eui-lab-showcase-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--eui-space-4);
+  padding: var(--eui-space-5) var(--eui-space-6);
+  background-color: var(--eui-grey-50);
+  border: 1px solid var(--eui-grey-100);
+  border-radius: var(--eui-radius-lg);
+}
+
+/* When no info zone, preview gets no special treatment */
+.engine-root .eui-lab-showcase-preview:last-child {
+  border-radius: 0;
+}
+
+/* ── Specimen: component + documentation label ── */
+.engine-root .eui-specimen {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--eui-space-4);
+  min-width: 80px;
+  width: 100%;
+}
+
+.engine-root .eui-specimen-framed {
+  background-color: var(--eui-grey-50);
+  padding: 32px 24px;
+  border-radius: var(--eui-radius-lg);
+}
+
+.engine-root .eui-specimen-preview {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 120px;
-  padding: var(--eui-space-6);
-  background-color: var(--eui-grey-50);
-  border-radius: var(--eui-radius-md);
+  min-height: 52px;
+  width: 100%;
 }
 
-.engine-root .eui-lab-showcase-stage.eui-stage-transparent {
-  background-color: transparent;
+.engine-root .eui-specimen-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  max-width: 360px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.engine-root .eui-specimen-id {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: var(--eui-radius-pill);
+  background-color: var(--eui-grey-100);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--eui-grey-700);
+  white-space: nowrap;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+}
+
+.engine-root .eui-specimen-hint {
+  font-size: 12px;
+  font-weight: var(--eui-font-weight-regular);
+  color: var(--eui-text-secondary);
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* ── DebugPanel: component state viewer ── */
+.engine-root .eui-debug-panel {
+  width: 100%;
+  max-width: 480px;
+  background-color: var(--eui-grey-0);
+  border: 1px solid var(--eui-grey-100);
+  border-radius: var(--eui-radius-md);
+  padding: 14px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.engine-root .eui-debug-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.engine-root .eui-debug-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--eui-grey-400);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.engine-root .eui-debug-reset {
+  background: none;
+  border: none;
   padding: 0;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--eui-text-secondary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.engine-root .eui-debug-reset:hover {
+  color: var(--eui-text-primary);
+}
+
+.engine-root .eui-debug-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.engine-root .eui-debug-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  line-height: 1.5;
+}
+
+.engine-root .eui-debug-label {
+  color: var(--eui-grey-500);
+  white-space: nowrap;
+}
+
+.engine-root .eui-debug-value {
+  color: var(--eui-grey-900);
+  font-weight: 500;
+  text-align: right;
+  word-break: break-all;
 }
 
 .engine-root .eui-lab-code {
@@ -3293,11 +4006,8 @@
   .engine-root .eui-flexible-months {
     padding: 4px 8px;
   }
-  .engine-root .eui-flexible-carousel-prev { left: -4px; }
-  .engine-root .eui-flexible-carousel-next { right: -4px; }
   .engine-root .eui-flexible-carousel-nav {
-    width: 32px;
-    height: 32px;
+    display: none;
   }
 
   /* ── GuestPicker / Stepper skala ── */
@@ -3329,7 +4039,7 @@
   .engine-root .eui-lab-showcase {
     padding: var(--eui-space-5);
   }
-  .engine-root .eui-lab-showcase-stage {
+  .engine-root .eui-lab-showcase-preview {
     padding: var(--eui-space-4);
   }
   /* Lab topbar (admin DOM — no `.engine-root` prefix) */
@@ -3381,3 +4091,694 @@
     font-size: var(--eui-font-size-xs);
   }
 }
+
+/* ════════════════════════════════════════════════════════════════════════
+ *  CZĘŚĆ 3 — SURFACE + OVERLAY
+ * ════════════════════════════════════════════════════════════════════════ */
+
+/* ── CardSurface ── */
+.engine-root .eui-card-surface {
+  display: block;
+  background-color: var(--eui-grey-0);
+  border: 1px solid var(--eui-grey-100);
+  transition: box-shadow 150ms var(--eui-ease-standard),
+              transform 150ms var(--eui-ease-standard);
+}
+
+.engine-root .eui-card-radius-md { border-radius: var(--eui-radius-md); }
+.engine-root .eui-card-radius-lg { border-radius: var(--eui-radius-lg); }
+.engine-root .eui-card-radius-xl { border-radius: var(--eui-radius-xl); }
+.engine-root .eui-card-radius-2xl { border-radius: var(--eui-radius-2xl); }
+
+.engine-root .eui-card-elev-flat { box-shadow: none; }
+.engine-root .eui-card-elev-raised { box-shadow: var(--eui-elev-1); }
+.engine-root .eui-card-elev-elevated { box-shadow: var(--eui-elev-2); }
+.engine-root .eui-card-elev-floating { box-shadow: var(--eui-elev-3); }
+
+.engine-root .eui-card-pad-sm { padding: var(--eui-space-4); }
+.engine-root .eui-card-pad-md { padding: var(--eui-space-6); }
+.engine-root .eui-card-pad-lg { padding: var(--eui-space-8); }
+
+.engine-root .eui-card-interactive { cursor: pointer; }
+.engine-root .eui-card-interactive.eui-card-elev-raised:hover { box-shadow: var(--eui-elev-2); }
+.engine-root .eui-card-interactive.eui-card-elev-flat:hover { background-color: var(--eui-grey-50); }
+
+/* ── PanelSurface ── */
+.engine-root .eui-panel-surface {
+  display: flex;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.engine-root .eui-panel-dir-column { flex-direction: column; }
+.engine-root .eui-panel-dir-row { flex-direction: row; }
+
+.engine-root .eui-panel-pad-none { padding: 0; }
+.engine-root .eui-panel-pad-sm { padding: var(--eui-space-3); }
+.engine-root .eui-panel-pad-md { padding: var(--eui-space-5); }
+.engine-root .eui-panel-pad-lg { padding: var(--eui-space-6); }
+.engine-root .eui-panel-pad-xl { padding: var(--eui-space-8); }
+
+.engine-root .eui-panel-gap-none { gap: 0; }
+.engine-root .eui-panel-gap-xs { gap: var(--eui-space-2); }
+.engine-root .eui-panel-gap-sm { gap: var(--eui-space-3); }
+.engine-root .eui-panel-gap-md { gap: var(--eui-space-5); }
+.engine-root .eui-panel-gap-lg { gap: var(--eui-space-6); }
+.engine-root .eui-panel-gap-xl { gap: var(--eui-space-8); }
+
+.engine-root .eui-panel-scroll {
+  overflow-y: auto;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* ── ScrollFade ── */
+.engine-root .eui-scroll-fade {
+  position: relative;
+  --eui-scroll-fade-color: var(--eui-grey-0);
+}
+
+.engine-root .eui-scroll-fade-content {
+  overflow: auto;
+  scrollbar-width: thin;
+  height: 100%;
+  width: 100%;
+}
+
+.engine-root .eui-scroll-fade-vertical::before,
+.engine-root .eui-scroll-fade-vertical::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.engine-root .eui-scroll-fade-vertical.eui-scroll-fade-sm::before,
+.engine-root .eui-scroll-fade-vertical.eui-scroll-fade-sm::after { height: 24px; }
+.engine-root .eui-scroll-fade-vertical.eui-scroll-fade-md::before,
+.engine-root .eui-scroll-fade-vertical.eui-scroll-fade-md::after { height: 40px; }
+.engine-root .eui-scroll-fade-vertical.eui-scroll-fade-lg::before,
+.engine-root .eui-scroll-fade-vertical.eui-scroll-fade-lg::after { height: 56px; }
+
+.engine-root .eui-scroll-fade-vertical::before {
+  top: 0;
+  background: linear-gradient(to bottom, var(--eui-scroll-fade-color), transparent);
+}
+.engine-root .eui-scroll-fade-vertical::after {
+  bottom: 0;
+  background: linear-gradient(to top, var(--eui-scroll-fade-color), transparent);
+}
+
+.engine-root .eui-scroll-fade-horizontal::before,
+.engine-root .eui-scroll-fade-horizontal::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.engine-root .eui-scroll-fade-horizontal.eui-scroll-fade-sm::before,
+.engine-root .eui-scroll-fade-horizontal.eui-scroll-fade-sm::after { width: 24px; }
+.engine-root .eui-scroll-fade-horizontal.eui-scroll-fade-md::before,
+.engine-root .eui-scroll-fade-horizontal.eui-scroll-fade-md::after { width: 40px; }
+.engine-root .eui-scroll-fade-horizontal.eui-scroll-fade-lg::before,
+.engine-root .eui-scroll-fade-horizontal.eui-scroll-fade-lg::after { width: 56px; }
+
+.engine-root .eui-scroll-fade-horizontal::before {
+  left: 0;
+  background: linear-gradient(to right, var(--eui-scroll-fade-color), transparent);
+}
+.engine-root .eui-scroll-fade-horizontal::after {
+  right: 0;
+  background: linear-gradient(to left, var(--eui-scroll-fade-color), transparent);
+}
+
+/* ── Backdrop ── */
+.engine-root .eui-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0);
+  transition: background-color 200ms var(--eui-ease-standard),
+              backdrop-filter 200ms var(--eui-ease-standard);
+  z-index: 50;
+  pointer-events: none;
+}
+
+.engine-root .eui-backdrop[data-state="open"],
+.engine-root .eui-backdrop-visible {
+  pointer-events: auto;
+}
+
+.engine-root .eui-backdrop-light[data-state="open"],
+.engine-root .eui-backdrop-light.eui-backdrop-visible {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+.engine-root .eui-backdrop-medium[data-state="open"],
+.engine-root .eui-backdrop-medium.eui-backdrop-visible {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+.engine-root .eui-backdrop-heavy[data-state="open"],
+.engine-root .eui-backdrop-heavy.eui-backdrop-visible {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+.engine-root .eui-backdrop-blur[data-state="open"],
+.engine-root .eui-backdrop-blur.eui-backdrop-visible {
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.engine-root .eui-backdrop[data-state="closed"] {
+  background-color: rgba(0, 0, 0, 0);
+  backdrop-filter: blur(0);
+}
+
+/* ── DragHandle ── */
+.engine-root .eui-drag-handle {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 8px 0;
+  flex-shrink: 0;
+}
+
+.engine-root .eui-drag-handle-bar {
+  width: 32px;
+  height: 4px;
+  border-radius: var(--eui-radius-pill);
+  background-color: var(--eui-grey-300);
+}
+
+.engine-root .eui-drag-handle-hidden .eui-drag-handle-bar {
+  opacity: 0;
+}
+
+/* ── SheetHeader ── */
+.engine-root .eui-sheet-header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 20px;
+  background-color: var(--eui-grey-0);
+  border-bottom: 1px solid var(--eui-grey-100);
+  flex-shrink: 0;
+}
+
+.engine-root .eui-sheet-header-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.engine-root .eui-sheet-header-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 40px;
+}
+
+.engine-root .eui-sheet-header-left,
+.engine-root .eui-sheet-header-right {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.engine-root .eui-sheet-header-center {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.engine-root .eui-sheet-header-title {
+  font-size: var(--eui-font-size-lg);
+  font-weight: var(--eui-font-weight-semibold);
+  color: var(--eui-text-primary);
+  line-height: 1.3;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.engine-root .eui-sheet-header-subtitle {
+  font-size: var(--eui-font-size-sm);
+  color: var(--eui-text-secondary);
+  line-height: 1.4;
+  margin-top: 2px;
+}
+
+.engine-root .eui-sheet-header-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.engine-root .eui-sheet-header-tabs::-webkit-scrollbar { display: none; }
+
+/* ── SheetFooter ── */
+.engine-root .eui-sheet-footer {
+  display: flex;
+  gap: 12px;
+  padding: 16px 20px;
+  background-color: var(--eui-grey-0);
+  border-top: 1px solid var(--eui-grey-100);
+  flex-shrink: 0;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+}
+
+.engine-root .eui-sheet-footer-sticky {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+}
+
+.engine-root .eui-sheet-footer-end {
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.engine-root .eui-sheet-footer-between {
+  justify-content: space-between;
+  align-items: center;
+}
+
+.engine-root .eui-sheet-footer-stacked {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.engine-root .eui-sheet-footer-stacked > * {
+  width: 100%;
+}
+
+/* ── BottomSheet ── */
+.engine-root .eui-bottom-sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--eui-grey-0);
+  border-top-left-radius: var(--eui-radius-2xl);
+  border-top-right-radius: var(--eui-radius-2xl);
+  box-shadow: var(--eui-elev-5);
+  z-index: 51;
+  display: flex;
+  flex-direction: column;
+  max-height: 100dvh;
+  overflow: hidden;
+  animation: eui-bottom-sheet-enter 300ms var(--eui-ease-enter);
+}
+
+.engine-root .eui-bottom-sheet[data-state="closed"] {
+  animation: eui-bottom-sheet-exit 200ms var(--eui-ease-exit);
+}
+
+@keyframes eui-bottom-sheet-enter {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes eui-bottom-sheet-exit {
+  from { transform: translateY(0); }
+  to { transform: translateY(100%); }
+}
+
+.engine-root .eui-bottom-sheet-inner {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  touch-action: pan-y;
+}
+
+.engine-root .eui-bottom-sheet-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  min-height: 0;
+  overscroll-behavior: contain;
+}
+
+.engine-root .eui-bottom-sheet-height-full { height: 100dvh; }
+.engine-root .eui-bottom-sheet-height-auto { max-height: 90dvh; }
+.engine-root .eui-bottom-sheet-height-half { height: 50dvh; }
+
+/* Desktop modal fallback */
+@media (min-width: 768px) {
+  .engine-root .eui-bottom-sheet-desktop-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    right: auto;
+    bottom: auto;
+    width: 100%;
+    max-height: 85dvh;
+    border-radius: var(--eui-radius-2xl);
+    animation: eui-bottom-sheet-modal-enter 200ms var(--eui-ease-enter);
+  }
+
+  .engine-root .eui-bottom-sheet-desktop-modal[data-state="closed"] {
+    animation: eui-bottom-sheet-modal-exit 150ms var(--eui-ease-exit);
+  }
+
+  .engine-root .eui-bottom-sheet-desktop-size-sm { max-width: 400px; }
+  .engine-root .eui-bottom-sheet-desktop-size-md { max-width: 560px; }
+  .engine-root .eui-bottom-sheet-desktop-size-lg { max-width: 720px; }
+  .engine-root .eui-bottom-sheet-desktop-size-xl { max-width: 960px; }
+
+  .engine-root .eui-bottom-sheet-desktop-modal .eui-drag-handle {
+    display: none;
+  }
+}
+
+@keyframes eui-bottom-sheet-modal-enter {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.95); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+@keyframes eui-bottom-sheet-modal-exit {
+  from { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  to { opacity: 0; transform: translate(-50%, -50%) scale(0.95); }
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+ *  CZĘŚĆ 4 — NAV MICRO
+ * ════════════════════════════════════════════════════════════════════════ */
+
+/* Floating wrapper — positioning on wrapper div so IconButton's inline
+   transform (from Pressable scale) doesn't conflict with centering */
+.engine-root .eui-nav-arrow-floating-wrapper {
+  position: absolute;
+  z-index: 2;
+  display: inline-flex;
+}
+
+.engine-root .eui-nav-arrow-floating-wrapper.eui-nav-arrow-dir-left {
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.engine-root .eui-nav-arrow-floating-wrapper.eui-nav-arrow-dir-right {
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.engine-root .eui-nav-arrow-floating-wrapper.eui-nav-arrow-dir-up {
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.engine-root .eui-nav-arrow-floating-wrapper.eui-nav-arrow-dir-down {
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* ── PaginationDot ── */
+.engine-root .eui-pagination-dot {
+  display: inline-block;
+  border-radius: var(--eui-radius-pill);
+  padding: 0;
+  border: none;
+  flex-shrink: 0;
+  transition: background-color 150ms var(--eui-ease-standard),
+              transform 150ms var(--eui-ease-standard);
+}
+
+.engine-root .eui-pagination-dot-size-sm { width: 6px; height: 6px; }
+.engine-root .eui-pagination-dot-size-md { width: 8px; height: 8px; }
+.engine-root .eui-pagination-dot-size-lg { width: 10px; height: 10px; }
+
+.engine-root .eui-pagination-dot-inactive { background-color: var(--eui-grey-300); }
+.engine-root .eui-pagination-dot-active { background-color: var(--eui-grey-900); transform: scale(1.25); }
+.engine-root .eui-pagination-dot-disabled { background-color: var(--eui-grey-100); }
+
+.engine-root .eui-pagination-dot-interactive { cursor: pointer; }
+.engine-root .eui-pagination-dot-interactive.eui-pagination-dot-inactive:hover { background-color: var(--eui-grey-500); }
+.engine-root .eui-pagination-dot-interactive:disabled { cursor: not-allowed; opacity: 0.4; }
+.engine-root .eui-pagination-dot-interactive:focus-visible { outline: 2px solid var(--eui-brand); outline-offset: 2px; }
+
+.engine-root .eui-pagination-dots {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+
+/* ── TabTrigger ── */
+.engine-root .eui-tab-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 16px;
+  font-family: inherit;
+  font-weight: 500;
+  color: var(--eui-grey-600);
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  transition: color 150ms var(--eui-ease-standard),
+              background-color 150ms var(--eui-ease-standard);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.engine-root .eui-tab-trigger-size-sm { height: 32px; font-size: 12px; padding: 0 12px; }
+.engine-root .eui-tab-trigger-size-md { height: 40px; font-size: 14px; padding: 0 16px; }
+.engine-root .eui-tab-trigger-size-lg { height: 48px; font-size: 16px; padding: 0 20px; }
+
+.engine-root .eui-tab-trigger:hover:not(:disabled) { color: var(--eui-grey-900); }
+.engine-root .eui-tab-trigger:disabled { opacity: 0.4; cursor: not-allowed; }
+.engine-root .eui-tab-trigger:focus-visible { outline: 2px solid var(--eui-brand); outline-offset: -2px; border-radius: var(--eui-radius-sm); }
+
+.engine-root .eui-tab-trigger-count { color: var(--eui-grey-500); font-weight: 400; }
+.engine-root .eui-tab-trigger-icon { display: inline-flex; align-items: center; }
+.engine-root .eui-tab-trigger-icon > svg { width: 16px; height: 16px; }
+
+/* Underline variant */
+.engine-root .eui-tab-trigger-underline { position: relative; border-radius: 0; }
+.engine-root .eui-tab-trigger-underline::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 16px;
+  right: 16px;
+  height: 2px;
+  background-color: transparent;
+  transition: background-color 200ms var(--eui-ease-standard);
+}
+.engine-root .eui-tab-trigger-underline.eui-tab-trigger-active { color: var(--eui-grey-900); }
+.engine-root .eui-tab-trigger-underline.eui-tab-trigger-active::after { background-color: var(--eui-grey-900); }
+
+/* Pill variant */
+.engine-root .eui-tab-trigger-pill { border-radius: var(--eui-radius-pill); }
+.engine-root .eui-tab-trigger-pill:hover:not(:disabled):not(.eui-tab-trigger-active) { background-color: var(--eui-grey-50); }
+.engine-root .eui-tab-trigger-pill.eui-tab-trigger-active { background-color: var(--eui-grey-0); color: var(--eui-grey-900); box-shadow: var(--eui-elev-1); }
+
+/* Segmented variant */
+.engine-root .eui-tab-trigger-segmented { border-radius: var(--eui-radius-sm); position: relative; }
+.engine-root .eui-tab-trigger-segmented:not(:first-child)::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 1px;
+  background-color: var(--eui-grey-200);
+}
+.engine-root .eui-tab-trigger-segmented.eui-tab-trigger-active + .eui-tab-trigger-segmented::before,
+.engine-root .eui-tab-trigger-segmented.eui-tab-trigger-active::before { background-color: transparent; }
+.engine-root .eui-tab-trigger-segmented.eui-tab-trigger-active { background-color: var(--eui-grey-0); color: var(--eui-grey-900); box-shadow: var(--eui-elev-1); }
+
+/* Tab group containers */
+.engine-root .eui-tab-group { display: inline-flex; gap: 4px; padding: 4px; background-color: var(--eui-grey-100); border-radius: var(--eui-radius-pill); }
+.engine-root .eui-tab-group-segmented { gap: 0; border-radius: var(--eui-radius-sm); }
+
+/* ── SortTrigger ── */
+.engine-root .eui-sort-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+  font-family: inherit;
+  font-weight: 500;
+  color: var(--eui-grey-600);
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--eui-radius-sm);
+  cursor: pointer;
+  transition: background-color 150ms var(--eui-ease-standard),
+              color 150ms var(--eui-ease-standard),
+              border-color 150ms var(--eui-ease-standard);
+  white-space: nowrap;
+}
+
+.engine-root .eui-sort-trigger-size-sm { height: 28px; font-size: 12px; padding: 0 10px; }
+.engine-root .eui-sort-trigger-size-md { height: 36px; font-size: 13px; padding: 0 12px; }
+.engine-root .eui-sort-trigger-size-lg { height: 44px; font-size: 14px; padding: 0 16px; }
+
+.engine-root .eui-sort-trigger:hover { background-color: var(--eui-grey-50); color: var(--eui-grey-900); }
+.engine-root .eui-sort-trigger-active { background-color: var(--eui-grey-100); color: var(--eui-grey-900); border-color: var(--eui-grey-200); }
+.engine-root .eui-sort-trigger-active:hover { background-color: var(--eui-grey-200); }
+.engine-root .eui-sort-trigger-icon { display: inline-flex; color: var(--eui-grey-500); }
+.engine-root .eui-sort-trigger-active .eui-sort-trigger-icon { color: var(--eui-grey-900); }
+.engine-root .eui-sort-trigger:focus-visible { outline: 2px solid var(--eui-brand); outline-offset: 2px; }
+
+/* ════════════════════════════════════════════════════════════════════════
+ *  CZĘŚĆ 5 — CHIP / TAG / BADGE / STATUS
+ * ════════════════════════════════════════════════════════════════════════ */
+
+/* ── Chip ── */
+.engine-root .eui-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: var(--eui-radius-pill);
+  font-family: inherit;
+  font-weight: 500;
+  border: 1px solid transparent;
+  background-color: transparent;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition:
+    background-color 150ms var(--eui-ease-standard),
+    border-color 150ms var(--eui-ease-standard),
+    color 150ms var(--eui-ease-standard);
+}
+
+.engine-root .eui-chip-size-sm { height: 28px; padding: 0 10px; font-size: 12px; }
+.engine-root .eui-chip-size-md { height: 32px; padding: 0 12px; font-size: 13px; }
+
+.engine-root .eui-chip-variant-neutral { background-color: var(--eui-grey-100); color: var(--eui-grey-900); }
+.engine-root .eui-chip-variant-active { background-color: var(--eui-grey-900); color: var(--eui-grey-0); }
+.engine-root .eui-chip-variant-outline { border-color: var(--eui-grey-300); color: var(--eui-grey-900); }
+.engine-root .eui-chip-variant-brand { background-color: var(--eui-brand); color: var(--eui-grey-0); }
+.engine-root .eui-chip-variant-success { background-color: rgba(15, 123, 77, 0.1); color: var(--eui-success); }
+.engine-root .eui-chip-variant-warning { background-color: rgba(180, 83, 9, 0.1); color: var(--eui-warning); }
+
+.engine-root .eui-chip-interactive { cursor: pointer; }
+.engine-root .eui-chip-interactive.eui-chip-variant-outline:hover { background-color: var(--eui-grey-50); border-color: var(--eui-grey-900); }
+.engine-root .eui-chip-interactive.eui-chip-variant-neutral:hover { background-color: var(--eui-grey-200); }
+.engine-root .eui-chip-interactive.eui-chip-variant-active:hover { background-color: var(--eui-grey-800); }
+.engine-root .eui-chip-disabled { opacity: 0.4; cursor: not-allowed; }
+.engine-root .eui-chip-interactive:focus-visible { outline: 2px solid var(--eui-brand); outline-offset: 2px; }
+
+.engine-root .eui-chip-icon-left,
+.engine-root .eui-chip-icon-right { display: inline-flex; align-items: center; }
+.engine-root .eui-chip-icon-left > svg,
+.engine-root .eui-chip-icon-right > svg { width: 14px; height: 14px; }
+.engine-root .eui-chip-count { opacity: 0.7; font-weight: 400; }
+
+.engine-root .eui-chip-remove {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 18px; height: 18px; padding: 0; margin-left: 2px; margin-right: -4px;
+  background: transparent; border: none; border-radius: var(--eui-radius-pill);
+  color: currentColor; opacity: 0.6; cursor: pointer;
+  transition: opacity 150ms var(--eui-ease-standard), background-color 150ms var(--eui-ease-standard);
+}
+.engine-root .eui-chip-remove:hover { opacity: 1; background-color: rgba(0, 0, 0, 0.08); }
+.engine-root .eui-chip-remove:focus-visible { outline: 2px solid var(--eui-brand); outline-offset: 1px; opacity: 1; }
+
+.engine-root .eui-chip-group { display: inline-flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+/* ── Tag ── */
+.engine-root .eui-tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  height: 24px; padding: 0 10px; border-radius: var(--eui-radius-pill);
+  font-family: inherit; font-size: 12px; font-weight: 500;
+  white-space: nowrap; flex-shrink: 0;
+}
+.engine-root .eui-tag-variant-neutral { background-color: var(--eui-grey-100); color: var(--eui-grey-900); }
+.engine-root .eui-tag-variant-brand { background-color: color-mix(in srgb, var(--eui-brand) 10%, transparent); color: var(--eui-brand); }
+.engine-root .eui-tag-variant-success { background-color: rgba(15, 123, 77, 0.1); color: var(--eui-success); }
+.engine-root .eui-tag-variant-warning { background-color: rgba(180, 83, 9, 0.1); color: var(--eui-warning); }
+.engine-root .eui-tag-variant-danger { background-color: rgba(180, 35, 24, 0.1); color: var(--eui-danger); }
+.engine-root .eui-tag-variant-info { background-color: rgba(20, 100, 204, 0.1); color: var(--eui-info); }
+.engine-root .eui-tag-icon-left { display: inline-flex; align-items: center; }
+.engine-root .eui-tag-icon-left > svg { width: 12px; height: 12px; }
+
+/* ── Badge ── */
+.engine-root .eui-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  font-family: inherit; font-weight: 600; letter-spacing: 0.04em;
+  text-transform: uppercase; white-space: nowrap;
+  border-radius: var(--eui-radius-pill); flex-shrink: 0;
+}
+.engine-root .eui-badge-size-xs { height: 18px; padding: 0 6px; font-size: 10px; }
+.engine-root .eui-badge-size-sm { height: 22px; padding: 0 8px; font-size: 11px; }
+.engine-root .eui-badge-shape-rounded { border-radius: var(--eui-radius-xs); }
+.engine-root .eui-badge-variant-neutral { background-color: var(--eui-grey-900); color: var(--eui-grey-0); }
+.engine-root .eui-badge-variant-brand { background-color: var(--eui-brand); color: var(--eui-grey-0); }
+.engine-root .eui-badge-variant-outline { border: 1px solid var(--eui-grey-300); background-color: transparent; color: var(--eui-grey-700); }
+.engine-root .eui-badge-variant-success { background-color: rgba(15, 123, 77, 0.12); color: var(--eui-success); }
+.engine-root .eui-badge-variant-warning { background-color: rgba(180, 83, 9, 0.12); color: var(--eui-warning); }
+.engine-root .eui-badge-variant-danger { background-color: rgba(180, 35, 24, 0.12); color: var(--eui-danger); }
+
+/* ── TinyBadge ── */
+.engine-root .eui-tiny-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 16px; height: 16px; padding: 0 5px;
+  border-radius: var(--eui-radius-pill); font-family: inherit;
+  font-size: 9px; font-weight: 600; letter-spacing: 0.04em;
+  text-transform: uppercase; line-height: 1;
+  vertical-align: middle; flex-shrink: 0;
+}
+.engine-root .eui-tiny-badge-variant-neutral { background-color: var(--eui-grey-900); color: var(--eui-grey-0); }
+.engine-root .eui-tiny-badge-variant-brand { background-color: var(--eui-brand); color: var(--eui-grey-0); }
+.engine-root .eui-tiny-badge-variant-danger { background-color: var(--eui-danger); color: var(--eui-grey-0); }
+
+/* ── StatusDot ── */
+.engine-root .eui-status-dot { display: inline-flex; align-items: center; flex-shrink: 0; }
+.engine-root .eui-status-dot-with-label { gap: 6px; }
+.engine-root .eui-status-dot-circle { width: 8px; height: 8px; border-radius: var(--eui-radius-pill); display: inline-block; flex-shrink: 0; }
+.engine-root .eui-status-dot-label { font-family: inherit; font-size: 12px; color: var(--eui-grey-600); }
+.engine-root .eui-status-dot-variant-available .eui-status-dot-circle { background-color: var(--eui-success); }
+.engine-root .eui-status-dot-variant-limited .eui-status-dot-circle { background-color: var(--eui-warning); }
+.engine-root .eui-status-dot-variant-unavailable .eui-status-dot-circle { background-color: var(--eui-grey-400); }
+.engine-root .eui-status-dot-variant-promo .eui-status-dot-circle { background-color: var(--eui-brand); }
+.engine-root .eui-status-dot-variant-new .eui-status-dot-circle {
+  background-color: var(--eui-brand);
+  animation: eui-status-pulse 2s var(--eui-ease-standard) infinite;
+}
+@keyframes eui-status-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.85); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .engine-root .eui-status-dot-variant-new .eui-status-dot-circle {
+    animation: none;
+  }
+}
+
+/* ── RatingPill ── */
+.engine-root .eui-rating-pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-family: inherit; font-weight: 500; white-space: nowrap;
+  flex-shrink: 0; border-radius: var(--eui-radius-pill);
+}
+.engine-root .eui-rating-pill-size-sm { height: 22px; padding: 0 8px; font-size: 12px; }
+.engine-root .eui-rating-pill-size-md { height: 28px; padding: 0 10px; font-size: 13px; }
+.engine-root .eui-rating-pill-variant-solid { background-color: var(--eui-grey-900); color: var(--eui-grey-0); }
+.engine-root .eui-rating-pill-variant-soft { background-color: var(--eui-grey-50); color: var(--eui-grey-900); border: 1px solid var(--eui-grey-100); }
+.engine-root .eui-rating-pill-variant-inline { background-color: transparent; color: var(--eui-grey-900); padding: 0; height: auto; }
+.engine-root .eui-rating-pill-star { fill: currentColor; stroke: currentColor; }
+.engine-root .eui-rating-pill-separator { opacity: 0.5; margin: 0 2px; }
+.engine-root .eui-rating-pill-count { opacity: 0.8; font-weight: 400; }
+
+/* ── InlineBadge ── */
+.engine-root .eui-inline-badge {
+  display: inline-flex; align-items: center; height: 18px; padding: 0 6px;
+  margin-left: 6px; border-radius: var(--eui-radius-pill);
+  font-family: inherit; font-size: 10px; font-weight: 600;
+  letter-spacing: 0.04em; text-transform: uppercase; line-height: 1;
+  vertical-align: baseline; transform: translateY(-1px);
+  white-space: nowrap; flex-shrink: 0;
+}
+.engine-root .eui-inline-badge-variant-neutral { background-color: var(--eui-grey-100); color: var(--eui-grey-700); }
+.engine-root .eui-inline-badge-variant-brand { background-color: color-mix(in srgb, var(--eui-brand) 12%, transparent); color: var(--eui-brand); }
+.engine-root .eui-inline-badge-variant-success { background-color: rgba(15, 123, 77, 0.12); color: var(--eui-success); }
+.engine-root .eui-inline-badge-variant-warning { background-color: rgba(180, 83, 9, 0.12); color: var(--eui-warning); }
+.engine-root .eui-inline-badge-variant-danger { background-color: rgba(180, 35, 24, 0.12); color: var(--eui-danger); }

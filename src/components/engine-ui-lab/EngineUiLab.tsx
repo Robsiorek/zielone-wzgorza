@@ -27,6 +27,10 @@ import {
   Users,
   SearchIcon,
   LayoutList,
+  MousePointerClick,
+  Layers,
+  Compass,
+  Tag as TagIcon,
 } from "lucide-react";
 
 import { useWidgetTheme } from "@/components/engine-ui/hooks/useWidgetTheme";
@@ -38,15 +42,23 @@ import { DatePickerSection } from "./sections/DatePickerSection";
 import { GuestPickerSection } from "./sections/GuestPickerSection";
 import { SearchBarSection } from "./sections/SearchBarSection";
 import { ResultsSection } from "./sections/ResultsSection";
+import { ButtonsSection } from "./sections/ButtonsSection";
+import { SurfaceSection } from "./sections/SurfaceSection";
+import { NavSection } from "./sections/NavSection";
+import { ChipSection } from "./sections/ChipSection";
 
 const SIDEBAR_ITEMS = [
   { id: "foundations", label: "Fundamenty",        icon: <Palette size={16} aria-hidden="true" /> },
   { id: "motion",      label: "Ruch",              icon: <Waves size={16} aria-hidden="true" /> },
+  { id: "surface",     label: "Powierzchnie",      icon: <Layers size={16} aria-hidden="true" /> },
+  { id: "nav",         label: "Nawigacja",          icon: <Compass size={16} aria-hidden="true" /> },
+  { id: "chip",        label: "Tagi i badge'y",    icon: <TagIcon size={16} aria-hidden="true" /> },
   { id: "popovers",    label: "Popovery",          icon: <LayoutGrid size={16} aria-hidden="true" /> },
   { id: "datepicker",  label: "Picker dat",        icon: <CalendarRange size={16} aria-hidden="true" /> },
   { id: "guestpicker", label: "Picker gości",      icon: <Users size={16} aria-hidden="true" /> },
   { id: "searchbar",   label: "Pasek wyszukiwania", icon: <SearchIcon size={16} aria-hidden="true" /> },
   { id: "results",     label: "Warstwa wyników",    icon: <LayoutList size={16} aria-hidden="true" /> },
+  { id: "buttons",     label: "Przyciski",          icon: <MousePointerClick size={16} aria-hidden="true" /> },
 ];
 
 export function EngineUiLab() {
@@ -77,11 +89,15 @@ export function EngineUiLab() {
         >
           <FoundationsSection theme={theme} />
           <MotionSection />
+          <SurfaceSection />
+          <NavSection />
+          <ChipSection />
           <PopoverSection />
           <DatePickerSection />
           <GuestPickerSection />
           <SearchBarSection />
           <ResultsSection />
+          <ButtonsSection />
         </div>
       </div>
     </div>

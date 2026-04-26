@@ -118,10 +118,7 @@ export {
   type ImageCarouselProps,
 } from "./ImageCarousel";
 
-export {
-  FavoriteButton,
-  type FavoriteButtonProps,
-} from "./FavoriteButton";
+// FavoriteButton moved to ./button
 
 export {
   Modal,
@@ -182,3 +179,90 @@ export {
   isValidYearMonth,
   parseFlexibleDuration,
 } from "@/lib/booking-params";
+
+// ── Foundation: tokens ────────────────────────────────────────────
+export * from "./tokens";
+
+// ── Foundation: hooks ─────────────────────────────────────────────
+export {
+  useFocusVisible,
+  usePress,
+  useHover,
+  useReducedMotion,
+  useKeyboardShortcut,
+  useFocusTrap,
+} from "./hooks";
+
+// ── Foundation: a11y ──────────────────────────────────────────────
+export { VisuallyHidden } from "./a11y/VisuallyHidden";
+export { mergeRefs } from "./a11y/mergeRefs";
+
+// ── Foundation: interaction ───────────────────────────────────────
+export { Pressable } from "./interaction/Pressable";
+export type { PressableProps, PressableState } from "./interaction/Pressable";
+
+// ── Button Foundation ─────────────────────────────────────────────
+export {
+  Button,
+  type ButtonProps,
+  type ButtonVariant,
+  type ButtonSize,
+  type ButtonShape,
+  BUTTON_DIMENSIONS,
+  IconButton,
+  type IconButtonProps,
+  type IconButtonVariant,
+  type IconButtonSize,
+  type IconButtonShape,
+  ICON_BUTTON_DIMENSIONS,
+  ButtonGroup,
+  ToggleButton,
+  type ButtonGroupProps,
+  type ButtonGroupVariant,
+  type ToggleButtonProps,
+  CloseButton,
+  type CloseButtonProps,
+  BackButton,
+  type BackButtonProps,
+  FavoriteButton,
+  type FavoriteButtonProps,
+  ShareButton,
+  type ShareButtonProps,
+} from "./button";
+
+// ── Part 3 — Surface ──────────────────────────────────────────
+export {
+  CardSurface, type CardSurfaceProps,
+  PanelSurface, type PanelSurfaceProps,
+  ScrollFade, type ScrollFadeProps,
+} from "./surface";
+
+// ── Part 3 — Overlay ──────────────────────────────────────────
+export {
+  Backdrop, type BackdropProps,
+  DragHandle, type DragHandleProps,
+  SheetHeader, type SheetHeaderProps,
+  SheetFooter, type SheetFooterProps,
+  BottomSheet, type BottomSheetProps,
+} from "./overlay";
+
+// ── Part 4 — Nav Micro ────────────────────────────────────────
+export {
+  Chevron, type ChevronProps,
+  NavigationArrow, type NavigationArrowProps,
+  PaginationDot, type PaginationDotProps,
+  TabTrigger, type TabTriggerProps,
+  SortTrigger, type SortTriggerProps, type SortDirection,
+} from "./nav";
+
+// ── Part 5 — Chip / Tag / Badge / Status ───────────────────────
+export {
+  Chip, type ChipProps, type ChipVariant, type ChipSize,
+  FilterChip, type FilterChipProps,
+  Tag, type TagProps, type TagVariant,
+  Badge, type BadgeProps, type BadgeVariant, type BadgeSize, type BadgeShape,
+  TinyBadge, type TinyBadgeProps, type TinyBadgeVariant,
+  StatusDot, type StatusDotProps, type StatusDotVariant,
+  RatingPill, type RatingPillProps,
+  InlineBadge, type InlineBadgeProps, type InlineBadgeVariant,
+} from "./chip";
