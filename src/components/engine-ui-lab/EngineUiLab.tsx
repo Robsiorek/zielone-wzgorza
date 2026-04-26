@@ -65,7 +65,7 @@ export function EngineUiLab() {
   // The hook mounts inside admin DOM but still finds `.engine-root`
   // further down and applies widget theme there — not to the admin
   // panel itself. Admin's colors stay untouched.
-  const { theme } = useWidgetTheme();
+  const { theme } = useWidgetTheme({ ignoreFontOverride: true });
 
   return (
     <div className="eui-lab-shell">

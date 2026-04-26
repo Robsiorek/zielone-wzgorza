@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { Manrope } from "next/font/google";
 import "@/styles/globals.css";
 
-const font = Plus_Jakarta_Sans({
+const font = Manrope({
   subsets: ["latin", "latin-ext"],
   display: "swap",
   variable: "--font-sans",
+  fallback: ["system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
 });
 
 export const viewport = {
@@ -24,7 +25,7 @@ import { ToastProvider } from "@/components/ui/toast";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pl" className={font.className} suppressHydrationWarning>
+    <html lang="pl" className={`${font.className} ${font.variable}`} suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{

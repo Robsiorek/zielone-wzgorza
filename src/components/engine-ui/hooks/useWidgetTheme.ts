@@ -140,18 +140,33 @@ export function applyThemeToElement(
  */
 export interface UseWidgetThemeOptions {
   /**
-   * Override the endpoint — used by tests or local overrides. Defaults to
-   * the public endpoint served from the same origin.
+   * Override the endpoint — used by tests or local overrides.
    */
   endpoint?: string;
+  /**
+   * If true, this hook will NOT apply ANY font side effects:
+   *  - no Google Fonts <link> appended to document.head
+   *  - no .engine-root style.fontFamily override
+   *
+   * Used by Engine UI Lab — dev environment that always uses system Manrope.
+   * Default: false (font side effects ARE applied — used by BookingWidget).
+   * Colors from tenant theme are STILL applied regardless of this flag.
+   */
+  ignoreFontOverride?: boolean;
 }
 
 const DEFAULT_ENDPOINT = "/api/public/widget-config";
 /**
- * "Plus Jakarta Sans" is already loaded globally in globals.css — we only
- * need to fetch another Google Font when the admin picks something else.
+ * "Manrope" is already loaded globally via next/font/google in src/app/layout.tsx —
+ * we only need to fetch another Google Font when the admin picks something
+ * else through /admin/global-settings/appearance.
+ *
+ * Architecture note: this hook is used by BookingWidget (public front) to
+ * apply tenant theming. Engine UI Lab does NOT apply font from this hook
+ * (passes ignoreFontOverride: true) — Lab is a development environment that
+ * always uses Manrope regardless of tenant theme.
  */
-const DEFAULT_FONT = "Plus Jakarta Sans";
+const DEFAULT_FONT = "Manrope";
 
 export function useWidgetTheme(
   options: UseWidgetThemeOptions = {}
@@ -214,6 +229,9 @@ export function useWidgetTheme(
   // We append a <link> to <head>; on cleanup we remove it so StrictMode
   // re-runs don't pile up multiple identical <link> tags.
   React.useEffect(() => {
+    // Early return: Lab and other internal consumers skip all font side effects
+    if (options.ignoreFontOverride) return;
+
     const family = theme?.fontFamily;
     if (!family || family === DEFAULT_FONT) return;
 
@@ -237,8 +255,14 @@ export function useWidgetTheme(
       } catch {
         /* link already gone — e.g. double cleanup under StrictMode */
       }
+      // Reset inline font-family so .engine-root falls back to inherited
+      // Manrope from <html> when tenant switches back to default
+      const rootEl = document.querySelector(".engine-root");
+      if (rootEl instanceof HTMLElement) {
+        rootEl.style.removeProperty("font-family");
+      }
     };
-  }, [theme?.fontFamily]);
+  }, [theme?.fontFamily, options.ignoreFontOverride]);
 
   return { theme, loading, error };
 }

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap');
+/* Font loaded by next/font/google in src/app/layout.tsx — no @import needed */
 
 
 @tailwind base;
@@ -80,8 +80,8 @@
   body {
     overflow-y: scroll;
     @apply bg-background text-foreground antialiased;
-    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    letter-spacing: -0.011em; /* Airbnb-style tight tracking — the "missing piece" */
+    letter-spacing: -0.011em; /* Airbnb-style tight tracking */
+    /* font-family inherited from <html className={font.className}> in layout.tsx */
   }
 
   ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -479,7 +479,8 @@
  *   - Brand color comes from --primary (set by useWidgetTheme from
  *     /api/public/widget-config). Do NOT hardcode brand hex values.
  *
- * LOADED BY: src/styles/globals.css (single @import, at the top).
+ * LOADED BY: src/styles/globals.css — colors only.
+ * Font is loaded separately by next/font/google in src/app/layout.tsx.
  * Do NOT import this file in layouts, pages or components.
  *
  * Tokens inspired by: Airbnb's public design language (elevation, motion,
@@ -547,10 +548,16 @@
   --eui-brand-softer:     color-mix(in srgb, hsl(var(--primary, 214 89% 52%)) 6%,  var(--eui-grey-0));
 
   /* ── Typography ──
-     Font comes from widget-config (applied to .engine-root by useWidgetTheme).
+     Font is the system Manrope from next/font/google in src/app/layout.tsx.
+     On public front (BookingWidget/EngineShell), useWidgetTheme can override
+     .engine-root font-family at runtime when tenant selects a non-Manrope font.
+     Engine UI Lab ignores font override (uses Manrope always) — see
+     EngineUiLab.tsx with ignoreFontOverride: true.
      Scale matches Airbnb display/title/body tiers.
      Premium signal: strong negative letter-spacing on display sizes. */
-  --eui-font-family: inherit; /* inherits the font applied by useWidgetTheme */
+  --eui-font-family: inherit; /* inherits from <html className={font.className}> in layout.tsx;
+                                  useWidgetTheme can override .engine-root font-family
+                                  inline for tenant-selected font (public front only) */
   --eui-font-weight-regular:  400;
   --eui-font-weight-medium:   500;
   --eui-font-weight-semibold: 600;

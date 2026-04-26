@@ -84,7 +84,7 @@ export async function PATCH(request: NextRequest) {
     if (body.fontFamily !== undefined) {
       const font = body.fontFamily.trim();
       if (font.length > 100) return apiError("Nazwa fontu zbyt długa");
-      data.fontFamily = font || "Plus Jakarta Sans";
+      data.fontFamily = font || "Manrope";
     }
 
     // Widget settings

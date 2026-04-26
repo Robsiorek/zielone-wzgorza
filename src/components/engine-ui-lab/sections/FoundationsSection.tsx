@@ -76,14 +76,15 @@ const ELEVATIONS = [
 export function FoundationsSection({ theme }: FoundationsSectionProps) {
   const brand = theme?.theme.primaryColor ?? "#2d7df6";
   const brandFg = theme?.theme.primaryForeground ?? "#ffffff";
-  const font = theme?.fontFamily ?? "Manrope";
+  // Engine UI Lab MUSI ignorować widget theme dla fontu — backend hardcoded.
+  const font = "Manrope";
 
   return (
     <LabSection
       id="foundations"
       title="Fundamenty"
       icon={<Palette />}
-      description="Tokeny wizualne — kolory, typografia, odstępy, zaokrąglenia, cienie, materiały. Kolor marki i font pochodzą z konfiguracji widgetu w panelu admina."
+      description="Tokeny wizualne — kolory, typografia, odstępy, zaokrąglenia, cienie, materiały. Kolor marki pochodzi z widget-config. Font systemowy Engine UI Lab: Manrope (hardcoded, niezmienialny przez widget-config)."
     >
       {/* ── Colors ── */}
       <ComponentShowcase
@@ -136,7 +137,7 @@ export function FoundationsSection({ theme }: FoundationsSectionProps) {
       {/* ── Typography ── */}
       <ComponentShowcase
         title="Typografia"
-        caption={`Font z widget-config: ${font}. Display ma ujemne letter-spacing (premium signal).`}
+        caption={`Font systemowy: ${font}. Display ma ujemne letter-spacing (premium signal).`}
       >
         <div style={{ display: "flex", flexDirection: "column", gap: 20, width: "100%" }}>
           <div>

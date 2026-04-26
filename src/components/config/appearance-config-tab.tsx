@@ -40,7 +40,7 @@ const DEFAULT_CONFIG: Partial<WidgetConfigData> = {
   successColor: "#16A34A",
   warningColor: "#D97706",
   dangerColor: "#DC2626",
-  fontFamily: "Plus Jakarta Sans",
+  fontFamily: "Manrope",
   logoHeight: 40,
 };
 
@@ -58,7 +58,7 @@ const COLOR_FIELDS: { key: keyof WidgetConfigData; desc: string }[] = [
 ];
 
 const FONT_OPTIONS = [
-  "Plus Jakarta Sans", "Inter", "DM Sans", "Outfit", "Poppins",
+  "Manrope", "Plus Jakarta Sans", "Inter", "DM Sans", "Outfit", "Poppins",
   "Montserrat", "Lato", "Open Sans", "Nunito", "Raleway", "Rubik", "Source Sans 3",
 ];
 

@@ -142,7 +142,7 @@ export function EngineShell({ children, maxWidth = "narrow", onReady }: EngineSh
 
   // ── Dynamic Google Font on .engine-root ──
   useEffect(() => {
-    if (!widgetTheme?.fontFamily || widgetTheme.fontFamily === "Plus Jakarta Sans") return;
+    if (!widgetTheme?.fontFamily || widgetTheme.fontFamily === "Manrope") return;
     const font = widgetTheme.fontFamily;
     const encoded = font.replace(/\s+/g, "+");
     const link = document.createElement("link");

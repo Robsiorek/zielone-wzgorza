@@ -1644,7 +1644,7 @@ model WidgetConfig {
   warningColor    String  @default("#D97706")   // warning states
   dangerColor     String  @default("#DC2626")   // error states
   // ── Font ──
-  fontFamily      String  @default("Plus Jakarta Sans")  // Google Fonts name
+  fontFamily      String  @default("Manrope")  // Google Fonts name (tenant-customizable)
   // ── Widget settings ──
   showPrices      Boolean @default(true)
   showAvailability Boolean @default(true)

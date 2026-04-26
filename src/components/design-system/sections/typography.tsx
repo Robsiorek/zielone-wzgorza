@@ -7,17 +7,18 @@ export function TypographySection() {
   return (
     <div className="space-y-5">
       {/* Font Family */}
-      <SectionBlock title="Czcionka" description="System używa Plus Jakarta Sans z Google Fonts. Ładowana przez next/font z font-swap.">
-        <PreviewRow label="Plus Jakarta Sans — wszystkie wagi">
+      <SectionBlock title="Czcionka" description="System używa Manrope z Google Fonts. Ładowana przez next/font z font-swap. Backend (admin + Engine UI Lab) ma font hardcoded — niezmienialny.">
+        <PreviewRow label="Manrope — wszystkie wagi">
           <span className="text-[16px] font-normal">Regular (400)</span>
           <span className="text-[16px] font-medium">Medium (500)</span>
           <span className="text-[16px] font-semibold">Semibold (600)</span>
           <span className="text-[16px] font-bold">Bold (700)</span>
         </PreviewRow>
         <ReferenceBox items={[
-          { label: "Font", value: "Plus Jakarta Sans" },
-          { label: "Plik", value: "src/app/layout.tsx — Plus_Jakarta_Sans from next/font/google" },
+          { label: "Font", value: "Manrope" },
+          { label: "Plik", value: "src/app/layout.tsx — Manrope from next/font/google" },
           { label: "Fallback", value: "system-ui, -apple-system, sans-serif" },
+          { label: "Letter-spacing", value: "-0.011em (body) — Airbnb-style tight tracking" },
         ]} />
       </SectionBlock>
 
