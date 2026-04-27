@@ -4789,3 +4789,199 @@
 .engine-root .eui-inline-badge-variant-success { background-color: rgba(15, 123, 77, 0.12); color: var(--eui-success); }
 .engine-root .eui-inline-badge-variant-warning { background-color: rgba(180, 83, 9, 0.12); color: var(--eui-warning); }
 .engine-root .eui-inline-badge-variant-danger { background-color: rgba(180, 35, 24, 0.12); color: var(--eui-danger); }
+
+/* ════════════════════════════════════════════════════════════════════════
+ *  CZĘŚĆ 6 — TYPOGRAPHY + TEXT META
+ *  Layout/color/spacing only — typography from utility classes (Part 1)
+ * ════════════════════════════════════════════════════════════════════════ */
+
+/* ── Text — color, align, weight, truncate, clamp ── */
+.engine-root .eui-text-color-primary    { color: var(--eui-grey-900); }
+.engine-root .eui-text-color-secondary  { color: var(--eui-grey-600); }
+.engine-root .eui-text-color-muted      { color: var(--eui-grey-500); }
+.engine-root .eui-text-color-brand      { color: var(--eui-brand); }
+.engine-root .eui-text-color-success    { color: var(--eui-success); }
+.engine-root .eui-text-color-warning    { color: var(--eui-warning); }
+.engine-root .eui-text-color-danger     { color: var(--eui-danger); }
+.engine-root .eui-text-color-info       { color: var(--eui-info); }
+
+.engine-root .eui-text-align-left   { text-align: left; }
+.engine-root .eui-text-align-center { text-align: center; }
+.engine-root .eui-text-align-right  { text-align: right; }
+
+.engine-root .eui-text-weight-regular  { font-weight: var(--eui-font-weight-regular); }
+.engine-root .eui-text-weight-medium   { font-weight: var(--eui-font-weight-medium); }
+.engine-root .eui-text-weight-semibold { font-weight: var(--eui-font-weight-semibold); }
+.engine-root .eui-text-weight-bold     { font-weight: var(--eui-font-weight-bold); }
+
+.engine-root .eui-text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.engine-root .eui-text-clamp {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ── SecondaryLink ── */
+.engine-root .eui-secondary-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+  cursor: pointer;
+  transition: color 150ms var(--eui-ease-standard);
+}
+.engine-root .eui-secondary-link-default { color: var(--eui-grey-900); font-weight: 500; }
+.engine-root .eui-secondary-link-default:hover { color: var(--eui-brand); }
+.engine-root .eui-secondary-link-subtle { color: var(--eui-grey-600); font-weight: 400; }
+.engine-root .eui-secondary-link-subtle:hover { color: var(--eui-grey-900); }
+.engine-root .eui-secondary-link-inverse { color: var(--eui-grey-0); font-weight: 500; }
+.engine-root .eui-secondary-link-inverse:hover { opacity: 0.8; }
+.engine-root .eui-secondary-link:focus-visible {
+  outline: 2px solid var(--eui-brand);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+.engine-root .eui-secondary-link-icon-left,
+.engine-root .eui-secondary-link-external {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+.engine-root .eui-secondary-link-icon-left > svg { width: 14px; height: 14px; }
+
+/* ── HelperText ── */
+.engine-root .eui-helper-text {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0;
+}
+.engine-root .eui-helper-text-default { color: var(--eui-grey-600); }
+.engine-root .eui-helper-text-error   { color: var(--eui-danger); }
+.engine-root .eui-helper-text-success { color: var(--eui-success); }
+.engine-root .eui-helper-text-warning { color: var(--eui-warning); }
+.engine-root .eui-helper-text-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* ── MetaText ── */
+.engine-root .eui-meta-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.engine-root .eui-meta-text-default { color: var(--eui-grey-500); }
+.engine-root .eui-meta-text-primary { color: var(--eui-grey-700); }
+.engine-root .eui-meta-text-icon { flex-shrink: 0; display: inline-flex; }
+.engine-root .eui-meta-text-icon > svg { width: 12px; height: 12px; }
+
+/* ── InlineMeta ── */
+.engine-root .eui-inline-meta {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+}
+.engine-root .eui-inline-meta-default { color: var(--eui-grey-600); }
+.engine-root .eui-inline-meta-caption { color: var(--eui-grey-500); }
+.engine-root .eui-inline-meta-primary { color: var(--eui-grey-900); }
+.engine-root .eui-inline-meta-separator { opacity: 0.6; user-select: none; }
+.engine-root .eui-inline-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ── Eyebrow ── */
+.engine-root .eui-eyebrow {
+  display: inline-block;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.engine-root .eui-eyebrow-default { color: var(--eui-grey-500); }
+.engine-root .eui-eyebrow-brand   { color: var(--eui-brand); }
+.engine-root .eui-eyebrow-success { color: var(--eui-success); }
+
+/* ── SectionHeading — layout only, typography from utility classes ── */
+.engine-root .eui-section-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.engine-root .eui-section-heading-align-center {
+  text-align: center;
+  align-items: center;
+}
+.engine-root .eui-section-heading-align-between {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.engine-root .eui-section-heading-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.engine-root .eui-section-heading-title { margin: 0; }
+.engine-root .eui-section-heading-description {
+  margin: 0;
+  color: var(--eui-grey-600);
+}
+.engine-root .eui-section-heading-action { flex-shrink: 0; }
+
+@media (max-width: 480px) {
+  .engine-root .eui-section-heading-align-between {
+    flex-direction: column;
+    gap: 12px;
+  }
+}
+
+/* ── PriceText — layout only, typography from utility classes ── */
+.engine-root .eui-price-text {
+  display: inline-flex;
+  align-items: baseline;
+  color: var(--eui-grey-900);
+}
+.engine-root .eui-price-text-amount { font-weight: 600; }
+.engine-root .eui-price-text-amount-plain { font-weight: 400; }
+.engine-root .eui-price-text-per {
+  font-weight: 400;
+  color: var(--eui-grey-600);
+  margin-left: 2px;
+}
+.engine-root .eui-price-text-display .eui-price-text-per {
+  font-size: var(--eui-font-size-lg);
+}
+
+/* ── EmptyStateText — layout only, typography from utility classes ── */
+.engine-root .eui-empty-state-text {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 480px;
+}
+.engine-root .eui-empty-state-text-align-center {
+  align-items: center;
+  text-align: center;
+  margin: 0 auto;
+}
+.engine-root .eui-empty-state-text-title {
+  margin: 0;
+  color: var(--eui-grey-900);
+}
+.engine-root .eui-empty-state-text-description {
+  margin: 0;
+  color: var(--eui-grey-600);
+}

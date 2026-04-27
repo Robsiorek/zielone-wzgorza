@@ -266,3 +266,16 @@ export {
   RatingPill, type RatingPillProps,
   InlineBadge, type InlineBadgeProps, type InlineBadgeVariant,
 } from "./chip";
+
+// ── Part 6 — Typography + Text Meta ────────────────────────────
+export {
+  Text, type TextProps, type TextVariant, type TextColor, type TextElement,
+  SecondaryLink, type SecondaryLinkProps,
+  HelperText, type HelperTextProps, type HelperTextVariant,
+  MetaText, type MetaTextProps,
+  InlineMeta, type InlineMetaProps,
+  Eyebrow, type EyebrowProps,
+  SectionHeading, type SectionHeadingProps,
+  PriceText, type PriceTextProps,
+  EmptyStateText, type EmptyStateTextProps,
+} from "./text";
