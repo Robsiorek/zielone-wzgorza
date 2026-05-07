@@ -279,3 +279,20 @@ export {
   PriceText, type PriceTextProps,
   EmptyStateText, type EmptyStateTextProps,
 } from "./text";
+
+// ── Part 7 — Layout + Action ────────────────────────────────────
+export {
+  // Helper
+  gapToVar, type GapSize,
+  // Layout primitives
+  Stack, type StackProps,
+  Inline, type InlineProps,
+  Spacer, type SpacerProps,
+  Divider, type DividerProps,
+  // Action wrappers
+  ActionRow, type ActionRowProps,
+  Toolbar, type ToolbarProps,
+  InlineActions, type InlineActionsProps,
+  SectionBlock, type SectionBlockProps,
+  StickyBar, type StickyBarProps,
+} from "./layout";
