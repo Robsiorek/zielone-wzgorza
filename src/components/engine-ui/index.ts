@@ -296,3 +296,16 @@ export {
   SectionBlock, type SectionBlockProps,
   StickyBar, type StickyBarProps,
 } from "./layout";
+
+// ── Part 8 — Media + Image ──────────────────────────────────────
+export {
+  aspectToValue, type AspectRatio,
+  MediaFrame, type MediaFrameProps,
+  ImagePlaceholder, type ImagePlaceholderProps,
+  MediaOverlay, type MediaOverlayProps,
+  MediaBadge, type MediaBadgeProps,
+  FavoriteOverlay, type FavoriteOverlayProps,
+  GalleryNavButton, type GalleryNavButtonProps,
+  ImageCounter, type ImageCounterProps,
+  ThumbnailStrip, type ThumbnailStripProps,
+} from "./media";

@@ -5145,3 +5145,242 @@
 .engine-root .eui-sticky-bar-safe-area {
   padding-bottom: calc(var(--eui-space-4) + env(safe-area-inset-bottom, 0px));
 }
+
+/* ════════════════════════════════════════════════════════════════════════
+ *  CZĘŚĆ 8 — MEDIA + IMAGE
+ *  Generic media containers + overlays + navigation primitives.
+ *  Layout/positioning/colors only — typography from Part 6 utility classes
+ *  (.eui-label, .eui-body-small, .eui-caption, .eui-body) applied in TSX.
+ *  Intentional typography overrides documented inline.
+ * ════════════════════════════════════════════════════════════════════════ */
+
+/* ── MediaFrame — generic image container with aspect-ratio ── */
+.engine-root .eui-media-frame {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  background-color: var(--eui-grey-100);
+}
+
+.engine-root .eui-media-frame-no-bg {
+  background-color: transparent;
+}
+
+.engine-root .eui-media-frame-radius-none { border-radius: 0; }
+.engine-root .eui-media-frame-radius-sm   { border-radius: var(--eui-radius-sm); }
+.engine-root .eui-media-frame-radius-md   { border-radius: var(--eui-radius-md); }
+.engine-root .eui-media-frame-radius-lg   { border-radius: var(--eui-radius-lg); }
+.engine-root .eui-media-frame-radius-xl   { border-radius: var(--eui-radius-xl); }
+.engine-root .eui-media-frame-radius-2xl  { border-radius: var(--eui-radius-2xl); }
+
+/* Hoverable: target NavigationArrow floating wrapper (NOT the button).
+   Avoids Pressable transform conflict from Part 4.
+   pointer-events: none in hidden state — invisible buttons can't catch clicks.
+   focus-within fades in arrows on Tab navigation (keyboard a11y). */
+.engine-root .eui-media-frame-hoverable .eui-nav-arrow-floating-wrapper {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 150ms var(--eui-ease-standard);
+}
+.engine-root .eui-media-frame-hoverable:hover .eui-nav-arrow-floating-wrapper,
+.engine-root .eui-media-frame-hoverable:focus-within .eui-nav-arrow-floating-wrapper {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Mobile: nav buttons always visible AND interactive (no hover on touch) */
+@media (max-width: 768px) {
+  .engine-root .eui-media-frame-hoverable .eui-nav-arrow-floating-wrapper {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+/* Image inside MediaFrame fills container */
+.engine-root .eui-media-frame > img,
+.engine-root .eui-media-frame > picture > img,
+.engine-root .eui-media-frame > video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ── ImagePlaceholder — empty state ──
+   Typography from Part 6 utility classes chosen by size prop in TSX. */
+.engine-root .eui-image-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--eui-space-2);
+  color: var(--eui-grey-400);
+  background-color: var(--eui-grey-100);
+}
+
+.engine-root .eui-image-placeholder-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.engine-root .eui-image-placeholder-text {
+  color: var(--eui-grey-500);
+  text-align: center;
+}
+
+/* ── MediaOverlay — absolute positioning wrapper ── */
+.engine-root .eui-media-overlay {
+  position: absolute;
+  z-index: var(--eui-z-raised);
+  pointer-events: auto;
+}
+
+/* Inset modifiers (corner positions only) */
+.engine-root .eui-media-overlay-inset-sm.eui-media-overlay-top-left,
+.engine-root .eui-media-overlay-inset-sm.eui-media-overlay-top-right { top: var(--eui-space-2); }
+.engine-root .eui-media-overlay-inset-sm.eui-media-overlay-bottom-left,
+.engine-root .eui-media-overlay-inset-sm.eui-media-overlay-bottom-right { bottom: var(--eui-space-2); }
+.engine-root .eui-media-overlay-inset-sm.eui-media-overlay-top-left,
+.engine-root .eui-media-overlay-inset-sm.eui-media-overlay-bottom-left { left: var(--eui-space-2); }
+.engine-root .eui-media-overlay-inset-sm.eui-media-overlay-top-right,
+.engine-root .eui-media-overlay-inset-sm.eui-media-overlay-bottom-right { right: var(--eui-space-2); }
+
+.engine-root .eui-media-overlay-inset-md.eui-media-overlay-top-left,
+.engine-root .eui-media-overlay-inset-md.eui-media-overlay-top-right { top: var(--eui-space-4); }
+.engine-root .eui-media-overlay-inset-md.eui-media-overlay-bottom-left,
+.engine-root .eui-media-overlay-inset-md.eui-media-overlay-bottom-right { bottom: var(--eui-space-4); }
+.engine-root .eui-media-overlay-inset-md.eui-media-overlay-top-left,
+.engine-root .eui-media-overlay-inset-md.eui-media-overlay-bottom-left { left: var(--eui-space-4); }
+.engine-root .eui-media-overlay-inset-md.eui-media-overlay-top-right,
+.engine-root .eui-media-overlay-inset-md.eui-media-overlay-bottom-right { right: var(--eui-space-4); }
+
+.engine-root .eui-media-overlay-inset-lg.eui-media-overlay-top-left,
+.engine-root .eui-media-overlay-inset-lg.eui-media-overlay-top-right { top: var(--eui-space-5); }
+.engine-root .eui-media-overlay-inset-lg.eui-media-overlay-bottom-left,
+.engine-root .eui-media-overlay-inset-lg.eui-media-overlay-bottom-right { bottom: var(--eui-space-5); }
+.engine-root .eui-media-overlay-inset-lg.eui-media-overlay-top-left,
+.engine-root .eui-media-overlay-inset-lg.eui-media-overlay-bottom-left { left: var(--eui-space-5); }
+.engine-root .eui-media-overlay-inset-lg.eui-media-overlay-top-right,
+.engine-root .eui-media-overlay-inset-lg.eui-media-overlay-bottom-right { right: var(--eui-space-5); }
+
+.engine-root .eui-media-overlay-center {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.engine-root .eui-media-overlay-cover {
+  inset: 0;
+  pointer-events: none;
+}
+
+/* ── MediaBadge — badge on image ──
+   Typography from .eui-label (Part 6) applied in TSX.
+   font-weight override is intentional emphasis for call-out semantics. */
+.engine-root .eui-media-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--eui-space-2) var(--eui-space-3);
+  border-radius: var(--eui-radius-pill);
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  font-weight: var(--eui-font-weight-semibold);
+}
+
+.engine-root .eui-media-badge-default {
+  background-color: var(--eui-grey-0);
+  color: var(--eui-grey-900);
+}
+
+.engine-root .eui-media-badge-brand {
+  background-color: var(--eui-brand);
+  color: var(--eui-brand-foreground, white);
+}
+
+.engine-root .eui-media-badge-dark {
+  background-color: rgba(0, 0, 0, 0.7);
+  color: var(--eui-grey-0);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* ── GalleryNavButton — marker class only (no positioning) ──
+   Positioning comes from NavigationArrow's .eui-nav-arrow-floating-wrapper. */
+
+/* Explicit visibility override via :has() targeting parent wrapper.
+   Browser support: Chrome 105+, Safari 15.4+, Firefox 121+ (~93% global).
+   Older browsers: visible prop has no effect, button stays per default. */
+.engine-root .eui-nav-arrow-floating-wrapper:has(.eui-gallery-nav-button-visible) {
+  opacity: 1 !important;
+}
+.engine-root .eui-nav-arrow-floating-wrapper:has(.eui-gallery-nav-button-hidden) {
+  opacity: 0 !important;
+  pointer-events: none;
+}
+
+/* ── ImageCounter — "3 / 12" with tabular-nums ──
+   Typography from .eui-body-small (Part 6) applied in TSX.
+   Overrides are counter-specific: stable digit width, medium weight, tight line-height. */
+.engine-root .eui-image-counter {
+  display: inline-flex;
+  align-items: center;
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--eui-font-weight-medium);
+  line-height: 1;
+}
+
+.engine-root .eui-image-counter-pill {
+  padding: var(--eui-space-2) var(--eui-space-3);
+  background-color: var(--eui-grey-0);
+  color: var(--eui-grey-900);
+  border-radius: var(--eui-radius-pill);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.engine-root .eui-image-counter-minimal {
+  color: var(--eui-grey-0);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* ── ThumbnailStrip — minimal v1 thumbnail row ── */
+.engine-root .eui-thumbnail-strip {
+  display: flex;
+  flex-direction: row;
+  gap: var(--eui-space-2);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: var(--eui-space-1);
+  scrollbar-width: none;
+}
+
+.engine-root .eui-thumbnail-strip::-webkit-scrollbar { display: none; }
+
+.engine-root .eui-thumbnail-strip-item {
+  flex-shrink: 0;
+  background: none;
+  border: 2px solid transparent;
+  border-radius: var(--eui-radius-md);
+  padding: 0;
+  cursor: pointer;
+  transition: border-color 150ms var(--eui-ease-standard);
+  overflow: hidden;
+}
+
+.engine-root .eui-thumbnail-strip-item:hover {
+  border-color: var(--eui-grey-300);
+}
+
+.engine-root .eui-thumbnail-strip-item-active {
+  border-color: var(--eui-brand);
+}
+
+.engine-root .eui-thumbnail-strip-item:focus-visible {
+  outline: 2px solid var(--eui-brand);
+  outline-offset: 2px;
+}
+
+.engine-root .eui-thumbnail-strip-sm .eui-thumbnail-strip-item { width: 48px; height: 48px; }
+.engine-root .eui-thumbnail-strip-md .eui-thumbnail-strip-item { width: 64px; height: 64px; }

@@ -33,6 +33,7 @@ import {
   Tag as TagIcon,
   Type,
   Layout as LayoutIcon,
+  Image as ImageIcon,
 } from "lucide-react";
 
 import { useWidgetTheme } from "@/components/engine-ui/hooks/useWidgetTheme";
@@ -50,6 +51,7 @@ import { NavSection } from "./sections/NavSection";
 import { ChipSection } from "./sections/ChipSection";
 import { TypographySection } from "./sections/TypographySection";
 import { LayoutSection } from "./sections/LayoutSection";
+import { MediaSection } from "./sections/MediaSection";
 
 const SIDEBAR_ITEMS = [
   { id: "foundations", label: "Fundamenty",        icon: <Palette size={16} aria-hidden="true" /> },
@@ -59,6 +61,7 @@ const SIDEBAR_ITEMS = [
   { id: "chip",        label: "Tagi i badge'y",    icon: <TagIcon size={16} aria-hidden="true" /> },
   { id: "typography",  label: "Typografia",        icon: <Type size={16} aria-hidden="true" /> },
   { id: "layout",      label: "Layout",            icon: <LayoutIcon size={16} aria-hidden="true" /> },
+  { id: "media",       label: "Media",             icon: <ImageIcon size={16} aria-hidden="true" /> },
   { id: "popovers",    label: "Popovery",          icon: <LayoutGrid size={16} aria-hidden="true" /> },
   { id: "datepicker",  label: "Picker dat",        icon: <CalendarRange size={16} aria-hidden="true" /> },
   { id: "guestpicker", label: "Picker gości",      icon: <Users size={16} aria-hidden="true" /> },
@@ -100,6 +103,7 @@ export function EngineUiLab() {
           <ChipSection />
           <TypographySection />
           <LayoutSection />
+          <MediaSection />
           <PopoverSection />
           <DatePickerSection />
           <GuestPickerSection />
