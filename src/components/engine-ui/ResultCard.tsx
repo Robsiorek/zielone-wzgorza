@@ -5,7 +5,7 @@
  * ────────────────────────────────────────────────────────────────────────
  * Premium card with:
  *   - ImageCarousel with swipe + arrows
- *   - FavoriteButton (heart) on image top-right
+ *   - LegacyFavoriteButton (heart) on image top-right
  *   - Badge on image top-left (e.g. "Wybór gości")
  *   - Name + rating row
  *   - Subtitle (1 line)
@@ -20,7 +20,7 @@ import * as React from "react";
 import { Star, Tag, X as XIcon } from "lucide-react";
 import type { ResultCardData } from "./results-types";
 import { ImageCarousel } from "./ImageCarousel";
-import { FavoriteButton } from "./FavoriteButton";
+import { FavoriteButton as LegacyFavoriteButton } from "./LegacyFavoriteButton";
 import { PriceBlock } from "./PriceBlock";
 import { Modal } from "./Modal";
 import { FeatureChips } from "./FeatureChips";
@@ -121,7 +121,7 @@ export function ResultCard({
           )}
 
           {/* Heart top-right */}
-          <FavoriteButton
+          <LegacyFavoriteButton
             active={data.isFavorite}
             onChange={(next) => onFavoriteChange?.(data.id, next)}
             className="eui-card-favorite"
