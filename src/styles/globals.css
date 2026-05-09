@@ -5447,3 +5447,12 @@
   flex-direction: column;
   gap: var(--eui-space-2);
 }
+
+/* ── SkeletonRegion (Stage 6) ──
+   A11y wrapper: aria-busy + conditional aria-live.
+   display: block + width: 100% (NIE display: contents — a11y safety
+   Safari < 15.4 może removować element z accessibility tree). */
+.engine-root .eui-skeleton-region {
+  display: block;
+  width: 100%;
+}
