@@ -5429,3 +5429,21 @@
   gap: var(--eui-space-2);
   width: 100%;
 }
+
+/* ── SkeletonCard layout (Stage 5) ──
+   Renamed from blueprint .eui-skeleton-card → .eui-skeleton-card-stack:
+   legacy .eui-skeleton-card (linia 3262) jest używany przez ResultsSkeleton
+   z innym kontraktem (pointer-events/cursor wrapper). Stack-suffix matchuje
+   Stage 2 .eui-skeleton-text-stack convention. */
+.engine-root .eui-skeleton-card-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--eui-space-3);
+  width: 100%;
+}
+
+.engine-root .eui-skeleton-card-stack-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--eui-space-2);
+}
