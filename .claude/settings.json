@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Read",
+      "Bash(ls *)",
+      "Bash(cat *)",
+      "Bash(grep *)",
+      "Bash(find *)",
+      "Bash(git status *)",
+      "Bash(git log *)",
+      "Bash(git diff *)",
+      "Bash(pm2 logs *)",
+      "Bash(pm2 status *)",
+      "Bash(bash scripts/check-polish.sh*)",
+      "Bash(bash scripts/test-critical.sh*)"
+    ],
+    "ask": [
+      "Edit",
+      "Write",
+      "Bash(./node_modules/.bin/next build*)",
+      "Bash(pm2 restart zw-admin)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)"
+    ],
+    "deny": [
+      "Bash(rm -rf *)",
+      "Bash(npx prisma)",
+      "Bash(npx prisma *)",
+      "Bash(npx next)",
+      "Bash(npx next *)",
+      "Bash(sudo *)"
+    ]
+  }
+}
