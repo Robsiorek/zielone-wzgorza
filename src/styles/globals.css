@@ -5421,3 +5421,11 @@
     animation: none;
   }
 }
+
+/* ── SkeletonText stack (Stage 2) ── */
+.engine-root .eui-skeleton-text-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--eui-space-2);
+  width: 100%;
+}
