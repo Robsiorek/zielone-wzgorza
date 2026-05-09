@@ -5384,3 +5384,40 @@
 
 .engine-root .eui-thumbnail-strip-sm .eui-thumbnail-strip-item { width: 48px; height: 48px; }
 .engine-root .eui-thumbnail-strip-md .eui-thumbnail-strip-item { width: 64px; height: 64px; }
+
+/* ═══════════════════════════════════════════════════════════════
+ * ENGINE UI — PART 9: SKELETON SYSTEM
+ * Reuse: @keyframes eui-shimmer (linia 3289), @keyframes eui-spin (linia 2231)
+ * Pattern: tokens jako raw var() (NIE hsl() wrapper), zgodnie z .eui-skeleton-box
+ * Out of scope: admin shimmer/skeleton/loading (po staremu)
+ * ═══════════════════════════════════════════════════════════════ */
+
+/* ── Skeleton base (Stage 1) ── */
+.engine-root .eui-skeleton {
+  display: inline-block;
+  background: linear-gradient(
+    90deg,
+    var(--eui-grey-100) 0%,
+    var(--eui-grey-50) 50%,
+    var(--eui-grey-100) 100%
+  );
+  background-size: 200% 100%;
+  animation: eui-shimmer 1.5s ease-in-out infinite;
+  pointer-events: none;
+  user-select: none;
+}
+
+.engine-root .eui-skeleton-radius-none { border-radius: 0; }
+.engine-root .eui-skeleton-radius-sm   { border-radius: var(--eui-radius-sm); }
+.engine-root .eui-skeleton-radius-md   { border-radius: var(--eui-radius-md); }
+.engine-root .eui-skeleton-radius-lg   { border-radius: var(--eui-radius-lg); }
+.engine-root .eui-skeleton-radius-xl   { border-radius: var(--eui-radius-xl); }
+.engine-root .eui-skeleton-radius-2xl  { border-radius: var(--eui-radius-2xl); }
+.engine-root .eui-skeleton-radius-full { border-radius: 9999px; }
+
+/* Reduced motion (Stage 1) */
+@media (prefers-reduced-motion: reduce) {
+  .engine-root .eui-skeleton {
+    animation: none;
+  }
+}
