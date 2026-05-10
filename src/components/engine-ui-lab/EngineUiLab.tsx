@@ -35,6 +35,7 @@ import {
   Layout as LayoutIcon,
   Image as ImageIcon,
   Loader2,
+  TextCursorInput,
 } from "lucide-react";
 
 import { useWidgetTheme } from "@/components/engine-ui/hooks/useWidgetTheme";
@@ -54,6 +55,7 @@ import { TypographySection } from "./sections/TypographySection";
 import { LayoutSection } from "./sections/LayoutSection";
 import { MediaSection } from "./sections/MediaSection";
 import { SkeletonSection } from "./sections/SkeletonSection";
+import { InputySection } from "./sections/InputySection";
 
 const SIDEBAR_ITEMS = [
   { id: "foundations", label: "Fundamenty",        icon: <Palette size={16} aria-hidden="true" /> },
@@ -71,6 +73,7 @@ const SIDEBAR_ITEMS = [
   { id: "results",     label: "Warstwa wyników",    icon: <LayoutList size={16} aria-hidden="true" /> },
   { id: "buttons",     label: "Przyciski",          icon: <MousePointerClick size={16} aria-hidden="true" /> },
   { id: "skeleton",    label: "Stany ładowania",   icon: <Loader2 size={16} aria-hidden="true" /> },
+  { id: "inputy",      label: "Inputy",             icon: <TextCursorInput size={16} aria-hidden="true" /> },
 ];
 
 export function EngineUiLab() {
@@ -114,6 +117,7 @@ export function EngineUiLab() {
           <ResultsSection />
           <ButtonsSection />
           <SkeletonSection />
+          <InputySection />
         </div>
       </div>
     </div>
