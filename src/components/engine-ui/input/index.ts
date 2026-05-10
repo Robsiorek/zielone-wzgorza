@@ -20,3 +20,6 @@ export type { FieldIds } from "./useFieldId";
 
 export { TextField } from "./TextField";
 export type { TextFieldProps, TextFieldType, TextFieldSize } from "./TextField";
+
+export { Textarea } from "./Textarea";
+export type { TextareaProps, TextareaSize } from "./Textarea";

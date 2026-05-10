@@ -5735,3 +5735,94 @@
 .engine-root .eui-textfield-input[aria-invalid="true"]:focus {
   border-color: var(--eui-danger);
 }
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * === PART 10 STAGE 3: Textarea ===
+ * Mirrors TextField padding/font-size for sm/md/lg visual parity.
+ * Height controlled by rows attribute (default 4 via TSX); size variant
+ * affects ONLY padding + font-size (NIE height — rows handles that per
+ * blueprint v1.2 sekcja 4.6).
+ * Vertical resize only (user-controlled grip); no auto-resize (out of scope).
+ * Error styling via [aria-invalid="true"] attribute selector — same pattern
+ * as TextField (covers compound/standalone/bare modes uniformly).
+ * Token format empirically verified pre-write: --eui-radius-sm = 8px,
+ * font-size tokens base/md/lg = 14/16/18px, hex colors raw var() usage.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Wrapper — for consumer className parity z TextField */
+.engine-root .eui-textarea-wrap {
+  display: block;
+  width: 100%;
+}
+
+/* Textarea base — mirrors TextField input frame */
+.engine-root .eui-textarea {
+  display: block;
+  width: 100%;
+  background: var(--eui-grey-50);
+  border: 1px solid var(--eui-border);
+  border-radius: var(--eui-radius-sm);
+  color: var(--eui-text-primary);
+  font-family: inherit;
+  outline: 0;
+  resize: vertical;
+  transition: border-color 0.15s, background-color 0.15s;
+}
+
+.engine-root .eui-textarea::placeholder {
+  color: var(--eui-text-muted);
+  opacity: 1;
+}
+
+/* ── Sizes — padding + font-size only; rows handles height ── */
+
+.engine-root .eui-textarea-sm {
+  padding: 8px 12px; /* horizontal mirrors TextField sm */
+  font-size: var(--eui-font-size-base); /* 14px */
+  line-height: 1.4;
+}
+
+.engine-root .eui-textarea-md {
+  padding: 10px 14px; /* horizontal mirrors TextField md hardcoded */
+  font-size: var(--eui-font-size-md); /* 16px — anti-iOS-zoom parity */
+  line-height: 1.4;
+}
+
+.engine-root .eui-textarea-lg {
+  padding: 12px 18px; /* horizontal mirrors TextField lg hardcoded */
+  font-size: var(--eui-font-size-lg); /* 18px */
+  line-height: 1.4;
+}
+
+/* ── Focus state — parity z TextField (no blue ring) ── */
+
+.engine-root .eui-textarea:focus {
+  background: var(--eui-grey-0);
+  border-color: var(--eui-border-strong);
+}
+
+/* ── Disabled state (native attr; no aria-disabled per v1.1 fix #2) ── */
+
+.engine-root .eui-textarea:disabled {
+  background: var(--eui-grey-100);
+  color: var(--eui-text-muted);
+  cursor: not-allowed;
+  resize: none;
+}
+
+/* ── ReadOnly state (native attr; no aria-readonly per v1.1 fix #3) ── */
+
+.engine-root .eui-textarea:read-only:not(:disabled) {
+  background: var(--eui-grey-50);
+  cursor: text;
+}
+
+/* ── Error state (CSS attr selector — covers all 3 modes) ── */
+
+.engine-root .eui-textarea[aria-invalid="true"] {
+  border-color: var(--eui-danger);
+}
+.engine-root .eui-textarea[aria-invalid="true"]:focus {
+  border-color: var(--eui-danger);
+}
