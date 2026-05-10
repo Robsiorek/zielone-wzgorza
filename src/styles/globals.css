@@ -5592,3 +5592,146 @@
 .engine-root .eui-field-label-required-asterisk {
   color: var(--eui-danger);
 }
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * === PART 10 STAGE 2: TextField ===
+ * Empirical token corrections vs blueprint v1.2:
+ *   - border-radius uses --eui-radius-sm (8px), NOT --eui-radius-md (12px).
+ *     Blueprint sekcja 6.2 wording was incorrect; --eui-radius-sm = 8px.
+ *   - md size font-size uses --eui-font-size-md (16px) for iOS no-zoom UX,
+ *     NOT --eui-font-size-base (14px). D3 sign-off.
+ *   - Horizontal padding hardcoded 12/14/18px (sm/md/lg) — no token equivalents.
+ *     D1 sign-off: design intent preserves Airbnb-like input proportions.
+ * Error styling uses CSS attribute selector [aria-invalid="true"] — covers all
+ * 3 modes (compound/standalone/bare) without separate class.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Wrapper — relative for absolute icon positioning, full width by default */
+.engine-root .eui-textfield-wrap {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+
+/* Input base — frame, color, transitions */
+.engine-root .eui-textfield-input {
+  display: block;
+  width: 100%;
+  background: var(--eui-grey-50);
+  border: 1px solid var(--eui-border);
+  border-radius: var(--eui-radius-sm);
+  color: var(--eui-text-primary);
+  font-family: inherit;
+  outline: 0;
+  transition: border-color 0.15s, background-color 0.15s;
+}
+
+/* Placeholder normalization (Firefox sets opacity != 1 by default) */
+.engine-root .eui-textfield-input::placeholder {
+  color: var(--eui-text-muted);
+  opacity: 1;
+}
+
+/* ── Sizes (height/padding/font-size) ── */
+
+.engine-root .eui-textfield-input-sm {
+  height: 36px;
+  padding: 0 12px;
+  font-size: var(--eui-font-size-base); /* 14px */
+  line-height: 1.4;
+}
+
+.engine-root .eui-textfield-input-md {
+  height: 44px;
+  padding: 0 14px; /* hardcoded — no 14px token (D1 sign-off) */
+  font-size: var(--eui-font-size-md); /* 16px — anti-iOS-zoom (D3) */
+  line-height: 1.4;
+}
+
+.engine-root .eui-textfield-input-lg {
+  height: 56px;
+  padding: 0 18px; /* hardcoded — no 18px token (D1 sign-off) */
+  font-size: var(--eui-font-size-lg); /* 18px */
+  line-height: 1.4;
+}
+
+/* ── Icon slot padding adjustments (per size) ── */
+
+/* Default: 40px slot for left icon (16px lucide), proportional right slot for IconButton */
+.engine-root .eui-textfield-input--with-icon-left {
+  padding-left: 40px;
+}
+.engine-root .eui-textfield-input--with-icon-right {
+  padding-right: 40px;
+}
+
+/* sm overrides — tighter slots */
+.engine-root .eui-textfield-input-sm.eui-textfield-input--with-icon-left {
+  padding-left: 36px;
+}
+.engine-root .eui-textfield-input-sm.eui-textfield-input--with-icon-right {
+  padding-right: 36px;
+}
+
+/* lg overrides — wider slots dla 40px IconButton md */
+.engine-root .eui-textfield-input-lg.eui-textfield-input--with-icon-left {
+  padding-left: 48px;
+}
+.engine-root .eui-textfield-input-lg.eui-textfield-input--with-icon-right {
+  padding-right: 56px;
+}
+
+/* ── Icon containers (absolute, vertically centered) ── */
+
+.engine-root .eui-textfield-icon {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--eui-text-muted);
+}
+
+.engine-root .eui-textfield-icon-left { left: 12px; }
+.engine-root .eui-textfield-icon-right { right: 6px; }
+
+/* sm size: tighter icon insets */
+.engine-root .eui-textfield-wrap-sm .eui-textfield-icon-left { left: 10px; }
+.engine-root .eui-textfield-wrap-sm .eui-textfield-icon-right { right: 6px; }
+
+/* lg size: wider icon insets */
+.engine-root .eui-textfield-wrap-lg .eui-textfield-icon-left { left: 16px; }
+.engine-root .eui-textfield-wrap-lg .eui-textfield-icon-right { right: 8px; }
+
+/* ── Focus state (no blue ring; border-color elevation) ── */
+
+.engine-root .eui-textfield-input:focus {
+  background: var(--eui-grey-0);
+  border-color: var(--eui-border-strong);
+}
+
+/* ── Disabled state (native attr; no aria-disabled per v1.1 fix #2) ── */
+
+.engine-root .eui-textfield-input:disabled {
+  background: var(--eui-grey-100);
+  color: var(--eui-text-muted);
+  cursor: not-allowed;
+}
+
+/* ── ReadOnly state (native attr; no aria-readonly per v1.1 fix #3) ── */
+
+.engine-root .eui-textfield-input:read-only:not(:disabled) {
+  background: var(--eui-grey-50);
+  cursor: text;
+}
+
+/* ── Error state (CSS attr selector covers all 3 modes) ── */
+
+.engine-root .eui-textfield-input[aria-invalid="true"] {
+  border-color: var(--eui-danger);
+}
+.engine-root .eui-textfield-input[aria-invalid="true"]:focus {
+  border-color: var(--eui-danger);
+}

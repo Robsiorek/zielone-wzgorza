@@ -17,3 +17,6 @@ export type {
 
 export { useFieldId } from "./useFieldId";
 export type { FieldIds } from "./useFieldId";
+
+export { TextField } from "./TextField";
+export type { TextFieldProps, TextFieldType, TextFieldSize } from "./TextField";
