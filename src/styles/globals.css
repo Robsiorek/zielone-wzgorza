@@ -5456,3 +5456,25 @@
   display: block;
   width: 100%;
 }
+
+/* ── Spinner standalone (Stage 7) ──
+   Reuse @keyframes eui-spin (linia 2231).
+   prefers-reduced-motion: animation: none (consistency z Skeleton, blueprint v1.1 MUST FIX 3).
+   Token mapping adapted (empirical Claude Code check):
+   - default: --eui-grey-500 (hex, raw var)
+   - primary: --primary (HSL triplet, hsl wrap z fallback jak linia 547)
+   - inverse: --eui-grey-0 (#ffffff, semantyczny "white") */
+.engine-root .eui-spinner {
+  animation: eui-spin 1s linear infinite;
+  display: inline-block;
+}
+
+.engine-root .eui-spinner-default  { color: var(--eui-grey-500); }
+.engine-root .eui-spinner-primary  { color: hsl(var(--primary, 214 89% 52%)); }
+.engine-root .eui-spinner-inverse  { color: var(--eui-grey-0); }
+
+@media (prefers-reduced-motion: reduce) {
+  .engine-root .eui-spinner {
+    animation: none;
+  }
+}
