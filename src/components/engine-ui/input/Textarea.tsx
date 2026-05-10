@@ -1,6 +1,13 @@
 "use client";
 
 import * as React from "react";
+import { AlertCircle } from "lucide-react";
+import { IconButton } from "../button/IconButton";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "../primitives/Popover";
 import { Field, FieldLabel, FieldControl, FieldMessage } from "./Field";
 import { useFieldContext } from "./useFieldContext";
 
@@ -30,6 +37,12 @@ export interface TextareaProps {
   // Visual
   size?: TextareaSize;
 
+  // Stage 4 enhancement (opt-in, standalone mode only).
+  // v1: uncontrolled only. controlled open/onOpenChange pair deferred.
+  // Activates when: showErrorPopover === true && error set && standalone mode.
+  // Compound mode: silently ignored (consumer wires popover via Field+IconButton).
+  showErrorPopover?: boolean;
+
   // Aria forwards (FieldControl injects these in compound mode)
   "aria-describedby"?: string;
   "aria-required"?: boolean;
@@ -49,10 +62,17 @@ export interface TextareaProps {
 // self-reference TypeScript error (Część 10 empirical catch #22).
 // ═══════════════════════════════════════════════════════════════════════════
 
+// Internal-only props passed by Textarea outer when standalone mode resolves
+// showErrorPopover + error. Public TextareaProps does NOT expose these.
+type TextareaInnerInternalProps = {
+  _errorPopoverMessage?: string; // when set, render absolute-positioned AlertCircle popover trigger
+};
+
 type TextareaInnerProps = Omit<
   TextareaProps,
-  "label" | "helperText" | "error"
->;
+  "label" | "helperText" | "error" | "showErrorPopover"
+> &
+  TextareaInnerInternalProps;
 
 const TextareaInner = React.forwardRef<
   HTMLTextAreaElement,
@@ -75,11 +95,14 @@ const TextareaInner = React.forwardRef<
     size = "md",
     className,
     textareaClassName,
+    _errorPopoverMessage,
     "aria-describedby": ariaDescribedBy,
     "aria-required": ariaRequired,
     "aria-invalid": ariaInvalid,
     "aria-label": ariaLabel,
   } = props;
+
+  const showErrorPopoverTrigger = _errorPopoverMessage !== undefined;
 
   const textareaClasses = [
     "eui-textarea",
@@ -121,6 +144,25 @@ const TextareaInner = React.forwardRef<
         aria-label={ariaLabel}
         className={textareaClasses}
       />
+      {showErrorPopoverTrigger && (
+        <Popover>
+          <PopoverTrigger asChild>
+            <IconButton
+              aria-label="Pokaż szczegóły błędu"
+              icon={<AlertCircle size={16} />}
+              variant="ghost"
+              size="sm"
+              onMouseDown={(e) => e.preventDefault()}
+              disabled={disabled}
+              tabIndex={-1}
+              className="eui-textarea-error-popover-trigger"
+            />
+          </PopoverTrigger>
+          <PopoverContent size="contextual">
+            {_errorPopoverMessage}
+          </PopoverContent>
+        </Popover>
+      )}
     </div>
   );
 });
@@ -143,11 +185,13 @@ TextareaInner.displayName = "TextareaInner";
 
 export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
   function Textarea(props, ref) {
-    const { label, helperText, error, ...innerProps } = props;
+    const { label, helperText, error, showErrorPopover, ...innerProps } =
+      props;
 
     // Compound detection: if consumer wraps Textarea in <Field>, ctx is non-null.
     // In that case label/helperText/error props are ignored — consumer's
-    // FieldLabel/FieldMessage handle that chrome.
+    // FieldLabel/FieldMessage handle that chrome. showErrorPopover also no-ops
+    // in compound mode (D2 sign-off): consumers wire popover via Field+IconButton.
     const ctx = useFieldContext();
     const insideField = ctx !== null;
     const wantsSelfChrome =
@@ -160,6 +204,9 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
       const messageContent = error ?? helperText;
       const messageVariant: "error" | "default" =
         error !== undefined ? "error" : "default";
+      // Stage 4: thread error popover trigger to inner via internal-only prop.
+      const errorPopoverMessage =
+        showErrorPopover && error !== undefined ? error : undefined;
 
       return (
         <Field
@@ -170,7 +217,11 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
         >
           {label !== undefined && <FieldLabel>{label}</FieldLabel>}
           <FieldControl>
-            <TextareaInner {...innerProps} ref={ref} />
+            <TextareaInner
+              {...innerProps}
+              _errorPopoverMessage={errorPopoverMessage}
+              ref={ref}
+            />
           </FieldControl>
           {messageContent !== undefined && (
             <FieldMessage variant={messageVariant}>

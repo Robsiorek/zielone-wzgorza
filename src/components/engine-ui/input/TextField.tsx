@@ -1,8 +1,13 @@
 "use client";
 
 import * as React from "react";
-import { Eye, EyeOff, X } from "lucide-react";
+import { AlertCircle, Eye, EyeOff, X } from "lucide-react";
 import { IconButton, type IconButtonSize } from "../button/IconButton";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "../primitives/Popover";
 import { Field, FieldLabel, FieldControl, FieldMessage } from "./Field";
 import { useFieldContext } from "./useFieldContext";
 
@@ -42,6 +47,12 @@ export interface TextFieldProps {
   iconLeft?: React.ReactNode;
   iconRight?: React.ReactNode;
 
+  // Stage 4 enhancement (opt-in, standalone mode only).
+  // v1: uncontrolled only. controlled open/onOpenChange pair deferred.
+  // Activates when: showErrorPopover === true && error set && standalone mode.
+  // Compound mode: silently ignored (consumer wires popover via Field+IconButton).
+  showErrorPopover?: boolean;
+
   // Aria forwards (FieldControl injects these in compound mode)
   "aria-describedby"?: string;
   "aria-required"?: boolean;
@@ -66,10 +77,17 @@ const ICON_BUTTON_SIZE_MAP: Record<TextFieldSize, IconButtonSize> = {
 // Standalone mode wraps this via internal Field structure (TextField below).
 // ═══════════════════════════════════════════════════════════════════════════
 
+// Internal-only props passed by TextField outer when standalone mode resolves
+// showErrorPopover + error. Public TextFieldProps does NOT expose these.
+type TextFieldInnerInternalProps = {
+  _errorPopoverMessage?: string; // when set, render AlertCircle popover trigger in iconRight
+};
+
 type TextFieldInnerProps = Omit<
   TextFieldProps,
-  "label" | "helperText" | "error"
->;
+  "label" | "helperText" | "error" | "showErrorPopover"
+> &
+  TextFieldInnerInternalProps;
 
 const TextFieldInner = React.forwardRef<
   HTMLInputElement,
@@ -94,6 +112,7 @@ const TextFieldInner = React.forwardRef<
     iconRight,
     className,
     inputClassName,
+    _errorPopoverMessage,
     "aria-describedby": ariaDescribedBy,
     "aria-required": ariaRequired,
     "aria-invalid": ariaInvalid,
@@ -114,7 +133,11 @@ const TextFieldInner = React.forwardRef<
     onClear !== undefined &&
     value.length > 0;
 
-  // Icon slot priority: password show/hide > search clear > consumer iconRight
+  // Icon slot priority (D4 sign-off):
+  //   password show/hide > search clear > error popover trigger > consumer iconRight
+  // Limitation: when password type combined with showErrorPopover, password wins
+  // (popover is suppressed). Error visual remains via FieldMessage + red border.
+  const showErrorPopoverTrigger = _errorPopoverMessage !== undefined;
   let resolvedIconRight: React.ReactNode = iconRight;
   if (isPassword) {
     resolvedIconRight = (
@@ -141,6 +164,26 @@ const TextFieldInner = React.forwardRef<
         disabled={disabled}
         tabIndex={-1}
       />
+    );
+  } else if (showErrorPopoverTrigger) {
+    resolvedIconRight = (
+      <Popover>
+        <PopoverTrigger asChild>
+          <IconButton
+            aria-label="Pokaż szczegóły błędu"
+            icon={<AlertCircle size={16} />}
+            variant="ghost"
+            size={ICON_BUTTON_SIZE_MAP[size]}
+            onMouseDown={(e) => e.preventDefault()}
+            disabled={disabled}
+            tabIndex={-1}
+            className="eui-textfield-error-popover-trigger"
+          />
+        </PopoverTrigger>
+        <PopoverContent size="contextual">
+          {_errorPopoverMessage}
+        </PopoverContent>
+      </Popover>
     );
   }
 
@@ -219,11 +262,13 @@ TextFieldInner.displayName = "TextFieldInner";
 
 export const TextField = React.forwardRef<HTMLInputElement, TextFieldProps>(
   function TextField(props, ref) {
-    const { label, helperText, error, ...innerProps } = props;
+    const { label, helperText, error, showErrorPopover, ...innerProps } =
+      props;
 
     // Compound detection: if consumer wraps TextField in <Field>, ctx is non-null.
     // In that case label/helperText/error props are ignored — consumer's
-    // FieldLabel/FieldMessage handle that chrome.
+    // FieldLabel/FieldMessage handle that chrome. showErrorPopover also no-ops
+    // in compound mode (D2 sign-off): consumers wire popover via Field+IconButton.
     const ctx = useFieldContext();
     const insideField = ctx !== null;
     const wantsSelfChrome =
@@ -236,6 +281,9 @@ export const TextField = React.forwardRef<HTMLInputElement, TextFieldProps>(
       const messageContent = error ?? helperText;
       const messageVariant: "error" | "default" =
         error !== undefined ? "error" : "default";
+      // Stage 4: thread error popover trigger to inner via internal-only prop.
+      const errorPopoverMessage =
+        showErrorPopover && error !== undefined ? error : undefined;
 
       return (
         <Field
@@ -246,7 +294,11 @@ export const TextField = React.forwardRef<HTMLInputElement, TextFieldProps>(
         >
           {label !== undefined && <FieldLabel>{label}</FieldLabel>}
           <FieldControl>
-            <TextFieldInner {...innerProps} ref={ref} />
+            <TextFieldInner
+              {...innerProps}
+              _errorPopoverMessage={errorPopoverMessage}
+              ref={ref}
+            />
           </FieldControl>
           {messageContent !== undefined && (
             <FieldMessage variant={messageVariant}>

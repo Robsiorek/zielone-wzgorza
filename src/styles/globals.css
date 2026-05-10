@@ -5826,3 +5826,37 @@
 .engine-root .eui-textarea[aria-invalid="true"]:focus {
   border-color: var(--eui-danger);
 }
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * === PART 10 STAGE 4: Error popover enhancement ===
+ * showErrorPopover opt-in prop on TextField + Textarea reuses engine-ui
+ * Popover primitive (Radix wrapper). AlertCircle trigger sits in iconRight
+ * slot for TextField (priority chain: password > search-clear > error-popover
+ * > consumer iconRight) and absolute-positioned top-right for Textarea
+ * (no iconRight slot exists; positioned within wrap). Triggers carry danger
+ * color cue via dedicated class hooks. PopoverContent uses neutral styling
+ * (size="contextual"); visual error elevation is on the trigger itself.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/* TextField error popover trigger — danger color override on IconButton ghost */
+.engine-root .eui-textfield-error-popover-trigger {
+  color: var(--eui-danger);
+}
+
+/* Textarea wrap requires position context for absolute trigger.
+   Harmless when showErrorPopover not active (no descendant uses position). */
+.engine-root .eui-textarea-wrap {
+  position: relative;
+}
+
+/* Textarea error popover trigger — top-right corner of wrap.
+   Resize handle lives bottom-right (browser-default), no conflict.
+   z-index: 1 keeps trigger above textarea content stacking. */
+.engine-root .eui-textarea-error-popover-trigger {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 1;
+  color: var(--eui-danger);
+}
