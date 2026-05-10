@@ -19,3 +19,6 @@ export { useReducedMotion } from "./useReducedMotion";
 export { useKeyboardShortcut } from "./useKeyboardShortcut";
 export type { ShortcutOptions } from "./useKeyboardShortcut";
 export { useFocusTrap } from "./useFocusTrap";
+
+export { useDelayedLoading } from "./useDelayedLoading";
+export type { UseDelayedLoadingOptions } from "./useDelayedLoading";
