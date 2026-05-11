@@ -158,7 +158,7 @@ const TextareaInner = React.forwardRef<
               className="eui-textarea-error-popover-trigger"
             />
           </PopoverTrigger>
-          <PopoverContent size="contextual">
+          <PopoverContent size="small">
             <span className="eui-body-small">{_errorPopoverMessage}</span>
           </PopoverContent>
         </Popover>

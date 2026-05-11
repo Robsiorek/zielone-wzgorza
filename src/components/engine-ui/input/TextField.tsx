@@ -182,7 +182,7 @@ const TextFieldInner = React.forwardRef<
             className="eui-textfield-error-popover-trigger"
           />
         </PopoverTrigger>
-        <PopoverContent size="contextual">
+        <PopoverContent size="small">
           <span className="eui-body-small">{_errorPopoverMessage}</span>
         </PopoverContent>
       </Popover>
