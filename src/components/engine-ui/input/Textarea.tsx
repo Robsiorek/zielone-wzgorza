@@ -151,7 +151,7 @@ const TextareaInner = React.forwardRef<
               aria-label="Pokaż szczegóły błędu"
               icon={<AlertCircle size={16} />}
               variant="ghost"
-              size="sm"
+              size="xs"
               onMouseDown={(e) => e.preventDefault()}
               disabled={disabled}
               tabIndex={-1}
@@ -159,7 +159,7 @@ const TextareaInner = React.forwardRef<
             />
           </PopoverTrigger>
           <PopoverContent size="contextual">
-            {_errorPopoverMessage}
+            <span className="eui-body-small">{_errorPopoverMessage}</span>
           </PopoverContent>
         </Popover>
       )}

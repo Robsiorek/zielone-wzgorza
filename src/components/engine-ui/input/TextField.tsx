@@ -64,11 +64,13 @@ export interface TextFieldProps {
   inputClassName?: string;
 }
 
-// IconButton size mapping per TextField size (D7 sign-off)
+// IconButton size mapping per TextField size.
+// Part 10a scale calibration: shifted down one notch so error popover trigger
+// reads as subtle helper indicator, not modal-bubble launcher.
 const ICON_BUTTON_SIZE_MAP: Record<TextFieldSize, IconButtonSize> = {
   sm: "xs", // 24px button, 14px icon
-  md: "sm", // 32px button, 16px icon (matches blueprint default)
-  lg: "md", // 40px button, 18px icon
+  md: "xs", // 24px button, 14px icon
+  lg: "sm", // 32px button, 16px icon
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -181,7 +183,7 @@ const TextFieldInner = React.forwardRef<
           />
         </PopoverTrigger>
         <PopoverContent size="contextual">
-          {_errorPopoverMessage}
+          <span className="eui-body-small">{_errorPopoverMessage}</span>
         </PopoverContent>
       </Popover>
     );
