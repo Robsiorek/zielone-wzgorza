@@ -42,7 +42,7 @@ export function MediaSection() {
       >
         <Inline gap="md" align="start">
           {(["square", "portrait", "photo", "video", "cinema"] as const).map((ratio) => (
-            <Stack key={ratio} gap="xs" style={{ width: 120 }}>
+            <Stack key={ratio} gap="xs" style={{ flex: "1 1 100px", maxWidth: 120 }}>
               <Text variant="caption">{ratio}</Text>
               <MediaFrame aspectRatio={ratio} radius="md">
                 <img src={MOCK_IMAGES[0].url} alt={MOCK_IMAGES[0].alt} loading="lazy" />

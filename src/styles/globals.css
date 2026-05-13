@@ -3355,6 +3355,7 @@
   grid-template-columns: 272px 1fr;
   gap: 24px;
   align-items: start;
+  overflow-x: hidden; /* safety net per LAB-CONVENTIONS-responsive.md #7 */
 }
 
 @media (max-width: 1024px) {
@@ -3524,8 +3525,19 @@
   align-items: center;
   gap: 24px;
   min-height: 80px;
+  min-width: 0; /* flex shrink — see LAB-CONVENTIONS-responsive.md #1 */
   padding: var(--eui-space-8);
   background-color: var(--eui-grey-0);
+}
+
+/* Mobile padding reduce — see LAB-CONVENTIONS-responsive.md #5 */
+@media (max-width: 768px) {
+  .engine-root .eui-lab-showcase {
+    padding: var(--eui-space-4); /* 12px */
+  }
+  .engine-root .eui-lab-showcase-preview {
+    padding: var(--eui-space-4); /* 12px */
+  }
 }
 
 /* Info zone — grey bg, metadata + debug */
