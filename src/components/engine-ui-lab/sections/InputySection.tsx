@@ -104,7 +104,7 @@ export function InputySection() {
           <Stack gap="md">
             <TextField size="sm" placeholder="Small (36px)" />
             <TextField size="md" placeholder="Medium (44px)" />
-            <TextField size="lg" placeholder="Large (56px)" />
+            <TextField size="lg" placeholder="Large (52px)" />
           </Stack>
         </div>
       </ComponentShowcase>

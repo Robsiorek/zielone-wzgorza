@@ -5645,7 +5645,7 @@
 .engine-root .eui-textfield-input-md {
   height: 44px;
   padding: 0 14px; /* hardcoded — no 14px token (D1 sign-off) */
-  font-size: var(--eui-font-size-base); /* 14px — desktop default, mobile override below for anti-iOS-zoom */
+  font-size: var(--eui-font-size-base); /* 14px — parity z Button md (viewport meta blokuje iOS auto-zoom) */
   line-height: 1.4;
 }
 
@@ -5785,7 +5785,7 @@
 
 .engine-root .eui-textarea-md {
   padding: 10px 14px; /* horizontal mirrors TextField md hardcoded */
-  font-size: var(--eui-font-size-base); /* 14px — desktop default, mobile override below for anti-iOS-zoom */
+  font-size: var(--eui-font-size-base); /* 14px — parity z TextField md (viewport meta blokuje iOS auto-zoom) */
   line-height: 1.4;
 }
 
@@ -5793,16 +5793,6 @@
   padding: 12px 18px; /* horizontal mirrors TextField lg hardcoded */
   font-size: var(--eui-font-size-md); /* 16px */
   line-height: 1.4;
-}
-
-/* ── Anti-iOS-zoom: bump md font to 16px on mobile (≤768px).
-   Desktop keeps 14px for Button parity; mobile keeps focus-zoom prevention.
-   Standard pattern (Bootstrap/Tailwind/Radix). */
-@media (max-width: 768px) {
-  .engine-root .eui-textfield-input-md,
-  .engine-root .eui-textarea-md {
-    font-size: var(--eui-font-size-md); /* 16px */
-  }
 }
 
 /* ── Focus state — parity z TextField (no blue ring) ── */
