@@ -14,6 +14,19 @@
  *   - Whole card clickable (cursor: pointer)
  *
  * No "Sprawdź >" button — the card itself is the action.
+ *
+ * Część 8.5a Stage 5A: structural shell on Engine UI primitives.
+ *   - <article> → <CardSurface> (transparent — preserves legacy .eui-card look)
+ *   - image area → <MediaFrame> + <MediaOverlay> + <MediaBadge>
+ *   - title row → <ActionRow align=between>
+ *   - content area → <Stack gap=xs>
+ *
+ * ZACHOWANE w 5A (refactor w 5B):
+ *   - Hand-rolled rating (Star + score + count)
+ *   - Hand-rolled price popover (trigger + content panel)
+ *   - Hand-rolled amenities link button
+ *   - isUnavailable styling (interactive guard preserved przez onClick check)
+ *   - Modal for amenities
  */
 
 import * as React from "react";
@@ -21,14 +34,19 @@ import { Star, Tag, X as XIcon } from "lucide-react";
 import type { ResultCardData } from "./results-types";
 import { ImageCarousel } from "./ImageCarousel";
 import { FavoriteButton as LegacyFavoriteButton } from "./LegacyFavoriteButton";
-import { PriceBlock } from "./PriceBlock";
 import { Modal } from "./Modal";
-import { FeatureChips } from "./FeatureChips";
 import {
   Popover,
   PopoverTrigger,
   PopoverContent,
 } from "./primitives/Popover";
+
+import { CardSurface } from "./surface/CardSurface";
+import { MediaFrame } from "./media/MediaFrame";
+import { MediaOverlay } from "./media/MediaOverlay";
+import { MediaBadge } from "./media/MediaBadge";
+import { Stack } from "./layout/Stack";
+import { ActionRow } from "./layout/ActionRow";
 
 // ═══════════════════════════════════════════
 // Types
@@ -61,10 +79,6 @@ function pluralNights(n: number): string {
   return `${n} nocy`;
 }
 
-// Icon map for amenities modal
-const AMENITY_ICONS: Record<string, React.ComponentType<{ size?: number | string }>> = {};
-// We'll use FeatureChips' icon map via the chips — amenities in modal are text-only with category headers
-
 // ═══════════════════════════════════════════
 // Component
 // ═══════════════════════════════════════════
@@ -81,6 +95,7 @@ export function ResultCard({
 
   const rootClass = [
     "eui-card",
+    "!bg-transparent !border-0 !shadow-none !flex flex-col",
     isUnavailable && "eui-card-unavailable",
     className,
   ]
@@ -100,7 +115,10 @@ export function ResultCard({
 
   return (
     <>
-      <article
+      <CardSurface
+        elevation="flat"
+        radius="xl"
+        padding={0}
         className={rootClass}
         onClick={handleCardClick}
         role={onSelect ? "button" : undefined}
@@ -112,26 +130,27 @@ export function ResultCard({
         }}
       >
         {/* ── Image area ── */}
-        <div className="eui-card-image">
+        <MediaFrame aspectRatio="16 / 10" radius="xl">
           <ImageCarousel images={data.images ?? []} />
 
-          {/* Badge top-left */}
           {data.imageBadge && (
-            <span className="eui-card-badge">{data.imageBadge}</span>
+            <MediaOverlay position="top-left" inset="sm">
+              <MediaBadge variant="default">{data.imageBadge}</MediaBadge>
+            </MediaOverlay>
           )}
 
-          {/* Heart top-right */}
-          <LegacyFavoriteButton
-            active={data.isFavorite}
-            onChange={(next) => onFavoriteChange?.(data.id, next)}
-            className="eui-card-favorite"
-          />
-        </div>
+          <MediaOverlay position="top-right" inset="sm">
+            <LegacyFavoriteButton
+              active={data.isFavorite}
+              onChange={(next) => onFavoriteChange?.(data.id, next)}
+            />
+          </MediaOverlay>
+        </MediaFrame>
 
         {/* ── Content ── */}
-        <div className="eui-card-content">
+        <Stack gap="xs" className="eui-card-content">
           {/* Name + rating */}
-          <div className="eui-card-title-row">
+          <ActionRow align="between" gap="none" className="eui-card-title-row">
             <h3 className="eui-card-name">{data.name}</h3>
             {data.rating && (
               <span className="eui-card-rating">
@@ -140,14 +159,14 @@ export function ResultCard({
                 <span className="eui-card-rating-count">({data.rating.count})</span>
               </span>
             )}
-          </div>
+          </ActionRow>
 
           {/* Subtitle */}
           {data.subtitle && (
             <p className="eui-card-subtitle">{data.subtitle}</p>
           )}
 
-          {/* Price + amenities link */}
+          {/* Price + amenities link — hand-rolled w 5A, refactor w 5B */}
           <div className="eui-card-bottom">
             <div className="eui-card-price-area" onClick={(e) => e.stopPropagation()}>
               <Popover open={priceOpen} onOpenChange={setPriceOpen}>
@@ -215,10 +234,10 @@ export function ResultCard({
               </button>
             )}
           </div>
-        </div>
-      </article>
+        </Stack>
+      </CardSurface>
 
-      {/* ── Amenities Modal ── */}
+      {/* ── Amenities Modal — legacy peer ── */}
       {data.amenities && (
         <Modal
           open={amenitiesOpen}
