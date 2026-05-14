@@ -2,7 +2,7 @@
 
 > Wewnętrzny mental map Engine UI design system. Inventory-level — 1 linia per component, brak prop signatures. Zapobiega duplikacji w future Parts.
 >
-> **Ostatnia aktualizacja:** 2026-05-10 (post Part 9: Skeleton + Loading System)
+> **Ostatnia aktualizacja:** 2026-05-14 (post Part 10a: Inputs Foundation)
 
 ---
 
@@ -21,7 +21,7 @@
 
 ## Engine UI directories
 
-`src/components/engine-ui/` zawiera 16 sub-directories + 19 root-level composite files. Total: ~107 component files.
+`src/components/engine-ui/` zawiera 16 sub-directories + 19 root-level composite files. Total: ~113 component files.
 
 | Directory | Components | Purpose |
 |---|---|---|
@@ -29,6 +29,7 @@
 | `button/` | 7 | Button primitives |
 | `chip/` | 8 | Badge / Chip / Tag family |
 | `hooks/` | 8 | Custom React hooks |
+| `input/` | 6 | Field compound (Field/FieldLabel/FieldControl/FieldMessage) + TextField + Textarea + useFieldId (Part 10a) |
 | `interaction/` | 1 | Pressable wrapper |
 | `layout/` | 9 | Stack, Inline, ActionRow etc. |
 | `loading/` | 2 | Spinner + LoadingOverlay (Part 9) |
@@ -92,6 +93,16 @@
 - `FavoriteButton` — heart toggle button
 - `ShareButton` — share action button
 - `ButtonGroup` — segmented button container
+
+### Input (Form fields foundation)
+
+- `Field` — compound root z FieldContext (id propagation, aria wiring) (Part 10a Stage 1)
+- `FieldLabel` — label slot z auto htmlFor (Part 10a Stage 1)
+- `FieldControl` — wrapper injektujący id/aria/required/disabled przez cloneElement (Part 10a Stage 1)
+- `FieldMessage` — helper/error message slot z auto aria-describedby (Part 10a Stage 1)
+- `TextField` — single-line input z error popover (Part 10a Stage 2)
+- `Textarea` — multi-line input z error popover (Part 10a Stage 3)
+- `useFieldId` — hook generujący stable ID set (label/control/error) (Part 10a Stage 1)
 
 ### Layout
 
@@ -190,9 +201,10 @@
 
 ## Hooks
 
-8 custom hooks. Wszystkie używają namespace import (`import * as React from "react"`) — codebase convention.
+8 custom hooks z `hooks/` + 1 hook z `input/`. Wszystkie używają namespace import (`import * as React from "react"`) — codebase convention.
 
 - `useDelayedLoading` — anti-flash debouncing dla skeleton/spinner (Part 9 Stage 9)
+- `useFieldId` — stable ID set dla Field compound (Part 10a Stage 1, lokalizacja: `input/`)
 - `useFocusTrap` — focus trap dla modal/sheet contexts
 - `useFocusVisible` — focus-visible state detection
 - `useHover` — pointer hover state (NIE touch)
@@ -205,7 +217,7 @@
 
 ## Lab integration
 
-`/admin/engine-ui-lab` — internal preview surface. **15 sections + 7 helpers.**
+`/admin/engine-ui-lab` — internal preview surface. **16 sections + 7 helpers.**
 
 **Route:** `src/app/admin/(panel)/engine-ui-lab/page.tsx`
 
@@ -238,6 +250,7 @@
 | 13 | `results` | Warstwa wyników | ResultsHeader + ResultCard + ResultsSkeleton + ResultsEmptyState |
 | 14 | `buttons` | Przyciski | Button + IconButton + 5 specialized buttons |
 | 15 | `skeleton` | Stany ładowania | Skeleton family + Spinner + LoadingOverlay + useDelayedLoading (Part 9 NEW) |
+| 16 | `inputy` | Inputy | Field compound + TextField + Textarea + error popover (Part 10a NEW) |
 
 ---
 
@@ -280,8 +293,10 @@ Wszystkie tokeny w `src/styles/globals.css` linie 502-665. **~120 `--eui-*` toke
 ## Roadmap
 
 - ✅ Part 1-8 — Foundation, Buttons, Forms, Nav, Surface, Typography, Layout, Media
+- ✅ Part 8.5a — Refactor legacy (ResourceCard, ImageCarousel, Stepper, GuestPicker, ResultCard, SearchBar)
 - ✅ Part 9 — Skeleton + Loading System (11 stages, 8 components + 1 hook + 1 refactor)
-- ⬜ Part 10 — Inputs / Form fields (greenfield: zero existing input/field/textarea/select w engine-ui)
+- ✅ Part 10a — Inputs Foundation (Field compound + TextField + Textarea + useFieldId + error popover)
+- ⬜ Part 10b — Select (greenfield, post-10a)
 - ⬜ Parts 11-14 — TBD
 
 ---
