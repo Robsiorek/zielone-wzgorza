@@ -5904,3 +5904,168 @@
   z-index: 1;
   color: var(--eui-danger);
 }
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * === PART 10b STAGE 1: Select (desktop) ===
+ * Trigger button mirrors TextField input frame (sizes/states/error).
+ * Listbox: floating panel; width matches trigger via Radix's
+ * --radix-popover-trigger-width CSS variable (no JS measurement).
+ * Chevron rotation: CSS transform on wrapper, animated on [data-open].
+ * A11y pattern: aria-activedescendant on listbox (focus stays on <ul>);
+ * options have role="option" + aria-selected but are NOT focusable.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Wrapper — for consumer className parity z TextField */
+.engine-root .eui-select-wrap {
+  display: block;
+  width: 100%;
+}
+
+/* Trigger button — frame mirrors TextField input */
+.engine-root .eui-select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--eui-space-3);
+  width: 100%;
+  background: var(--eui-grey-50);
+  border: 1px solid var(--eui-border);
+  border-radius: var(--eui-radius-sm);
+  color: var(--eui-text-primary);
+  font-family: inherit;
+  cursor: pointer;
+  outline: 0;
+  text-align: left;
+  transition: border-color 0.15s, background-color 0.15s;
+}
+
+/* Sizes mirror TextField (height/padding/font-size 1:1) */
+.engine-root .eui-select-trigger-sm {
+  height: 36px;
+  padding: 0 12px;
+  font-size: var(--eui-font-size-base); /* 14px */
+  line-height: 1.4;
+}
+
+.engine-root .eui-select-trigger-md {
+  height: 44px;
+  padding: 0 14px;
+  font-size: var(--eui-font-size-base); /* 14px — parity z TextField md */
+  line-height: 1.4;
+}
+
+.engine-root .eui-select-trigger-lg {
+  height: 52px;
+  padding: 0 18px;
+  font-size: var(--eui-font-size-md); /* 16px */
+  line-height: 1.4;
+}
+
+/* Value (selected label) — truncate gracefully */
+.engine-root .eui-select-value {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Placeholder color when no value selected */
+.engine-root .eui-select-trigger-placeholder .eui-select-value {
+  color: var(--eui-text-muted);
+}
+
+/* Chevron wrapper — animated rotation on open */
+.engine-root .eui-select-chevron {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: var(--eui-text-muted);
+  transition: transform 0.2s var(--eui-ease-standard);
+}
+
+.engine-root .eui-select-chevron[data-open="true"] {
+  transform: rotate(180deg);
+}
+
+/* Focus — mirror TextField visual elevation (no blue ring; border darkens) */
+.engine-root .eui-select-trigger:focus-visible {
+  background: var(--eui-grey-0);
+  border-color: var(--eui-border-strong);
+}
+
+/* Hover (non-disabled) — subtle border emphasis */
+.engine-root .eui-select-trigger:hover:not(:disabled) {
+  border-color: var(--eui-border-strong);
+}
+
+/* Disabled */
+.engine-root .eui-select-trigger:disabled {
+  background: var(--eui-grey-100);
+  color: var(--eui-text-muted);
+  cursor: not-allowed;
+}
+
+/* Error — CSS attr selector parity z TextField */
+.engine-root .eui-select-trigger[aria-invalid="true"] {
+  border-color: var(--eui-danger);
+}
+.engine-root .eui-select-trigger[aria-invalid="true"]:focus-visible {
+  border-color: var(--eui-danger);
+}
+
+/* PopoverContent override — match trigger width via Radix CSS var.
+   Source order: this rule appears AFTER .eui-size-medium, so it wins
+   for the same specificity (0,3,0). Padding 0 — listbox owns its padding. */
+.engine-root .eui-popover-content.eui-select-content {
+  width: var(--radix-popover-trigger-width);
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Listbox — scrollable list container */
+.engine-root .eui-select-listbox {
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+  max-height: min(300px, 60vh);
+  overflow-y: auto;
+  outline: 0;
+}
+
+/* Option — base row */
+.engine-root .eui-select-option {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: var(--eui-radius-xs);
+  font-size: var(--eui-font-size-base);
+  color: var(--eui-text-primary);
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Highlighted (keyboard cursor via aria-activedescendant) */
+.engine-root .eui-select-option.eui-highlighted {
+  background: var(--eui-grey-100);
+}
+
+/* Selected (persistent — matches current value) */
+.engine-root .eui-select-option.eui-selected {
+  background: var(--eui-brand-softer);
+  font-weight: var(--eui-font-weight-medium);
+}
+
+/* Selected + Highlighted (selected option while keyboard-cursored) */
+.engine-root .eui-select-option.eui-selected.eui-highlighted {
+  background: var(--eui-brand-soft);
+}
+
+/* Disabled option */
+.engine-root .eui-select-option.eui-disabled {
+  color: var(--eui-text-muted);
+  cursor: not-allowed;
+}
+.engine-root .eui-select-option.eui-disabled.eui-highlighted {
+  background: transparent;
+}

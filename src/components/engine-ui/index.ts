@@ -344,4 +344,8 @@ export {
   Textarea,
   type TextareaProps,
   type TextareaSize,
+  Select,
+  type SelectProps,
+  type SelectOption,
+  type SelectSize,
 } from "./input";

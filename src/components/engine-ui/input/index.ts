@@ -23,3 +23,6 @@ export type { TextFieldProps, TextFieldType, TextFieldSize } from "./TextField";
 
 export { Textarea } from "./Textarea";
 export type { TextareaProps, TextareaSize } from "./Textarea";
+
+export { Select } from "./Select";
+export type { SelectProps, SelectOption, SelectSize } from "./Select";
