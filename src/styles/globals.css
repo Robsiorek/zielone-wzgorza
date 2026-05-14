@@ -2611,6 +2611,30 @@
   background-color: rgba(255, 255, 255, 1);
 }
 
+/* ──────────────────────────────────────────────────────────────────
+ *  CZĘŚĆ 8.5a — ImageCarousel scroll-snap track
+ *  Component-specific track (Q2: not promoted to systemic primitive).
+ *  Used by refactored ImageCarousel — replaces legacy .eui-carousel-track.
+ * ────────────────────────────────────────────────────────────────── */
+
+.engine-root .eui-image-carousel-track {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.engine-root .eui-image-carousel-track::-webkit-scrollbar {
+  display: none;
+}
+
+.engine-root .eui-image-carousel-track > * {
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+}
+
 
 /* ── FavoriteButton ── */
 .engine-root .eui-favorite-btn {

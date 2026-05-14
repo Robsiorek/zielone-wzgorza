@@ -4,19 +4,24 @@
  * ImageCarousel — Airbnb-style image slider (engine-ui)
  * ────────────────────────────────────────────────────────────────────────
  * Horizontal image carousel with:
- *   - Dot indicators at the bottom
- *   - Left/right arrows visible on hover (desktop)
- *   - Touch swipe support (CSS scroll-snap)
+ *   - Dot indicators at the bottom (PaginationDot, Part 4)
+ *   - Left/right arrows visible on hover (GalleryNavButton, Part 8)
+ *   - Touch swipe support (CSS scroll-snap via .eui-image-carousel-track)
  *   - Lazy loading on non-visible images
- *   - Placeholder when no images
+ *   - Placeholder when no images (ImagePlaceholder, Part 8)
  *
- * Clicks on arrows stop propagation so the parent card's onClick
- * doesn't fire when navigating images.
+ * Część 8.5a Stage 2: refactor on Engine UI primitives.
+ * State (useRef + useState + useEffect) preserved. e.stopPropagation
+ * is handled inside GalleryNavButton itself.
  */
 
 import * as React from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { ResultImage } from "./results-types";
+
+import { MediaFrame } from "./media/MediaFrame";
+import { ImagePlaceholder } from "./media/ImagePlaceholder";
+import { GalleryNavButton } from "./media/GalleryNavButton";
+import { PaginationDot } from "./nav/PaginationDot";
 
 export interface ImageCarouselProps {
   images: ResultImage[];
@@ -27,7 +32,6 @@ export function ImageCarousel({ images, className }: ImageCarouselProps) {
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = React.useState(0);
 
-  // Track scroll position to update dots
   React.useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -44,87 +48,64 @@ export function ImageCarousel({ images, className }: ImageCarouselProps) {
     return () => el.removeEventListener("scroll", onScroll);
   }, [images.length]);
 
-  const goTo = (index: number, e: React.MouseEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
+  const goTo = (index: number) => {
     const el = scrollRef.current;
     if (!el) return;
     const target = Math.max(0, Math.min(index, images.length - 1));
     el.scrollTo({ left: target * el.offsetWidth, behavior: "smooth" });
   };
 
+  const rootClass = ["relative", className].filter(Boolean).join(" ");
+
   if (images.length === 0) {
     return (
-      <div className={["eui-carousel", className].filter(Boolean).join(" ")}>
-        <div className="eui-carousel-placeholder">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <rect x="3" y="3" width="18" height="18" rx="2" />
-            <circle cx="8.5" cy="8.5" r="1.5" />
-            <path d="m21 15-5-5L5 21" />
-          </svg>
-        </div>
+      <div className={rootClass}>
+        <MediaFrame aspectRatio="16 / 10">
+          <ImagePlaceholder size="lg" />
+        </MediaFrame>
       </div>
     );
   }
 
   return (
-    <div className={["eui-carousel", className].filter(Boolean).join(" ")}>
-      {/* Scrollable image track */}
-      <div ref={scrollRef} className="eui-carousel-track">
+    <div className={rootClass}>
+      <div ref={scrollRef} className="eui-image-carousel-track">
         {images.map((img, i) => (
-          <div key={i} className="eui-carousel-slide">
+          <MediaFrame key={i} aspectRatio="16 / 10">
             <img
               src={img.url}
               alt={img.alt}
-              className="eui-carousel-img"
+              className="w-full h-full object-cover select-none"
               loading={i === 0 ? "eager" : "lazy"}
               draggable={false}
             />
-          </div>
+          </MediaFrame>
         ))}
       </div>
 
-      {/* Arrows — only when multiple images */}
       {images.length > 1 && (
         <>
-          {activeIndex > 0 && (
-            <button
-              type="button"
-              className="eui-carousel-arrow eui-carousel-prev"
-              onClick={(e) => goTo(activeIndex - 1, e)}
-              aria-label="Poprzednie zdjęcie"
-            >
-              <ChevronLeft size={16} />
-            </button>
-          )}
-          {activeIndex < images.length - 1 && (
-            <button
-              type="button"
-              className="eui-carousel-arrow eui-carousel-next"
-              onClick={(e) => goTo(activeIndex + 1, e)}
-              aria-label="Następne zdjęcie"
-            >
-              <ChevronRight size={16} />
-            </button>
-          )}
-        </>
-      )}
+          <GalleryNavButton
+            direction="left"
+            visible={activeIndex > 0}
+            onClick={() => goTo(activeIndex - 1)}
+          />
+          <GalleryNavButton
+            direction="right"
+            visible={activeIndex < images.length - 1}
+            onClick={() => goTo(activeIndex + 1)}
+          />
 
-      {/* Dots */}
-      {images.length > 1 && (
-        <div className="eui-carousel-dots">
-          {images.map((_, i) => (
-            <span
-              key={i}
-              className={[
-                "eui-carousel-dot",
-                i === activeIndex && "eui-carousel-dot-active",
-              ]
-                .filter(Boolean)
-                .join(" ")}
-            />
-          ))}
-        </div>
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 z-[2] pointer-events-none">
+            {images.map((_, i) => (
+              <PaginationDot
+                key={i}
+                state={i === activeIndex ? "active" : "inactive"}
+                size="sm"
+              />
+            ))}
+          </div>
+        </>
       )}
     </div>
   );
