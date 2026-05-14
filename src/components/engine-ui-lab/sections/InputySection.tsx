@@ -19,7 +19,9 @@ import { LabSection } from "../LabSection";
 import { ComponentShowcase } from "../ComponentShowcase";
 import { SpecimenInfo } from "../Specimen";
 
-const SPECIMEN_WIDTH = 320;
+// Per LAB-CONVENTIONS #3: intrinsic flex zamiast fixed width.
+// Specimens shrink na mobile (basis 280px), nie urosną poza 320px na desktop.
+const SPECIMEN_STYLE: React.CSSProperties = { flex: "1 1 280px", maxWidth: 320 };
 
 export function InputySection() {
   // Search clear demo state
@@ -52,7 +54,7 @@ export function InputySection() {
             <Text variant="caption" color="muted">
               Compound (Field-wrapped)
             </Text>
-            <div style={{ width: SPECIMEN_WIDTH }}>
+            <div style={SPECIMEN_STYLE}>
               <Field id="email-compound" required>
                 <FieldLabel>Email</FieldLabel>
                 <FieldControl>
@@ -67,7 +69,7 @@ export function InputySection() {
             <Text variant="caption" color="muted">
               Standalone (TextField props)
             </Text>
-            <div style={{ width: SPECIMEN_WIDTH }}>
+            <div style={SPECIMEN_STYLE}>
               <TextField
                 type="email"
                 label="Email"
@@ -82,7 +84,7 @@ export function InputySection() {
             <Text variant="caption" color="muted">
               Bare (input only)
             </Text>
-            <div style={{ width: SPECIMEN_WIDTH }}>
+            <div style={SPECIMEN_STYLE}>
               <TextField type="email" placeholder="adres@example.pl" />
             </div>
           </Stack>
@@ -96,11 +98,11 @@ export function InputySection() {
         info={
           <SpecimenInfo
             id="TextField"
-            hint="md font-size 16px (anti-iOS-zoom)"
+            hint="md font-size 14px (post Stage 5.2 downsize)"
           />
         }
       >
-        <div style={{ width: SPECIMEN_WIDTH }}>
+        <div style={SPECIMEN_STYLE}>
           <Stack gap="md">
             <TextField size="sm" placeholder="Small (36px)" />
             <TextField size="md" placeholder="Medium (44px)" />
@@ -120,7 +122,7 @@ export function InputySection() {
           />
         }
       >
-        <div style={{ width: SPECIMEN_WIDTH }}>
+        <div style={SPECIMEN_STYLE}>
           <Stack gap="md">
             <TextField type="text" placeholder="text — generic" />
             <TextField
@@ -154,7 +156,7 @@ export function InputySection() {
           />
         }
       >
-        <div style={{ width: SPECIMEN_WIDTH }}>
+        <div style={SPECIMEN_STYLE}>
           <Stack gap="md">
             <TextField placeholder="Default" />
             <TextField defaultValue="Filled value" />
@@ -186,7 +188,7 @@ export function InputySection() {
           />
         }
       >
-        <div style={{ width: SPECIMEN_WIDTH }}>
+        <div style={SPECIMEN_STYLE}>
           <Stack gap="md">
             <Textarea
               label="Notatka"
@@ -224,7 +226,7 @@ export function InputySection() {
             <Text variant="caption" color="muted">
               Krótki error (popover redundant)
             </Text>
-            <div style={{ width: SPECIMEN_WIDTH }}>
+            <div style={SPECIMEN_STYLE}>
               <TextField
                 label="PIN"
                 defaultValue="12"
@@ -238,7 +240,7 @@ export function InputySection() {
             <Text variant="caption" color="muted">
               Długi error (popover odciąża inline)
             </Text>
-            <div style={{ width: SPECIMEN_WIDTH }}>
+            <div style={SPECIMEN_STYLE}>
               <TextField
                 type="password"
                 label="Hasło"
@@ -253,7 +255,7 @@ export function InputySection() {
             <Text variant="caption" color="muted">
               Textarea z popoverem
             </Text>
-            <div style={{ width: SPECIMEN_WIDTH }}>
+            <div style={SPECIMEN_STYLE}>
               <Textarea
                 label="Opis"
                 defaultValue="Brak"
