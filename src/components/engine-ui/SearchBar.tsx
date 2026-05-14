@@ -21,6 +21,27 @@
  * Segments:
  *   ["when", "guests"] — configurable via props. "when" opens DatePickerTabs
  *   which shows Dokładne/Elastyczne tabs. "guests" opens GuestPicker.
+ *
+ * Część 8.5a Stage 6 — minimal refactor (pill-shell preservation):
+ *   The .eui-searchbar pill shell is tightly coupled with custom CSS that
+ *   primitives cannot match without visual regression:
+ *     - Submit button has CSS-driven width-expand animation on hover
+ *       (selectors `.eui-searchbar-submit > svg` + `> span`), which depends
+ *       on having icon and label as direct children — Button primitive wraps
+ *       icon in an extra <span class="eui-button-icon-left"> that would break
+ *       the selector.
+ *     - Segments use align-self: stretch to fill the pill height; Pressable's
+ *       press-scale and focus-ring would compete with the pill design.
+ *     - Divider has a specific 32px height aligned to the pill; Divider
+ *       primitive's stretch + grey-200 background would diverge.
+ *
+ *   Transitive benefits already achieved in 8.5a:
+ *     - GuestPicker (Stage 4): primitives Inline/ActionRow/Button/SecondaryLink
+ *     - Stepper (Stage 3): IconButton primitive
+ *     - DatePickerTabs: unchanged (Q1 split scope — legacy peer)
+ *
+ *   Full pill-shell rebuild deferred to 8.5b along with PriceBlock / Modal /
+ *   LegacyFavoriteButton legacy peers.
  */
 
 import * as React from "react";
