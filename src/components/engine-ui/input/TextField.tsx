@@ -10,6 +10,7 @@ import {
 } from "../primitives/Popover";
 import { Field, FieldLabel, FieldControl, FieldMessage } from "./Field";
 import { useFieldContext } from "./useFieldContext";
+import { HelperText } from "../text/HelperText";
 
 export type TextFieldType =
   | "text"
@@ -183,7 +184,7 @@ const TextFieldInner = React.forwardRef<
           />
         </PopoverTrigger>
         <PopoverContent size="small">
-          <span className="eui-body-small">{_errorPopoverMessage}</span>
+          <HelperText variant="error" showIcon={false}>{_errorPopoverMessage}</HelperText>
         </PopoverContent>
       </Popover>
     );
