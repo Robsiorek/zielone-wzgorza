@@ -35,6 +35,7 @@
 
 import * as React from "react";
 import { Minus, Plus } from "lucide-react";
+import { IconButton } from "./button/IconButton";
 
 // ═══════════════════════════════════════════
 // Types
@@ -156,21 +157,23 @@ export const Stepper = React.forwardRef<HTMLDivElement, StepperProps>(
 
     const displayed = formatValue ? formatValue(value) : String(value);
 
+    const iconBtnSize = size === "sm" ? "xs" : "sm";
+
     return (
       <div ref={ref} className={rootClass}>
-        <button
-          type="button"
-          className="eui-stepper-btn"
+        <IconButton
+          size={iconBtnSize}
+          shape="pill"
+          variant="ghost"
           onClick={handleDecrement}
           disabled={disabled || atMin}
           aria-label={`Zmniejsz: ${label}`}
           tabIndex={disabled ? -1 : 0}
-        >
-          <Minus size={size === "sm" ? 14 : 16} strokeWidth={2} aria-hidden="true" />
-        </button>
+          icon={<Minus strokeWidth={2} aria-hidden="true" />}
+        />
 
         <span
-          className="eui-stepper-value"
+          className="eui-stepper-value eui-body"
           role="spinbutton"
           aria-label={label}
           aria-valuenow={value}
@@ -183,16 +186,16 @@ export const Stepper = React.forwardRef<HTMLDivElement, StepperProps>(
           {displayed}
         </span>
 
-        <button
-          type="button"
-          className="eui-stepper-btn"
+        <IconButton
+          size={iconBtnSize}
+          shape="pill"
+          variant="ghost"
           onClick={handleIncrement}
           disabled={disabled || atMax}
           aria-label={`Zwiększ: ${label}`}
           tabIndex={disabled ? -1 : 0}
-        >
-          <Plus size={size === "sm" ? 14 : 16} strokeWidth={2} aria-hidden="true" />
-        </button>
+          icon={<Plus strokeWidth={2} aria-hidden="true" />}
+        />
       </div>
     );
   }
