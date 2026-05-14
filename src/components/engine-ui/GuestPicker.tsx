@@ -40,14 +40,20 @@
  *   - "Wyczyść" is a real <button>, not a link, so it's keyboard-reachable.
  *   - The footer uses a real <button type="button"> for Apply.
  *   - Focus order: adults → children → infants → pets → Wyczyść → Zastosuj.
+ *
+ * Część 8.5a Stage 4: refactor structural HTML → primitives (Parts 1-7).
+ * Draft/commit model and ALL state logic preserved 1:1.
  */
 
 import * as React from "react";
 import { User, Users, Baby, Dog } from "lucide-react";
 import { Stepper } from "./Stepper";
-import {
-  type BookingParty,
-} from "@/lib/booking-params";
+import { type BookingParty } from "@/lib/booking-params";
+
+import { Inline } from "./layout/Inline";
+import { ActionRow } from "./layout/ActionRow";
+import { Button } from "./button/Button";
+import { SecondaryLink } from "./text/SecondaryLink";
 
 // ═══════════════════════════════════════════
 // Constants (product rules)
@@ -237,21 +243,27 @@ export function GuestPicker({
   return (
     <div className={rootClass}>
       {rows.map((row) => (
-        <div key={row.key} className="eui-guestpicker-row">
+        <Inline
+          key={row.key}
+          gap="md"
+          align="center"
+          className="eui-guestpicker-row"
+        >
           <div className="eui-guestpicker-icon" aria-hidden="true">
             {row.icon}
           </div>
           <div className="eui-guestpicker-label">
             <span className="eui-guestpicker-title">{row.title}</span>
             {row.subtitleHref ? (
-              <a
-                className="eui-guestpicker-subtitle eui-guestpicker-subtitle-link"
+              <SecondaryLink
                 href={row.subtitleHref}
-                target="_blank"
-                rel="noopener noreferrer"
+                external
+                variant="subtle"
+                size="sm"
+                className="eui-guestpicker-subtitle-link"
               >
                 {row.subtitle}
-              </a>
+              </SecondaryLink>
             ) : (
               <span className="eui-guestpicker-subtitle">{row.subtitle}</span>
             )}
@@ -263,25 +275,27 @@ export function GuestPicker({
             onChange={setField(row.key)}
             label={row.label}
           />
-        </div>
+        </Inline>
       ))}
 
-      <div className="eui-guestpicker-footer">
-        <button
-          type="button"
-          className="eui-guestpicker-link"
+      <ActionRow align="between" className="eui-guestpicker-footer">
+        <Button
+          variant="link"
+          size="sm"
           onClick={handleClear}
+          className="eui-guestpicker-link"
         >
           Wyczyść
-        </button>
-        <button
-          type="button"
-          className="eui-guestpicker-apply"
+        </Button>
+        <Button
+          variant="secondary"
+          size="lg"
           onClick={handleApply}
+          className="eui-guestpicker-apply"
         >
           Zastosuj
-        </button>
-      </div>
+        </Button>
+      </ActionRow>
     </div>
   );
 }
