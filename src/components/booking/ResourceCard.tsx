@@ -18,6 +18,15 @@ import React from "react";
 import { Users, BedDouble, Search, ImageOff } from "lucide-react";
 import { DynamicIcon } from "@/components/ui/dynamic-icon";
 
+import { CardSurface } from "@/components/engine-ui/surface/CardSurface";
+import { MediaFrame } from "@/components/engine-ui/media/MediaFrame";
+import { MediaOverlay } from "@/components/engine-ui/media/MediaOverlay";
+import { MediaBadge } from "@/components/engine-ui/media/MediaBadge";
+import { ImagePlaceholder } from "@/components/engine-ui/media/ImagePlaceholder";
+import { Inline } from "@/components/engine-ui/layout/Inline";
+import { Tag } from "@/components/engine-ui/chip/Tag";
+import { Button } from "@/components/engine-ui/button/Button";
+
 // ═══════════════════════════════════════════
 // Types
 // ═══════════════════════════════════════════
@@ -79,13 +88,15 @@ export function ResourceCard({ resource, onCheckAvailability }: Props) {
   // ── Defensive: top 4 amenities ──
   const topAmenities = resource.amenities.slice(0, 4);
 
-  // ── Defensive: total bed count ──
-  const totalBeds = resource.beds.reduce((sum, b) => sum + b.quantity, 0);
-
   return (
-    <div className="bg-card rounded-2xl border-2 border-border hover:border-primary/40 transition-all duration-200 overflow-hidden flex flex-col">
+    <CardSurface
+      elevation="raised"
+      radius="2xl"
+      padding={0}
+      className="flex flex-col h-full"
+    >
       {/* ── Cover image ── */}
-      <div className="relative aspect-[16/10] bg-muted overflow-hidden">
+      <MediaFrame aspectRatio="16 / 10">
         {coverImage ? (
           <img
             src={coverImage.urls.medium}
@@ -94,17 +105,12 @@ export function ResourceCard({ resource, onCheckAvailability }: Props) {
             loading="lazy"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <ImageOff className="h-8 w-8 text-muted-foreground/30" />
-          </div>
+          <ImagePlaceholder size="lg" icon={<ImageOff />} />
         )}
-        {/* Category badge */}
-        <div className="absolute top-3 left-3">
-          <span className="text-[11px] font-medium bg-white/90 backdrop-blur-sm text-foreground/80 px-2.5 py-1 rounded-full">
-            {resource.category.name}
-          </span>
-        </div>
-      </div>
+        <MediaOverlay position="top-left">
+          <MediaBadge variant="default">{resource.category.name}</MediaBadge>
+        </MediaOverlay>
+      </MediaFrame>
 
       {/* ── Content ── */}
       <div className="p-4 flex-1 flex flex-col">
@@ -114,20 +120,22 @@ export function ResourceCard({ resource, onCheckAvailability }: Props) {
         </h3>
 
         {/* Meta row: capacity + bedrooms */}
-        <div className="flex items-center gap-3 mt-1.5">
-          {resource.maxCapacity && resource.maxCapacity > 0 && (
-            <span className="inline-flex items-center gap-1 text-[12px] text-muted-foreground">
-              <Users className="h-3 w-3" />
-              do {resource.maxCapacity} osób
-            </span>
-          )}
-          {resource.bedroomCount && resource.bedroomCount > 0 && (
-            <span className="inline-flex items-center gap-1 text-[12px] text-muted-foreground">
-              <BedDouble className="h-3 w-3" />
-              {resource.bedroomCount} {resource.bedroomCount === 1 ? "sypialnia" : resource.bedroomCount < 5 ? "sypialnie" : "sypialni"}
-            </span>
-          )}
-        </div>
+        {(resource.maxCapacity || resource.bedroomCount) ? (
+          <Inline gap="md" align="center" className="mt-1.5">
+            {resource.maxCapacity && resource.maxCapacity > 0 && (
+              <span className="inline-flex items-center gap-1 text-[12px] text-muted-foreground">
+                <Users className="h-3 w-3" />
+                do {resource.maxCapacity} osób
+              </span>
+            )}
+            {resource.bedroomCount && resource.bedroomCount > 0 && (
+              <span className="inline-flex items-center gap-1 text-[12px] text-muted-foreground">
+                <BedDouble className="h-3 w-3" />
+                {resource.bedroomCount} {resource.bedroomCount === 1 ? "sypialnia" : resource.bedroomCount < 5 ? "sypialnie" : "sypialni"}
+              </span>
+            )}
+          </Inline>
+        ) : null}
 
         {/* Short description */}
         {resource.shortDescription && (
@@ -138,39 +146,39 @@ export function ResourceCard({ resource, onCheckAvailability }: Props) {
 
         {/* Amenities (top 4) */}
         {topAmenities.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mt-3">
+          <Inline wrap gap="xs" className="mt-3">
             {topAmenities.map((amenity) => (
-              <span
+              <Tag
                 key={amenity.id}
-                className="inline-flex items-center gap-1 text-[11px] text-muted-foreground bg-muted/50 rounded-full px-2 py-0.5"
+                variant="neutral"
+                iconLeft={amenity.icon ? <DynamicIcon iconKey={amenity.icon} className="h-3 w-3" /> : undefined}
               >
-                {amenity.icon && (
-                  <DynamicIcon iconKey={amenity.icon} className="h-3 w-3" />
-                )}
                 {amenity.name}
-              </span>
+              </Tag>
             ))}
             {resource.amenities.length > 4 && (
               <span className="text-[11px] text-muted-foreground/60 px-1 py-0.5">
                 +{resource.amenities.length - 4}
               </span>
             )}
-          </div>
+          </Inline>
         )}
 
         {/* Spacer to push CTA to bottom */}
         <div className="flex-1 min-h-3" />
 
         {/* CTA */}
-        <button
+        <Button
+          variant="primary"
+          size="md"
+          fullWidth
+          iconLeft={<Search />}
           onClick={() => onCheckAvailability(resource.slug)}
-          className="w-full mt-3 bg-primary hover:bg-primary/90 text-white rounded-xl text-[13px] font-semibold flex items-center justify-center gap-1.5 transition-all active:scale-[0.98]"
-          style={{ height: 42 }}
+          className="mt-3"
         >
-          <Search className="h-3.5 w-3.5" />
           Sprawdź dostępność
-        </button>
+        </Button>
       </div>
-    </div>
+    </CardSurface>
   );
 }
