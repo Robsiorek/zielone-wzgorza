@@ -3,20 +3,7 @@
 import * as React from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { DragHandle } from "./DragHandle";
-
-// ── useIsMobile — media query detection ──
-
-function useIsMobile(): boolean {
-  const [isMobile, setIsMobile] = React.useState(false);
-  React.useEffect(() => {
-    const mq = window.matchMedia("(max-width: 767px)");
-    const update = () => setIsMobile(mq.matches);
-    update();
-    mq.addEventListener("change", update);
-    return () => mq.removeEventListener("change", update);
-  }, []);
-  return isMobile;
-}
+import { useIsMobile } from "../hooks/useIsMobile";
 
 // ── useSwipeToDismiss ──
 

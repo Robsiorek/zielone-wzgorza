@@ -22,3 +22,5 @@ export { useFocusTrap } from "./useFocusTrap";
 
 export { useDelayedLoading } from "./useDelayedLoading";
 export type { UseDelayedLoadingOptions } from "./useDelayedLoading";
+
+export { useIsMobile } from "./useIsMobile";
