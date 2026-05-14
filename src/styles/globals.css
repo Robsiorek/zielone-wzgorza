@@ -2635,6 +2635,14 @@
   scroll-snap-align: start;
 }
 
+/* ── ResultCard component-specific modifier (Q6 — unavailable state) ── */
+
+.engine-root .eui-result-card-unavailable {
+  filter: grayscale(0.5);
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
 
 /* ── FavoriteButton ── */
 .engine-root .eui-favorite-btn {
