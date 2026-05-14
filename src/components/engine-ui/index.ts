@@ -309,3 +309,39 @@ export {
   ImageCounter, type ImageCounterProps,
   ThumbnailStrip, type ThumbnailStripProps,
 } from "./media";
+
+// ── Part 9 — Skeleton + Loading ──────────────────────────────────
+export {
+  Skeleton, type SkeletonProps,
+  SkeletonText, type SkeletonTextProps,
+  SkeletonCircle, type SkeletonCircleProps,
+  SkeletonImage, type SkeletonImageProps,
+  SkeletonCard, type SkeletonCardProps,
+  SkeletonRegion, type SkeletonRegionProps,
+} from "./skeleton";
+export {
+  Spinner, type SpinnerProps,
+  LoadingOverlay, type LoadingOverlayProps,
+} from "./loading";
+
+// ── Part 10 — Inputs Foundation ──────────────────────────────────
+export {
+  Field,
+  FieldLabel,
+  FieldControl,
+  FieldMessage,
+  type FieldProps,
+  type FieldLabelProps,
+  type FieldControlProps,
+  type FieldMessageProps,
+  type FieldMessageVariant,
+  useFieldId,
+  type FieldIds,
+  TextField,
+  type TextFieldProps,
+  type TextFieldType,
+  type TextFieldSize,
+  Textarea,
+  type TextareaProps,
+  type TextareaSize,
+} from "./input";
