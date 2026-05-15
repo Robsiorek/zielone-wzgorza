@@ -33,6 +33,8 @@ import {
   PopoverTrigger,
 } from "../primitives/Popover";
 import { Chevron } from "../nav/Chevron";
+import { BottomSheet } from "../overlay/BottomSheet";
+import { useIsMobile } from "../hooks/useIsMobile";
 import { Field, FieldLabel, FieldControl, FieldMessage } from "./Field";
 import { useFieldContext } from "./useFieldContext";
 
@@ -276,37 +278,132 @@ const SelectInner = React.forwardRef<HTMLButtonElement, SelectInnerProps>(
       .filter(Boolean)
       .join(" ");
 
+    // Mobile / desktop branching per architect D4.
+    // Halt-safety note: Radix Dialog (BottomSheet underlying) installs a focus
+    // trap. With our listbox tabindex=-1 + non-focusable <li>, there are NO
+    // tabbable elements inside the dialog — Tab inside the open sheet does
+    // nothing (focus stays on dialog body). Users dismiss via tap-outside,
+    // Escape, or swipe — adequate mobile UX. If this proves problematic in
+    // production usage, defer mobile to 10c per architect D6.
+    const isMobile = useIsMobile();
+
+    // Trigger button — onClick differs per path:
+    //   - Mobile: explicit toggle (no Radix wrapping the button)
+    //   - Desktop: no onClick — Radix PopoverTrigger asChild composes its own
+    //     click handler. Adding ours would double-toggle (both run via Slot
+    //     composeEventHandlers; the functional updates cancel out).
+    const triggerInner = (
+      <>
+        <span className="eui-select-value">
+          {selectedOption ? selectedOption.label : placeholder}
+        </span>
+        <span
+          className="eui-select-chevron"
+          data-open={open ? "true" : undefined}
+          aria-hidden="true"
+        >
+          <Chevron direction="down" size={18} />
+        </span>
+      </>
+    );
+
+    const commonTriggerProps = {
+      ref,
+      type: "button" as const,
+      id: triggerId,
+      name,
+      disabled,
+      className: triggerClasses,
+      "aria-haspopup": "listbox" as const,
+      "aria-expanded": open,
+      "aria-controls": open ? listboxId : undefined,
+      "aria-describedby": ariaDescribedBy,
+      "aria-required": ariaRequired,
+      "aria-invalid": ariaInvalid,
+      "aria-label": ariaLabel,
+      onKeyDown: handleTriggerKey,
+    };
+
+    const listboxNode = (
+      <ul
+        ref={listboxRef}
+        id={listboxId}
+        role="listbox"
+        tabIndex={-1}
+        className="eui-select-listbox"
+        aria-activedescendant={
+          highlightedIndex >= 0
+            ? `${listboxId}-opt-${highlightedIndex}`
+            : undefined
+        }
+        aria-labelledby={ariaLabel ? undefined : triggerId}
+        aria-label={ariaLabel}
+        onKeyDown={handleListboxKey}
+      >
+        {options.map((opt, idx) => {
+          const isSelected = opt.value === value;
+          const isHighlighted = idx === highlightedIndex;
+          const optClasses = [
+            "eui-select-option",
+            isHighlighted && "eui-highlighted",
+            isSelected && "eui-selected",
+            opt.disabled && "eui-disabled",
+          ]
+            .filter(Boolean)
+            .join(" ");
+          return (
+            <li
+              key={opt.value}
+              id={`${listboxId}-opt-${idx}`}
+              role="option"
+              aria-selected={isSelected}
+              aria-disabled={opt.disabled || undefined}
+              className={optClasses}
+              onClick={() => {
+                if (!opt.disabled) commitValue(opt.value);
+              }}
+              onMouseEnter={() => {
+                if (!opt.disabled) setHighlightedIndex(idx);
+              }}
+            >
+              {opt.label}
+            </li>
+          );
+        })}
+      </ul>
+    );
+
+    if (isMobile) {
+      return (
+        <div className={wrapperClasses}>
+          <button
+            {...commonTriggerProps}
+            onClick={() => setOpen((prev) => !prev)}
+          >
+            {triggerInner}
+          </button>
+          <BottomSheet
+            open={open}
+            onOpenChange={setOpen}
+            height="auto"
+            labelledBy={triggerId}
+            showDragHandle
+            swipeToDismiss
+            closeOnEscape
+            closeOnOutsideClick
+            className="eui-select-bottomsheet"
+          >
+            {listboxNode}
+          </BottomSheet>
+        </div>
+      );
+    }
+
     return (
       <div className={wrapperClasses}>
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
-            <button
-              ref={ref}
-              type="button"
-              id={triggerId}
-              name={name}
-              disabled={disabled}
-              className={triggerClasses}
-              aria-haspopup="listbox"
-              aria-expanded={open}
-              aria-controls={open ? listboxId : undefined}
-              aria-describedby={ariaDescribedBy}
-              aria-required={ariaRequired}
-              aria-invalid={ariaInvalid}
-              aria-label={ariaLabel}
-              onKeyDown={handleTriggerKey}
-            >
-              <span className="eui-select-value">
-                {selectedOption ? selectedOption.label : placeholder}
-              </span>
-              <span
-                className="eui-select-chevron"
-                data-open={open ? "true" : undefined}
-                aria-hidden="true"
-              >
-                <Chevron direction="down" size={18} />
-              </span>
-            </button>
+            <button {...commonTriggerProps}>{triggerInner}</button>
           </PopoverTrigger>
           <PopoverContent
             align="start"
@@ -314,52 +411,7 @@ const SelectInner = React.forwardRef<HTMLButtonElement, SelectInnerProps>(
             sideOffset={4}
             className="eui-select-content"
           >
-            <ul
-              ref={listboxRef}
-              id={listboxId}
-              role="listbox"
-              tabIndex={-1}
-              className="eui-select-listbox"
-              aria-activedescendant={
-                highlightedIndex >= 0
-                  ? `${listboxId}-opt-${highlightedIndex}`
-                  : undefined
-              }
-              aria-labelledby={ariaLabel ? undefined : triggerId}
-              aria-label={ariaLabel}
-              onKeyDown={handleListboxKey}
-            >
-              {options.map((opt, idx) => {
-                const isSelected = opt.value === value;
-                const isHighlighted = idx === highlightedIndex;
-                const optClasses = [
-                  "eui-select-option",
-                  isHighlighted && "eui-highlighted",
-                  isSelected && "eui-selected",
-                  opt.disabled && "eui-disabled",
-                ]
-                  .filter(Boolean)
-                  .join(" ");
-                return (
-                  <li
-                    key={opt.value}
-                    id={`${listboxId}-opt-${idx}`}
-                    role="option"
-                    aria-selected={isSelected}
-                    aria-disabled={opt.disabled || undefined}
-                    className={optClasses}
-                    onClick={() => {
-                      if (!opt.disabled) commitValue(opt.value);
-                    }}
-                    onMouseEnter={() => {
-                      if (!opt.disabled) setHighlightedIndex(idx);
-                    }}
-                  >
-                    {opt.label}
-                  </li>
-                );
-              })}
-            </ul>
+            {listboxNode}
           </PopoverContent>
         </Popover>
       </div>

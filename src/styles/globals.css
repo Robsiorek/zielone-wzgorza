@@ -6069,3 +6069,19 @@
 .engine-root .eui-select-option.eui-disabled.eui-highlighted {
   background: transparent;
 }
+
+/* ── Mobile path (Stage 2): Select renders BottomSheet on viewport ≤767px ──
+   .eui-select-bottomsheet is the className passed to BottomSheet's
+   Dialog.Content. We override option sizing for tap-friendly 44×44 targets
+   (WCAG 2.5.5 Target Size). Listbox grows naturally with content; if it
+   exceeds 60vh, the inner overflow-y handles scroll. */
+.engine-root .eui-select-bottomsheet .eui-select-listbox {
+  padding: var(--eui-space-3);
+  max-height: 60vh;
+}
+
+.engine-root .eui-select-bottomsheet .eui-select-option {
+  min-height: 44px;
+  padding: 10px 14px;
+  font-size: var(--eui-font-size-md); /* 16px — iOS-friendly tap target */
+}
