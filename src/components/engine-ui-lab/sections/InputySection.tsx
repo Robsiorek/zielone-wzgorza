@@ -10,6 +10,8 @@ import {
   FieldMessage,
   TextField,
   Textarea,
+  Select,
+  type SelectOption,
 } from "@/components/engine-ui/input";
 import { Stack } from "@/components/engine-ui/layout/Stack";
 import { Inline } from "@/components/engine-ui/layout/Inline";
@@ -23,6 +25,41 @@ import { SpecimenInfo } from "../Specimen";
 // Specimens shrink na mobile (basis 280px), nie urosną poza 320px na desktop.
 const SPECIMEN_STYLE: React.CSSProperties = { flex: "1 1 280px", maxWidth: 320 };
 
+// Select demo data ─────────────────────────────────────────────────────────
+
+const CATEGORIES: SelectOption[] = [
+  { value: "domek", label: "Domek" },
+  { value: "apartament", label: "Apartament" },
+  { value: "pokoj", label: "Pokój" },
+  { value: "miejsce-namiotowe", label: "Miejsce namiotowe" },
+];
+
+const CATEGORIES_WITH_DISABLED: SelectOption[] = [
+  { value: "domek", label: "Domek" },
+  { value: "apartament", label: "Apartament" },
+  { value: "pokoj", label: "Pokój", disabled: true },
+  { value: "miejsce-namiotowe", label: "Miejsce namiotowe" },
+];
+
+const COUNTRIES: SelectOption[] = [
+  { value: "pl", label: "Polska" },
+  { value: "de", label: "Niemcy" },
+  { value: "cz", label: "Czechy" },
+  { value: "sk", label: "Słowacja" },
+  { value: "lt", label: "Litwa" },
+  { value: "lv", label: "Łotwa" },
+  { value: "ee", label: "Estonia" },
+  { value: "no", label: "Norwegia" },
+  { value: "se", label: "Szwecja" },
+  { value: "fi", label: "Finlandia" },
+  { value: "dk", label: "Dania" },
+  { value: "nl", label: "Holandia" },
+  { value: "be", label: "Belgia" },
+  { value: "fr", label: "Francja" },
+  { value: "es", label: "Hiszpania" },
+  { value: "it", label: "Włochy" },
+];
+
 export function InputySection() {
   // Search clear demo state
   const [searchValue, setSearchValue] = React.useState("kajaki");
@@ -30,6 +67,10 @@ export function InputySection() {
   // Long error message used in popover spotlight
   const longErrorMessage =
     "Hasło musi zawierać co najmniej 12 znaków, jedną wielką literę, jedną cyfrę i jeden znak specjalny. Aktualnie brakuje znaku specjalnego.";
+
+  // Controlled Select state (for "Architecture" demo + many-options demo)
+  const [category, setCategory] = React.useState<string>("apartament");
+  const [country, setCountry] = React.useState<string>("pl");
 
   return (
     <LabSection
@@ -265,6 +306,150 @@ export function InputySection() {
             </div>
           </Stack>
         </Inline>
+      </ComponentShowcase>
+
+      {/* 7. Select — Architecture: 3 modes side-by-side */}
+      <ComponentShowcase
+        title="Select — architektura 3 trybów"
+        caption="Mirror TextField API: compound (Field-wrapped, consumer chrome), standalone (label/helperText/error props), bare (sam trigger). Greenfield a11y: listbox/option + aria-activedescendant."
+        info={
+          <SpecimenInfo
+            id="Select"
+            hint="trigger button + Popover (desktop) / BottomSheet (mobile ≤767px)"
+          />
+        }
+      >
+        <Inline gap="lg" align="start" wrap>
+          <Stack gap="xs">
+            <Text variant="caption" color="muted">
+              Compound (Field-wrapped)
+            </Text>
+            <div style={SPECIMEN_STYLE}>
+              <Field id="category-compound" required>
+                <FieldLabel>Kategoria</FieldLabel>
+                <FieldControl>
+                  <Select
+                    options={CATEGORIES}
+                    value={category}
+                    onChange={setCategory}
+                    placeholder="Wybierz kategorię"
+                  />
+                </FieldControl>
+                <FieldMessage>Wymagana do utworzenia oferty</FieldMessage>
+              </Field>
+            </div>
+          </Stack>
+
+          <Stack gap="xs">
+            <Text variant="caption" color="muted">
+              Standalone (props)
+            </Text>
+            <div style={SPECIMEN_STYLE}>
+              <Select
+                options={CATEGORIES}
+                label="Kategoria"
+                helperText="Wymagana do utworzenia oferty"
+                placeholder="Wybierz kategorię"
+                required
+              />
+            </div>
+          </Stack>
+
+          <Stack gap="xs">
+            <Text variant="caption" color="muted">
+              Bare (trigger only)
+            </Text>
+            <div style={SPECIMEN_STYLE}>
+              <Select
+                options={CATEGORIES}
+                placeholder="Wybierz kategorię"
+              />
+            </div>
+          </Stack>
+        </Inline>
+      </ComponentShowcase>
+
+      {/* 8. Select — Sizes */}
+      <ComponentShowcase
+        title="Select — rozmiary"
+        caption="3 rozmiary mirror TextField: sm (36px, gęste tabele), md (44px, default), lg (52px, hero forms). Padding + font-size + chevron skala proporcjonalnie."
+        info={
+          <SpecimenInfo
+            id="Select"
+            hint="trigger frame matches eui-textfield-input sizes (sm/md/lg)"
+          />
+        }
+      >
+        <div style={SPECIMEN_STYLE}>
+          <Stack gap="md">
+            <Select size="sm" options={CATEGORIES} placeholder="Small (36px)" />
+            <Select size="md" options={CATEGORIES} placeholder="Medium (44px)" />
+            <Select size="lg" options={CATEGORIES} placeholder="Large (52px)" />
+          </Stack>
+        </div>
+      </ComponentShowcase>
+
+      {/* 9. Select — States */}
+      <ComponentShowcase
+        title="Select — stany"
+        caption="Default (placeholder), wybrana wartość, disabled (native attr), error (border-color danger via [aria-invalid]), opcje z disabled flag (pomijane przez keyboard nav)."
+        info={
+          <SpecimenInfo
+            id="Select"
+            hint='error via CSS [aria-invalid="true"]; disabled options skip keyboard nav'
+          />
+        }
+      >
+        <div style={SPECIMEN_STYLE}>
+          <Stack gap="md">
+            <Select
+              options={CATEGORIES}
+              placeholder="Default — bez wartości"
+            />
+            <Select
+              options={CATEGORIES}
+              defaultValue="apartament"
+            />
+            <Select
+              options={CATEGORIES}
+              defaultValue="domek"
+              disabled
+            />
+            <Select
+              options={CATEGORIES}
+              label="Kategoria"
+              error="Wybierz kategorię przed zapisem"
+            />
+            <Select
+              options={CATEGORIES_WITH_DISABLED}
+              label="Z disabled opcją"
+              helperText="Opcja 'Pokój' jest wyłączona — keyboard ją pomija"
+              placeholder="Wybierz..."
+            />
+          </Stack>
+        </div>
+      </ComponentShowcase>
+
+      {/* 10. Select — many options + keyboard nav */}
+      <ComponentShowcase
+        title="Select — długa lista (keyboard test)"
+        caption="16 krajów. Test scroll listboxa (max-height 60vh), keyboard navigation (ArrowUp/Down/Home/End), aria-activedescendant podświetlenia. Trigger-width auto-matched przez Radix CSS var."
+        info={
+          <SpecimenInfo
+            id="Select"
+            hint="listbox max-height min(300px, 60vh); options scroll vertically"
+          />
+        }
+      >
+        <div style={SPECIMEN_STYLE}>
+          <Select
+            options={COUNTRIES}
+            value={country}
+            onChange={setCountry}
+            label="Kraj"
+            helperText="Tab → trigger; Enter/Space/ArrowDown → otwórz; Arrow/Home/End → highlight; Enter → wybierz; Esc → zamknij"
+          />
+        </div>
       </ComponentShowcase>
     </LabSection>
   );

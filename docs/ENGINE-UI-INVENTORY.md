@@ -2,7 +2,7 @@
 
 > Wewnętrzny mental map Engine UI design system. Inventory-level — 1 linia per component, brak prop signatures. Zapobiega duplikacji w future Parts.
 >
-> **Ostatnia aktualizacja:** 2026-05-14 (post Part 10a: Inputs Foundation)
+> **Ostatnia aktualizacja:** 2026-05-15 (post Part 10b: Select)
 
 ---
 
@@ -29,7 +29,7 @@
 | `button/` | 7 | Button primitives |
 | `chip/` | 8 | Badge / Chip / Tag family |
 | `hooks/` | 8 | Custom React hooks |
-| `input/` | 6 | Field compound (Field/FieldLabel/FieldControl/FieldMessage) + TextField + Textarea + useFieldId (Part 10a) |
+| `input/` | 7 | Field compound (Field/FieldLabel/FieldControl/FieldMessage) + TextField + Textarea + Select + useFieldId (Parts 10a + 10b) |
 | `interaction/` | 1 | Pressable wrapper |
 | `layout/` | 9 | Stack, Inline, ActionRow etc. |
 | `loading/` | 2 | Spinner + LoadingOverlay (Part 9) |
@@ -102,6 +102,7 @@
 - `FieldMessage` — helper/error message slot z auto aria-describedby (Part 10a Stage 1)
 - `TextField` — single-line input z error popover (Part 10a Stage 2)
 - `Textarea` — multi-line input z error popover (Part 10a Stage 3)
+- `Select` — single-select dropdown; Popover (desktop) / BottomSheet (mobile); aria-activedescendant pattern (Part 10b)
 - `useFieldId` — hook generujący stable ID set (label/control/error) (Part 10a Stage 1)
 
 ### Layout
@@ -201,13 +202,14 @@
 
 ## Hooks
 
-8 custom hooks z `hooks/` + 1 hook z `input/`. Wszystkie używają namespace import (`import * as React from "react"`) — codebase convention.
+9 custom hooks z `hooks/` + 1 hook z `input/`. Wszystkie używają namespace import (`import * as React from "react"`) — codebase convention.
 
 - `useDelayedLoading` — anti-flash debouncing dla skeleton/spinner (Part 9 Stage 9)
 - `useFieldId` — stable ID set dla Field compound (Part 10a Stage 1, lokalizacja: `input/`)
 - `useFocusTrap` — focus trap dla modal/sheet contexts
 - `useFocusVisible` — focus-visible state detection
 - `useHover` — pointer hover state (NIE touch)
+- `useIsMobile` — viewport ≤767px detection (Part 10b Stage 0; extracted from BottomSheet for reuse by Select)
 - `useKeyboardShortcut` — keyboard shortcut binding z cleanup
 - `usePress` — press/active state z multi-input support
 - `useReducedMotion` — OS-level prefers-reduced-motion
@@ -250,7 +252,7 @@
 | 13 | `results` | Warstwa wyników | ResultsHeader + ResultCard + ResultsSkeleton + ResultsEmptyState |
 | 14 | `buttons` | Przyciski | Button + IconButton + 5 specialized buttons |
 | 15 | `skeleton` | Stany ładowania | Skeleton family + Spinner + LoadingOverlay + useDelayedLoading (Part 9 NEW) |
-| 16 | `inputy` | Inputy | Field compound + TextField + Textarea + error popover (Part 10a NEW) |
+| 16 | `inputy` | Inputy | Field compound + TextField + Textarea + error popover (Part 10a) + Select (Part 10b NEW) |
 
 ---
 
@@ -296,7 +298,7 @@ Wszystkie tokeny w `src/styles/globals.css` linie 502-665. **~120 `--eui-*` toke
 - ✅ Part 8.5a — Refactor legacy (ResourceCard, ImageCarousel, Stepper, GuestPicker, ResultCard, SearchBar)
 - ✅ Part 9 — Skeleton + Loading System (11 stages, 8 components + 1 hook + 1 refactor)
 - ✅ Part 10a — Inputs Foundation (Field compound + TextField + Textarea + useFieldId + error popover)
-- ⬜ Part 10b — Select (greenfield, post-10a)
+- ✅ Part 10b — Select (Popover desktop + BottomSheet mobile; aria-activedescendant; greenfield listbox/option)
 - ⬜ Parts 11-14 — TBD
 
 ---
