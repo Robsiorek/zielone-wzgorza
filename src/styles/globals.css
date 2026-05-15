@@ -3387,7 +3387,11 @@
   grid-template-columns: 272px 1fr;
   gap: 24px;
   align-items: start;
-  overflow-x: hidden; /* safety net per LAB-CONVENTIONS-responsive.md #7 */
+  /* overflow-x: clip (NIE hidden) — clip ucina horizontal overflow bez
+     tworzenia scroll-containera, więc descendant .eui-lab-sidebar
+     position:sticky nadal działa. `hidden` zamieniało .eui-lab-shell w
+     scroll-container co psuło sticky. Per LAB-CONVENTIONS-responsive.md #7. */
+  overflow-x: clip;
 }
 
 @media (max-width: 1024px) {

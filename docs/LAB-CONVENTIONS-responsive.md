@@ -101,16 +101,18 @@ Powód powstania: 2026-05-13, Część 10 Stage 5.3. Trzy sekcje (Eyebrow / Medi
 
 ---
 
-## 7. `overflow-x: hidden` na top-level Lab container = safety net
+## 7. `overflow-x: clip` na top-level Lab container = safety net
 
-**Co**: `.eui-lab-shell` (lub odpowiednik) ma `overflow-x: hidden`.
+**Co**: `.eui-lab-shell` (lub odpowiednik) ma `overflow-x: clip` — **NIE `hidden`**.
 
-**Dlaczego**: Defense in depth. Nawet jak coś przeoczysz w punktach 1-6, ten safety net zatrzyma horizontal scroll na poziomie root. **NIE zastępuje** punktów 1-6 — bo `overflow: hidden` clipuje (ucinanie content), a punkty 1-6 layoutują content tak, żeby się mieścił. Hidden = ostatnia linia obrony, nie pierwsza.
+**Dlaczego**: Defense in depth. Nawet jak coś przeoczysz w punktach 1-6, ten safety net zatrzyma horizontal scroll na poziomie root. **NIE zastępuje** punktów 1-6 — clip ucina content, a punkty 1-6 layoutują tak, żeby się mieścił. Clip = ostatnia linia obrony, nie pierwsza.
+
+**KRYTYCZNE — `clip`, nie `hidden`**: `overflow-x: hidden` zamienia element w scroll-container, co **psuje `position: sticky` na descendantach** (sticky przykleja się do tego kontenera zamiast viewportu). `.eui-lab-sidebar` jest sticky → `hidden` go zabijał (regresja Część 10 Stage 5.3, fix 2026-05-16). `overflow-x: clip` ucina overflow **bez** tworzenia scroll-containera → sticky działa. Wymaga Chrome 90+ / Firefox 81+ / Safari 16+ (OK dla wewnętrznego Lab).
 
 **CSS**:
 ```css
 .eui-lab-shell {
-  overflow-x: hidden;
+  overflow-x: clip; /* NIE hidden — patrz wyżej */
   /* …reszta */
 }
 ```
