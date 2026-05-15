@@ -6037,55 +6037,58 @@
   outline: 0;
 }
 
-/* Option — base row */
-.engine-root .eui-select-option {
-  display: flex;
-  align-items: center;
-  padding: 8px 12px;
-  border-radius: var(--eui-radius-xs);
-  font-size: var(--eui-font-size-base);
-  color: var(--eui-text-primary);
-  cursor: pointer;
-  user-select: none;
+/* Options REUSE .eui-popover-item visual system (system-menu-row look:
+   icon envelope + title + optional subtitle). The base .eui-popover-item
+   rules (layout, padding, hover, [aria-selected], [aria-disabled], icon
+   envelope, body/title/subtitle) live in the PopoverItem section above
+   and apply role-agnostically to our <li role="option">.
+
+   Only the keyboard-cursor highlight (aria-activedescendant — no native
+   :hover for the virtual cursor) needs new rules, scoped to the listbox
+   so we don't leak into real PopoverItem usages. */
+
+/* Highlighted (keyboard virtual cursor) — matches PopoverItem :hover bg */
+.engine-root .eui-select-listbox .eui-popover-item.eui-highlighted {
+  background-color: var(--eui-grey-100);
 }
 
-/* Highlighted (keyboard cursor via aria-activedescendant) */
-.engine-root .eui-select-option.eui-highlighted {
-  background: var(--eui-grey-100);
+/* Selected + highlighted — deeper brand tint (parity z legacy combined state) */
+.engine-root
+  .eui-select-listbox
+  .eui-popover-item[aria-selected="true"].eui-highlighted {
+  background-color: var(--eui-brand-soft);
 }
 
-/* Selected (persistent — matches current value) */
-.engine-root .eui-select-option.eui-selected {
-  background: var(--eui-brand-softer);
+/* Selected item gets medium weight title (reinforces current value) */
+.engine-root
+  .eui-select-listbox
+  .eui-popover-item[aria-selected="true"]
+  .eui-popover-item-title {
   font-weight: var(--eui-font-weight-medium);
 }
 
-/* Selected + Highlighted (selected option while keyboard-cursored) */
-.engine-root .eui-select-option.eui-selected.eui-highlighted {
-  background: var(--eui-brand-soft);
-}
-
-/* Disabled option */
-.engine-root .eui-select-option.eui-disabled {
-  color: var(--eui-text-muted);
-  cursor: not-allowed;
-}
-.engine-root .eui-select-option.eui-disabled.eui-highlighted {
-  background: transparent;
+/* Disabled option must NOT show keyboard highlight (nav skips it anyway,
+   but mouse-enter guard + this rule keep it visually inert). */
+.engine-root
+  .eui-select-listbox
+  .eui-popover-item[aria-disabled="true"].eui-highlighted {
+  background-color: transparent;
 }
 
 /* ── Mobile path (Stage 2): Select renders BottomSheet on viewport ≤767px ──
    .eui-select-bottomsheet is the className passed to BottomSheet's
-   Dialog.Content. We override option sizing for tap-friendly 44×44 targets
-   (WCAG 2.5.5 Target Size). Listbox grows naturally with content; if it
-   exceeds 60vh, the inner overflow-y handles scroll. */
+   Dialog.Content. .eui-popover-item base padding (space-4 all-round) +
+   40px icon envelope already exceed WCAG 2.5.5 (44×44) for icon rows;
+   for text-only rows we enforce min-height. Larger font for iOS tap. */
 .engine-root .eui-select-bottomsheet .eui-select-listbox {
   padding: var(--eui-space-3);
   max-height: 60vh;
 }
 
-.engine-root .eui-select-bottomsheet .eui-select-option {
+.engine-root .eui-select-bottomsheet .eui-popover-item {
   min-height: 44px;
-  padding: 10px 14px;
+}
+
+.engine-root .eui-select-bottomsheet .eui-popover-item-title {
   font-size: var(--eui-font-size-md); /* 16px — iOS-friendly tap target */
 }

@@ -43,6 +43,11 @@ export type SelectSize = "sm" | "md" | "lg";
 export interface SelectOption {
   value: string;
   label: string;
+  /** Optional leading icon — rendered in a PopoverItem-style envelope.
+   *  When absent, no empty envelope is shown (title aligns flush left). */
+  icon?: React.ReactNode;
+  /** Optional secondary line under the label (PopoverItem subtitle). */
+  description?: string;
   disabled?: boolean;
 }
 
@@ -341,13 +346,13 @@ const SelectInner = React.forwardRef<HTMLButtonElement, SelectInnerProps>(
         onKeyDown={handleListboxKey}
       >
         {options.map((opt, idx) => {
-          const isSelected = opt.value === value;
           const isHighlighted = idx === highlightedIndex;
+          // Reuse PopoverItem visual system. selected/disabled drive off
+          // aria-* attributes (CSS [aria-selected]/[aria-disabled]); only
+          // keyboard highlight needs an explicit class.
           const optClasses = [
-            "eui-select-option",
+            "eui-popover-item",
             isHighlighted && "eui-highlighted",
-            isSelected && "eui-selected",
-            opt.disabled && "eui-disabled",
           ]
             .filter(Boolean)
             .join(" ");
@@ -356,7 +361,7 @@ const SelectInner = React.forwardRef<HTMLButtonElement, SelectInnerProps>(
               key={opt.value}
               id={`${listboxId}-opt-${idx}`}
               role="option"
-              aria-selected={isSelected}
+              aria-selected={opt.value === value}
               aria-disabled={opt.disabled || undefined}
               className={optClasses}
               onClick={() => {
@@ -366,7 +371,19 @@ const SelectInner = React.forwardRef<HTMLButtonElement, SelectInnerProps>(
                 if (!opt.disabled) setHighlightedIndex(idx);
               }}
             >
-              {opt.label}
+              {opt.icon !== undefined && (
+                <span className="eui-popover-item-icon" aria-hidden="true">
+                  {opt.icon}
+                </span>
+              )}
+              <span className="eui-popover-item-body">
+                <span className="eui-popover-item-title">{opt.label}</span>
+                {opt.description && (
+                  <span className="eui-popover-item-subtitle">
+                    {opt.description}
+                  </span>
+                )}
+              </span>
             </li>
           );
         })}

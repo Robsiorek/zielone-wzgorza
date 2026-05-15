@@ -1,7 +1,15 @@
 "use client";
 
 import * as React from "react";
-import { TextCursorInput, Mail, Search } from "lucide-react";
+import {
+  TextCursorInput,
+  Mail,
+  Search,
+  Home,
+  Building2,
+  BedDouble,
+  Tent,
+} from "lucide-react";
 
 import {
   Field,
@@ -27,18 +35,60 @@ const SPECIMEN_STYLE: React.CSSProperties = { flex: "1 1 280px", maxWidth: 320 }
 
 // Select demo data ─────────────────────────────────────────────────────────
 
+// Icon + description options — system-menu-row look (PopoverItem pattern)
 const CATEGORIES: SelectOption[] = [
-  { value: "domek", label: "Domek" },
-  { value: "apartament", label: "Apartament" },
-  { value: "pokoj", label: "Pokój" },
-  { value: "miejsce-namiotowe", label: "Miejsce namiotowe" },
+  {
+    value: "domek",
+    label: "Domek",
+    icon: <Home size={20} aria-hidden="true" />,
+    description: "Wolnostojący, własny ogród",
+  },
+  {
+    value: "apartament",
+    label: "Apartament",
+    icon: <Building2 size={20} aria-hidden="true" />,
+    description: "W budynku wielorodzinnym",
+  },
+  {
+    value: "pokoj",
+    label: "Pokój",
+    icon: <BedDouble size={20} aria-hidden="true" />,
+    description: "Pojedynczy pokój z łazienką",
+  },
+  {
+    value: "miejsce-namiotowe",
+    label: "Miejsce namiotowe",
+    icon: <Tent size={20} aria-hidden="true" />,
+    description: "Pole namiotowe z dostępem do mediów",
+  },
 ];
 
 const CATEGORIES_WITH_DISABLED: SelectOption[] = [
-  { value: "domek", label: "Domek" },
-  { value: "apartament", label: "Apartament" },
-  { value: "pokoj", label: "Pokój", disabled: true },
-  { value: "miejsce-namiotowe", label: "Miejsce namiotowe" },
+  {
+    value: "domek",
+    label: "Domek",
+    icon: <Home size={20} aria-hidden="true" />,
+    description: "Wolnostojący, własny ogród",
+  },
+  {
+    value: "apartament",
+    label: "Apartament",
+    icon: <Building2 size={20} aria-hidden="true" />,
+    description: "W budynku wielorodzinnym",
+  },
+  {
+    value: "pokoj",
+    label: "Pokój",
+    icon: <BedDouble size={20} aria-hidden="true" />,
+    description: "Chwilowo niedostępny",
+    disabled: true,
+  },
+  {
+    value: "miejsce-namiotowe",
+    label: "Miejsce namiotowe",
+    icon: <Tent size={20} aria-hidden="true" />,
+    description: "Pole namiotowe z dostępem do mediów",
+  },
 ];
 
 const COUNTRIES: SelectOption[] = [
@@ -311,11 +361,11 @@ export function InputySection() {
       {/* 7. Select — Architecture: 3 modes side-by-side */}
       <ComponentShowcase
         title="Select — architektura 3 trybów"
-        caption="Mirror TextField API: compound (Field-wrapped, consumer chrome), standalone (label/helperText/error props), bare (sam trigger). Greenfield a11y: listbox/option + aria-activedescendant."
+        caption="Mirror TextField API: compound (Field-wrapped, consumer chrome), standalone (label/helperText/error props), bare (sam trigger). Opcje w stylu systemowego wiersza menu (PopoverItem): ikona w kopercie + tytuł + opis. Greenfield a11y: listbox/option + aria-activedescendant."
         info={
           <SpecimenInfo
             id="Select"
-            hint="trigger button + Popover (desktop) / BottomSheet (mobile ≤767px)"
+            hint="opcje reuse .eui-popover-item* (icon envelope + title + subtitle); li role=option zachowane"
           />
         }
       >
@@ -432,12 +482,12 @@ export function InputySection() {
 
       {/* 10. Select — many options + keyboard nav */}
       <ComponentShowcase
-        title="Select — długa lista (keyboard test)"
-        caption="16 krajów. Test scroll listboxa (max-height 60vh), keyboard navigation (ArrowUp/Down/Home/End), aria-activedescendant podświetlenia. Trigger-width auto-matched przez Radix CSS var."
+        title="Select — długa lista bez ikon (keyboard test)"
+        caption="16 krajów BEZ icon/description — pokazuje graceful degradation: brak ikony → brak pustej koperty, tytuł flush-left (kompatybilność wsteczna). Test scroll listboxa (max-height 60vh), keyboard nav (ArrowUp/Down/Home/End), aria-activedescendant."
         info={
           <SpecimenInfo
             id="Select"
-            hint="listbox max-height min(300px, 60vh); options scroll vertically"
+            hint="opcje text-only: .eui-popover-item bez .eui-popover-item-icon → title flush-left"
           />
         }
       >
