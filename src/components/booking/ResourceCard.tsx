@@ -92,8 +92,9 @@ export function ResourceCard({ resource, onCheckAvailability }: Props) {
     <CardSurface
       elevation="flat"
       radius="lg"
+      variant="bordered"
       padding={0}
-      className="!bg-card !border-2 !border-border hover:!border-primary/40 !transition-all !duration-200 overflow-hidden !flex flex-col h-full"
+      className="overflow-hidden h-full"
     >
       {/* ── Cover image ── */}
       <MediaFrame aspectRatio="16 / 10">

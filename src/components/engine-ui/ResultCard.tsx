@@ -98,7 +98,6 @@ export function ResultCard({
 
   const rootClass = [
     "eui-card",
-    "!bg-transparent !border-0 !shadow-none !flex flex-col",
     isUnavailable && "eui-result-card-unavailable",
     className,
   ]
@@ -121,6 +120,7 @@ export function ResultCard({
       <CardSurface
         elevation="flat"
         radius="xl"
+        variant="bare"
         padding={0}
         interactive={!isUnavailable && !!onSelect}
         className={rootClass}

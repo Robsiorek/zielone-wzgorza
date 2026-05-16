@@ -4186,6 +4186,35 @@
 .engine-root .eui-card-interactive.eui-card-elev-raised:hover { box-shadow: var(--eui-elev-2); }
 .engine-root .eui-card-interactive.eui-card-elev-flat:hover { background-color: var(--eui-grey-50); }
 
+/* GOVERNANCE Stage 2 — variant=bordered/bare. Eliminuje !important bypassy
+   w ResourceCard (bordered) i ResultCard (bare). Reguły PO elevation/
+   interactive → wygrywają source-order dla bg/border/shadow (równa
+   specyficzność). display:flex column = karta jest pionowym kontenerem
+   (media↑ content↓) — usuwa potrzebę !flex u konsumentów. */
+.engine-root .eui-card-variant-bordered {
+  display: flex;
+  flex-direction: column;
+  background-color: transparent;
+  border: 2px solid var(--eui-border);
+  box-shadow: none;
+}
+.engine-root .eui-card-variant-bordered:hover {
+  border-color: var(--eui-border-strong);
+}
+
+.engine-root .eui-card-variant-bare {
+  display: flex;
+  flex-direction: column;
+  background-color: transparent;
+  border: none;
+  box-shadow: none;
+}
+/* Bare na interactive+flat: neutralizuje .eui-card-interactive.eui-card-elev-flat:hover
+   (równa specyficzność 0,3,0 — wygrywa bo zdefiniowane później). */
+.engine-root .eui-card-variant-bare:hover {
+  background-color: transparent;
+}
+
 /* ── PanelSurface ── */
 .engine-root .eui-panel-surface {
   display: flex;
