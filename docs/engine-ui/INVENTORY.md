@@ -1,8 +1,16 @@
+> # ✅ CANONICAL — ENGINE UI SOURCE OF TRUTH
+> **Dotyczy `.eui-*` / `--eui-*` / Manrope / Engine UI Lab / przyszłego booking frontu.**
+> To jest **jedyne źródło prawdy** dla Engine UI design system.
+> Stary admin / `.bubble` / Plus Jakarta = **legacy/transitional** → `docs/legacy/DESIGN_SYSTEM.md`.
+> Nowy czat AI: zacznij tutaj (oraz `docs/engine-ui/LAB-CONVENTIONS.md`). Mapa: `docs/README.md`.
+
+---
+
 # Engine UI — Inventory Map
 
 > Wewnętrzny mental map Engine UI design system. Inventory-level — 1 linia per component, brak prop signatures. Zapobiega duplikacji w future Parts.
 >
-> **Ostatnia aktualizacja:** 2026-05-15 (post Part 10b: Select)
+> **Ostatnia aktualizacja:** 2026-05-15 (post Part 10b: Select). Reorganizacja docs/ 2026-05-16 (Stage 1 governance consolidation).
 
 ---
 
@@ -314,6 +322,6 @@ Po każdym Part deploy update'uj ten dokument:
 5. Update top header **Ostatnia aktualizacja** date.
 6. Commit message: `chore(docs): update Engine UI inventory (post Part X)`.
 
-**Plik path:** `docs/ENGINE-UI-INVENTORY.md`
+**Plik path:** `docs/engine-ui/INVENTORY.md` (przeniesiony z `docs/ENGINE-UI-INVENTORY.md` w reorg 2026-05-16)
 
 **Cel:** prevent duplikację (np. zanim zaczniesz Part 11, sprawdź czy podobne components już istnieją); maintain mental map systemu dla future Parts.

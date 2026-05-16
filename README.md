@@ -29,11 +29,13 @@ prisma/
   migrations/       — Prisma migrate (nigdy db push)
 
 docs/
-  master-plan-v2_3.md   — Master Plan (pełna specyfikacja systemu)
-  DESIGN_SYSTEM.md      — Design System (jedyne źródło prawdy UI)
-  TIMELINE_SPEC.md      — specyfikacja kalendarza/timeline
-  TIMELINE_TODO.md      — status TODO timeline
-  UNIFIED_PANEL_SPEC.md — specyfikacja UnifiedPanel
+  README.md                    — MAPA dokumentacji (start tutaj)
+  engine-ui/INVENTORY.md       — ✅ CANONICAL Engine UI (jedyne źródło prawdy UI)
+  legacy/DESIGN_SYSTEM.md      — 🟡 LEGACY admin .bubble (NIE źródło prawdy Engine UI)
+  master-plan-v2_5.md          — Master Plan (aktualny)
+  ops/TIMELINE_SPEC.md         — specyfikacja kalendarza/timeline
+  ops/TIMELINE_TODO.md         — status TODO timeline
+  ops/UNIFIED_PANEL_SPEC.md    — specyfikacja UnifiedPanel
   BOOKING_EDIT_DESIGN.md — projekt edycji rezerwacji
 
 scripts/
@@ -87,8 +89,11 @@ bash scripts/test-b2-content.sh     # 7/7  — resource content, beds, catalog
 
 ## Dokumentacja
 
-Pełna specyfikacja systemu: `docs/master-plan-v2_3.md` (6300+ linii).
-Design System UI: `docs/DESIGN_SYSTEM.md` (780 linii).
+**Start: `docs/README.md`** — mapa dokumentacji + który system jest canonical.
+
+- **Engine UI (canonical, przyszły front):** `docs/engine-ui/INVENTORY.md` + `docs/engine-ui/LAB-CONVENTIONS.md`
+- **Admin panel legacy (`.bubble`):** `docs/legacy/DESIGN_SYSTEM.md` — NIE źródło prawdy dla Engine UI
+- Strategia: `docs/master-plan-v2_5.md` · Historia: `docs/history/**`
 
 ## Licencja
 

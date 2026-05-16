@@ -558,11 +558,27 @@ scripts/
 └── check-polish.sh             # Polish characters validation
 
 docs/
-├── MASTER-PLAN.md              # Live status of 14 Częsci
-├── DESIGN_SYSTEM.md            # UI source of truth (v1.8+)
-├── BLUEPRINT-part*.md          # Per-Part blueprints from 4.7
-└── adr/                        # 13+ Architecture Decision Records
+├── README.md                   # MAPA dokumentacji — start tutaj
+├── engine-ui/INVENTORY.md      # ✅ CANONICAL Engine UI source of truth
+├── engine-ui/LAB-CONVENTIONS.md# Engine UI Lab responsive rules
+├── legacy/DESIGN_SYSTEM.md     # 🟡 LEGACY admin .bubble (NIE Engine UI truth)
+├── legacy/master-plan-v2_4.md  # superseded by v2_5
+├── master-plan-v2_5.md         # aktualny strategiczny roadmap
+├── history/{blueprints,reports,prompts,audits}/  # zapis punktowy (NIE truth)
+└── ops/                        # nginx, TIMELINE_*, UNIFIED_PANEL_SPEC
 ```
+
+### Dwa design systemy (KLUCZOWE — nie myl)
+
+| System | Scope | Doc |
+|---|---|---|
+| **Engine UI** | `.eui-*`, Engine UI Lab, przyszły booking frontend | `docs/engine-ui/INVENTORY.md` |
+| **Admin Panel legacy** | `.bubble`, `/admin/*`, stary system admina | `docs/legacy/DESIGN_SYSTEM.md` |
+
+**Engine UI jest canonical future design system.** Admin `.bubble` + obecny
+booking frontend są **legacy/transitional** (do przyszłej migracji na Engine UI).
+`docs/legacy/DESIGN_SYSTEM.md` NIE jest globalnym źródłem prawdy — opisuje tylko
+legacy admin. Nowy czat: zacznij od `docs/README.md`.
 
 ### Production data (live database)
 
@@ -635,16 +651,19 @@ DB host: localhost:5432
 ## 📚 Dokumenty referencyjne (czytaj przed dużymi zmianami)
 
 ```bash
-# Przed zmianami architektury
-cat docs/MASTER-PLAN.md
-cat docs/DESIGN_SYSTEM.md
+# ZAWSZE najpierw — mapa dokumentacji + który system canonical
+cat docs/README.md
 
-# Przed implementacją nowej Częsci
-cat docs/BLUEPRINT-part<N>-<topic>.md   # 4.7 produkuje te pliki w chacie
-ls docs/adr/                             # 13+ ADRs
+# Engine UI (canonical) — przed zmianami w engine-ui/*
+cat docs/engine-ui/INVENTORY.md
+cat docs/engine-ui/LAB-CONVENTIONS.md
 
-# Po deploy nowej Częsci
-# Aktualizuj docs/MASTER-PLAN.md (status check)
+# Admin legacy .bubble (tylko dla /admin/* starego systemu)
+cat docs/legacy/DESIGN_SYSTEM.md
+
+# Strategia / historia
+cat docs/master-plan-v2_5.md
+ls docs/history/blueprints/             # specy sprzed realizacji (NIE truth)
 ```
 
 ---

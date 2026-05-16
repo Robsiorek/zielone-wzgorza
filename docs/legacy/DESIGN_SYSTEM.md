@@ -1,7 +1,15 @@
-# DESIGN SYSTEM — Zielone Wzgórza Admin Panel
+> # ⚠️ LEGACY ADMIN DESIGN SYSTEM
+> **Dotyczy starego admin / `.bubble` / Plus Jakarta Sans.**
+> **NIE jest źródłem prawdy dla Engine UI.**
+> Engine UI canonical: **`docs/engine-ui/INVENTORY.md`**.
+> Ten dokument opisuje system legacy/transitional (admin panel `/admin/*`).
+> Nowy czat AI: NIE czytaj tego jako aktualnej prawdy stylu. Patrz `docs/README.md`.
+
+---
+
+# DESIGN SYSTEM — Zielone Wzgórza Admin Panel (LEGACY)
 # Wersja 1.8 | Kwiecień 2026
-# Ten plik jest JEDYNYM źródłem prawdy dla stylu wizualnego panelu.
-# Czytaj go na starcie KAŻDEGO czatu przed generowaniem kodu.
+# (Historyczny nagłówek "jedyne źródło prawdy" UNIEWAŻNIONY — patrz banner powyżej.)
 
 ## 1. FUNDAMENT
 
