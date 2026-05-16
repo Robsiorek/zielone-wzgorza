@@ -504,33 +504,34 @@ export function InputySection() {
           />
         }
       >
-        <Inline gap="md" align="start" wrap>
-          <Stack gap="xs">
-            <Text variant="caption" color="muted">
-              Z ikonami (icon + description)
-            </Text>
-            <div style={SPECIMEN_STYLE}>
+        {/* Single-column (jeden pod drugim) — spójne z resztą sekcji.
+            Wcześniej 2-kolumnowy <Inline wrap>: div w Stack-w-Inline →
+            szerokość content-driven → ściśnięte po rozwinięciu. */}
+        <div style={SPECIMEN_STYLE}>
+          <Stack gap="md">
+            <Stack gap="xs">
+              <Text variant="caption" color="muted">
+                Z ikonami (icon + description)
+              </Text>
               <Select
                 options={CATEGORIES}
                 defaultValue="domek"
                 label="Kategoria"
               />
-            </div>
-          </Stack>
+            </Stack>
 
-          <Stack gap="xs">
-            <Text variant="caption" color="muted">
-              Bez ikon (sama etykieta)
-            </Text>
-            <div style={SPECIMEN_STYLE}>
+            <Stack gap="xs">
+              <Text variant="caption" color="muted">
+                Bez ikon (sama etykieta)
+              </Text>
               <Select
                 options={CATEGORIES_PLAIN}
                 defaultValue="domek"
                 label="Kategoria"
               />
-            </div>
+            </Stack>
           </Stack>
-        </Inline>
+        </div>
       </ComponentShowcase>
 
       {/* 11. Select — many options + keyboard nav */}
