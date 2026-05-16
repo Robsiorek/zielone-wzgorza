@@ -29,9 +29,13 @@ import { LabSection } from "../LabSection";
 import { ComponentShowcase } from "../ComponentShowcase";
 import { SpecimenInfo } from "../Specimen";
 
-// Per LAB-CONVENTIONS #3: intrinsic flex zamiast fixed width.
-// Specimens shrink na mobile (basis 280px), nie urosną poza 320px na desktop.
-const SPECIMEN_STYLE: React.CSSProperties = { flex: "1 1 280px", maxWidth: 320 };
+// LAB-CONVENTIONS #3 intent (responsywny shrink + cap desktop), ale parent
+// .eui-lab-showcase-preview to flex-COLUMN z align-items:center. `flex: 1 1 Xpx`
+// (forma z konwencji #3) zakłada parent flex-ROW — w kolumnie działałaby na
+// oś główną=wysokość (rozpychało pionowo = pusta przestrzeń pod spodem) a
+// szerokość zwijała się do treści (wąskie/niespójne między sekcjami).
+// Poprawnie dla flex-column parent: width 100% (fill cross-axis) + maxWidth cap.
+const SPECIMEN_STYLE: React.CSSProperties = { width: "100%", maxWidth: 320 };
 
 // Select demo data ─────────────────────────────────────────────────────────
 

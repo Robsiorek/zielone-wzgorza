@@ -54,6 +54,10 @@ Powód powstania: 2026-05-13, Część 10 Stage 5.3. Trzy sekcje (Eyebrow / Medi
 
 `flex: 1 1 100px` = grow 1, shrink 1, basis 100px (min ~100px na mobile). `maxWidth: 120` = nie urosnie powyżej intencji desktopowej.
 
+**⚠️ KRYTYCZNE — forma `flex: 1 1 Xpx` zakłada parent flex-ROW.** `.eui-lab-showcase-preview` jest **flex-COLUMN** (`flex-direction: column; align-items: center`). W kolumnie `flex: 1 1 Xpx` działa na oś główną = **wysokość** (basis Xpx + grow → rozpycha pionowo = pusta biała przestrzeń pod spodem), a szerokość zwija się shrink-to-fit do treści (wąskie, niespójne między sekcjami zależnie od długości tekstu). Bug znaleziony 2026-05-16 (Select — rozmiary vs stany).
+
+**Reguła**: dla specimen jako bezpośredniego dziecka flex-COLUMN parenta (np. `.eui-lab-showcase-preview` single-column showcase) używaj `style={{ width: "100%", maxWidth: Ypx }}` — wypełnia cross-axis, cap desktop, ZERO wymuszania wysokości. Forma `flex: 1 1 Xpx` tylko gdy parent jest flex-ROW (np. wielokolumnowy `<Inline wrap>` gdzie flex item to kolumna).
+
 ---
 
 ## 4. Images / MediaFrame → `max-width: 100%` globalnie
