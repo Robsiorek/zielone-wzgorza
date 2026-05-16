@@ -5759,7 +5759,10 @@
 
 .engine-root .eui-textfield-input:focus {
   background: var(--eui-grey-0);
-  border-color: var(--eui-grey-900);
+  /* B-neutral premium feel: spokojna krawędź + miękki halo (NIE grey-900
+     "black razor", NIE brand blue). box-shadow respektuje radius-sm. */
+  border-color: var(--eui-grey-500);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--eui-grey-900) 8%, transparent);
 }
 
 /* ── Disabled state (native attr; no aria-disabled per v1.1 fix #2) ── */
@@ -5784,6 +5787,8 @@
 }
 .engine-root .eui-textfield-input[aria-invalid="true"]:focus {
   border-color: var(--eui-danger);
+  /* Error focus: danger-tinted ring (błąd nie traci sygnału przy focusie) */
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--eui-danger) 12%, transparent);
 }
 
 
@@ -5850,7 +5855,9 @@
 
 .engine-root .eui-textarea:focus {
   background: var(--eui-grey-0);
-  border-color: var(--eui-grey-900);
+  /* B-neutral premium — parity z .eui-textfield-input:focus */
+  border-color: var(--eui-grey-500);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--eui-grey-900) 8%, transparent);
 }
 
 /* ── Disabled state (native attr; no aria-disabled per v1.1 fix #2) ── */
@@ -5876,6 +5883,8 @@
 }
 .engine-root .eui-textarea[aria-invalid="true"]:focus {
   border-color: var(--eui-danger);
+  /* Error focus: danger-tinted ring — parity z TextField */
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--eui-danger) 12%, transparent);
 }
 
 
@@ -5996,16 +6005,17 @@
   transform: rotate(180deg);
 }
 
-/* Focus — border darkens to grey-900 (parity z TextField/Textarea fix 5) */
+/* Focus — B-neutral premium (parity z TextField/Textarea:focus) */
 .engine-root .eui-select-trigger:focus-visible {
   background: var(--eui-grey-0);
-  border-color: var(--eui-grey-900);
+  border-color: var(--eui-grey-500);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--eui-grey-900) 8%, transparent);
 }
 
-/* Hover (non-disabled) — border emphasis (border-strong default → grey-900,
-   inaczej hover byłby niewidoczny bo default już = border-strong) */
+/* Hover (non-disabled) — spokojna krawędź (grey-500, NIE grey-900 razor;
+   default = border-strong/grey-300 więc grey-500 daje widoczny feedback) */
 .engine-root .eui-select-trigger:hover:not(:disabled) {
-  border-color: var(--eui-grey-900);
+  border-color: var(--eui-grey-500);
 }
 
 /* Disabled */
@@ -6021,6 +6031,8 @@
 }
 .engine-root .eui-select-trigger[aria-invalid="true"]:focus-visible {
   border-color: var(--eui-danger);
+  /* Error focus: danger-tinted ring — parity z TextField/Textarea */
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--eui-danger) 12%, transparent);
 }
 
 /* PopoverContent override — match trigger width via Radix CSS var.
