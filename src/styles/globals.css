@@ -5666,8 +5666,10 @@
 .engine-root .eui-textfield-input {
   display: block;
   width: 100%;
-  background: var(--eui-grey-50);
-  border: 1px solid var(--eui-border);
+  /* Airbnb pattern (PO feedback fix 5): aktywne inputy = białe tło + mocny
+     border. Szary bg czytał się jak disabled. Kontrast przez border, nie fill. */
+  background: var(--eui-grey-0);
+  border: 1px solid var(--eui-border-strong);
   border-radius: var(--eui-radius-sm);
   color: var(--eui-text-primary);
   font-family: inherit;
@@ -5757,7 +5759,7 @@
 
 .engine-root .eui-textfield-input:focus {
   background: var(--eui-grey-0);
-  border-color: var(--eui-border-strong);
+  border-color: var(--eui-grey-900);
 }
 
 /* ── Disabled state (native attr; no aria-disabled per v1.1 fix #2) ── */
@@ -5808,8 +5810,9 @@
 .engine-root .eui-textarea {
   display: block;
   width: 100%;
-  background: var(--eui-grey-50);
-  border: 1px solid var(--eui-border);
+  /* Airbnb pattern (PO feedback fix 5) — parity z .eui-textfield-input. */
+  background: var(--eui-grey-0);
+  border: 1px solid var(--eui-border-strong);
   border-radius: var(--eui-radius-sm);
   color: var(--eui-text-primary);
   font-family: inherit;
@@ -5847,7 +5850,7 @@
 
 .engine-root .eui-textarea:focus {
   background: var(--eui-grey-0);
-  border-color: var(--eui-border-strong);
+  border-color: var(--eui-grey-900);
 }
 
 /* ── Disabled state (native attr; no aria-disabled per v1.1 fix #2) ── */
@@ -5933,8 +5936,9 @@
   justify-content: space-between;
   gap: var(--eui-space-3);
   width: 100%;
-  background: var(--eui-grey-50);
-  border: 1px solid var(--eui-border);
+  /* Airbnb pattern (PO feedback fix 5) — parity z .eui-textfield-input. */
+  background: var(--eui-grey-0);
+  border: 1px solid var(--eui-border-strong);
   border-radius: var(--eui-radius-sm);
   color: var(--eui-text-primary);
   font-family: inherit;
@@ -5992,15 +5996,16 @@
   transform: rotate(180deg);
 }
 
-/* Focus — mirror TextField visual elevation (no blue ring; border darkens) */
+/* Focus — border darkens to grey-900 (parity z TextField/Textarea fix 5) */
 .engine-root .eui-select-trigger:focus-visible {
   background: var(--eui-grey-0);
-  border-color: var(--eui-border-strong);
+  border-color: var(--eui-grey-900);
 }
 
-/* Hover (non-disabled) — subtle border emphasis */
+/* Hover (non-disabled) — border emphasis (border-strong default → grey-900,
+   inaczej hover byłby niewidoczny bo default już = border-strong) */
 .engine-root .eui-select-trigger:hover:not(:disabled) {
-  border-color: var(--eui-border-strong);
+  border-color: var(--eui-grey-900);
 }
 
 /* Disabled */
@@ -6025,13 +6030,20 @@
   width: var(--radix-popover-trigger-width);
   padding: 0;
   overflow: hidden;
+  /* Dropdown nie potrzebuje dużego 2xl (24px) popover radiusa. Tighter
+     lg (16px) + listbox padding 8px > (16 - option_radius 12) → hover
+     pierwszej/ostatniej opcji NIE jest przycinany przez zaokrąglony róg.
+     (radius 2xl + padding 4px klipował — PO feedback fix 2.) */
+  border-radius: var(--eui-radius-lg);
 }
 
-/* Listbox — scrollable list container */
+/* Listbox — scrollable list container.
+   padding 8px: clears .eui-select-content border-radius (lg 16px) vs
+   option radius (md 12px) so first/last hover bg isn't clipped. */
 .engine-root .eui-select-listbox {
   list-style: none;
   margin: 0;
-  padding: 4px;
+  padding: 8px;
   max-height: min(300px, 60vh);
   overflow-y: auto;
   outline: 0;

@@ -6,9 +6,9 @@ import {
   Mail,
   Search,
   Home,
-  Building2,
   BedDouble,
   Tent,
+  MapPin,
 } from "lucide-react";
 
 import {
@@ -35,7 +35,7 @@ const SPECIMEN_STYLE: React.CSSProperties = { flex: "1 1 280px", maxWidth: 320 }
 
 // Select demo data ─────────────────────────────────────────────────────────
 
-// Icon + description options — system-menu-row look (PopoverItem pattern)
+// WARIANT Z IKONAMI — system-menu-row look (PopoverItem: koperta + tytuł + opis)
 const CATEGORIES: SelectOption[] = [
   {
     value: "domek",
@@ -46,7 +46,7 @@ const CATEGORIES: SelectOption[] = [
   {
     value: "apartament",
     label: "Apartament",
-    icon: <Building2 size={20} aria-hidden="true" />,
+    icon: <MapPin size={20} aria-hidden="true" />,
     description: "W budynku wielorodzinnym",
   },
   {
@@ -63,6 +63,15 @@ const CATEGORIES: SelectOption[] = [
   },
 ];
 
+// WARIANT BEZ IKON — sama etykieta (graceful degradation, brak pustej koperty)
+const CATEGORIES_PLAIN: SelectOption[] = [
+  { value: "domek", label: "Domek" },
+  { value: "apartament", label: "Apartament" },
+  { value: "pokoj", label: "Pokój" },
+  { value: "miejsce-namiotowe", label: "Miejsce namiotowe" },
+];
+
+// Wariant z ikonami + jedna opcja disabled (test keyboard nav skip)
 const CATEGORIES_WITH_DISABLED: SelectOption[] = [
   {
     value: "domek",
@@ -73,7 +82,7 @@ const CATEGORIES_WITH_DISABLED: SelectOption[] = [
   {
     value: "apartament",
     label: "Apartament",
-    icon: <Building2 size={20} aria-hidden="true" />,
+    icon: <MapPin size={20} aria-hidden="true" />,
     description: "W budynku wielorodzinnym",
   },
   {
@@ -140,7 +149,7 @@ export function InputySection() {
           />
         }
       >
-        <Inline gap="lg" align="start" wrap>
+        <Inline gap="md" align="start" wrap>
           <Stack gap="xs">
             <Text variant="caption" color="muted">
               Compound (Field-wrapped)
@@ -312,7 +321,7 @@ export function InputySection() {
           />
         }
       >
-        <Inline gap="lg" align="start" wrap>
+        <Inline gap="md" align="start" wrap>
           <Stack gap="xs">
             <Text variant="caption" color="muted">
               Krótki error (popover redundant)
@@ -369,7 +378,7 @@ export function InputySection() {
           />
         }
       >
-        <Inline gap="lg" align="start" wrap>
+        <Inline gap="md" align="start" wrap>
           <Stack gap="xs">
             <Text variant="caption" color="muted">
               Compound (Field-wrapped)
@@ -480,7 +489,47 @@ export function InputySection() {
         </div>
       </ComponentShowcase>
 
-      {/* 10. Select — many options + keyboard nav */}
+      {/* 10. Select — z ikonami vs bez ikon (explicit comparison) */}
+      <ComponentShowcase
+        title="Select — z ikonami vs bez ikon"
+        caption="Ten sam komponent, dwa warianty SelectOption. Z ikonami: koperta + tytuł + opis (systemowy wiersz menu). Bez ikon: sama etykieta, brak pustej koperty, tytuł flush-left. icon? i description? są opcjonalne — graceful degradation."
+        info={
+          <SpecimenInfo
+            id="Select"
+            hint="SelectOption.icon?/description? opcjonalne; brak → degradacja do czystego title"
+          />
+        }
+      >
+        <Inline gap="md" align="start" wrap>
+          <Stack gap="xs">
+            <Text variant="caption" color="muted">
+              Z ikonami (icon + description)
+            </Text>
+            <div style={SPECIMEN_STYLE}>
+              <Select
+                options={CATEGORIES}
+                defaultValue="domek"
+                label="Kategoria"
+              />
+            </div>
+          </Stack>
+
+          <Stack gap="xs">
+            <Text variant="caption" color="muted">
+              Bez ikon (sama etykieta)
+            </Text>
+            <div style={SPECIMEN_STYLE}>
+              <Select
+                options={CATEGORIES_PLAIN}
+                defaultValue="domek"
+                label="Kategoria"
+              />
+            </div>
+          </Stack>
+        </Inline>
+      </ComponentShowcase>
+
+      {/* 11. Select — many options + keyboard nav */}
       <ComponentShowcase
         title="Select — długa lista bez ikon (keyboard test)"
         caption="16 krajów BEZ icon/description — pokazuje graceful degradation: brak ikony → brak pustej koperty, tytuł flush-left (kompatybilność wsteczna). Test scroll listboxa (max-height 60vh), keyboard nav (ArrowUp/Down/Home/End), aria-activedescendant."
