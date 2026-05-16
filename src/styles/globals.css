@@ -5757,6 +5757,11 @@
 
 /* ── Focus state (no blue ring; border-color elevation) ── */
 
+/* Hover — B-neutral: spokojna krawędź (parity z .eui-select-trigger:hover) */
+.engine-root .eui-textfield-input:hover:not(:disabled):not(:read-only) {
+  border-color: var(--eui-grey-500);
+}
+
 .engine-root .eui-textfield-input:focus {
   background: var(--eui-grey-0);
   /* B-neutral premium feel: spokojna krawędź + miękki halo (NIE grey-900
@@ -5852,6 +5857,11 @@
 }
 
 /* ── Focus state — parity z TextField (no blue ring) ── */
+
+/* Hover — B-neutral: spokojna krawędź (parity z TextField/Select) */
+.engine-root .eui-textarea:hover:not(:disabled):not(:read-only) {
+  border-color: var(--eui-grey-500);
+}
 
 .engine-root .eui-textarea:focus {
   background: var(--eui-grey-0);
