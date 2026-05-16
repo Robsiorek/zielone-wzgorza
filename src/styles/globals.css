@@ -660,9 +660,14 @@
   --eui-z-popover:  100;
   --eui-z-toast:    200;
 
-  /* ── Focus ring ──
-     Visible, non-garish, honours brand. Never `outline: none` without this. */
-  --eui-focus-ring: 0 0 0 2px var(--eui-surface), 0 0 0 4px var(--eui-border-focus);
+  /* ── Focus ring — GOVERNANCE: B-neutral canonical ──
+     B-neutral miękki szary halo jest CANONICAL dla całego Engine UI
+     (decyzja PO, Stage 2). NIE wracamy do brand-blue focus ring.
+     Inputy mają własne, identyczne B-neutral reguły (:focus). Error focus =
+     danger-tinted halo (reguły [aria-invalid] przy inputach).
+     Wyjątek: .eui-focus-ring-inverse — ciemne/brand powierzchnie, gdzie
+     szary halo byłby niewidoczny (a11y) — patrz komentarz tam. */
+  --eui-focus-ring: 0 0 0 3px color-mix(in srgb, var(--eui-grey-900) 8%, transparent);
 }
 
 
@@ -1997,19 +2002,19 @@
 }
 
 .engine-root .eui-focus-ring {
-  /* Keyboard-focused state. 2px brand-colored ring with 2px offset from
-     the element via a white "gap" ring. Works on any background. */
+  /* GOVERNANCE (Stage 2): używa kanonicznego --eui-focus-ring (B-neutral
+     grey halo). Wcześniej hardcoded brand-blue — usunięte. Jedno źródło. */
   outline: none;
-  box-shadow:
-    0 0 0 2px var(--eui-surface-raised),
-    0 0 0 4px var(--eui-brand);
+  box-shadow: var(--eui-focus-ring);
   /* The ring must appear instantly — waiting for transition makes
      keyboard nav feel laggy. */
   transition: none;
 }
 
 .engine-root .eui-focus-ring-inverse {
-  /* For dark surfaces (e.g. brand-colored button already dark). */
+  /* GOVERNANCE wyjątek (świadomy, NIE drift): ciemne/brand powierzchnie
+     (np. solid button już ciemny) — B-neutral szary halo byłby tam
+     niewidoczny (a11y). Neutralny biały halo na ciemnym tle. NIE brand-blue. */
   box-shadow:
     0 0 0 2px var(--eui-grey-900),
     0 0 0 4px var(--eui-grey-0);
@@ -3907,8 +3912,11 @@
 }
 
 .engine-root .eui-lab-code-copy:focus-visible {
+  /* GOVERNANCE (Stage 2): brand-blue usunięty. Ciemny code-toolbar →
+     neutralny inverse (jak .eui-focus-ring-inverse), NIE B-neutral grey
+     (niewidoczny na ciemnym). NIE brand-blue. */
   outline: none;
-  box-shadow: 0 0 0 2px var(--eui-grey-900), 0 0 0 4px var(--eui-border-focus);
+  box-shadow: 0 0 0 2px var(--eui-grey-900), 0 0 0 4px var(--eui-grey-0);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -4574,7 +4582,7 @@
 .engine-root .eui-pagination-dot-interactive { cursor: pointer; }
 .engine-root .eui-pagination-dot-interactive.eui-pagination-dot-inactive:hover { background-color: var(--eui-grey-500); }
 .engine-root .eui-pagination-dot-interactive:disabled { cursor: not-allowed; opacity: 0.4; }
-.engine-root .eui-pagination-dot-interactive:focus-visible { outline: 2px solid var(--eui-brand); outline-offset: 2px; }
+.engine-root .eui-pagination-dot-interactive:focus-visible { outline: none; box-shadow: var(--eui-focus-ring); }
 
 .engine-root .eui-pagination-dots {
   display: inline-flex;
@@ -4606,7 +4614,7 @@
 
 .engine-root .eui-tab-trigger:hover:not(:disabled) { color: var(--eui-grey-900); }
 .engine-root .eui-tab-trigger:disabled { opacity: 0.4; cursor: not-allowed; }
-.engine-root .eui-tab-trigger:focus-visible { outline: 2px solid var(--eui-brand); outline-offset: -2px; border-radius: var(--eui-radius-sm); }
+.engine-root .eui-tab-trigger:focus-visible { outline: none; box-shadow: var(--eui-focus-ring); border-radius: var(--eui-radius-sm); }
 
 .engine-root .eui-tab-trigger-count { color: var(--eui-grey-500); font-weight: 400; }
 .engine-root .eui-tab-trigger-icon { display: inline-flex; align-items: center; }
@@ -4679,7 +4687,7 @@
 .engine-root .eui-sort-trigger-active:hover { background-color: var(--eui-grey-200); }
 .engine-root .eui-sort-trigger-icon { display: inline-flex; color: var(--eui-grey-500); }
 .engine-root .eui-sort-trigger-active .eui-sort-trigger-icon { color: var(--eui-grey-900); }
-.engine-root .eui-sort-trigger:focus-visible { outline: 2px solid var(--eui-brand); outline-offset: 2px; }
+.engine-root .eui-sort-trigger:focus-visible { outline: none; box-shadow: var(--eui-focus-ring); }
 
 /* ════════════════════════════════════════════════════════════════════════
  *  CZĘŚĆ 5 — CHIP / TAG / BADGE / STATUS
@@ -4718,7 +4726,7 @@
 .engine-root .eui-chip-interactive.eui-chip-variant-neutral:hover { background-color: var(--eui-grey-200); }
 .engine-root .eui-chip-interactive.eui-chip-variant-active:hover { background-color: var(--eui-grey-800); }
 .engine-root .eui-chip-disabled { opacity: 0.4; cursor: not-allowed; }
-.engine-root .eui-chip-interactive:focus-visible { outline: 2px solid var(--eui-brand); outline-offset: 2px; }
+.engine-root .eui-chip-interactive:focus-visible { outline: none; box-shadow: var(--eui-focus-ring); }
 
 .engine-root .eui-chip-icon-left,
 .engine-root .eui-chip-icon-right { display: inline-flex; align-items: center; }
@@ -4734,7 +4742,7 @@
   transition: opacity 150ms var(--eui-ease-standard), background-color 150ms var(--eui-ease-standard);
 }
 .engine-root .eui-chip-remove:hover { opacity: 1; background-color: rgba(0, 0, 0, 0.08); }
-.engine-root .eui-chip-remove:focus-visible { outline: 2px solid var(--eui-brand); outline-offset: 1px; opacity: 1; }
+.engine-root .eui-chip-remove:focus-visible { outline: none; box-shadow: var(--eui-focus-ring); opacity: 1; }
 
 .engine-root .eui-chip-group { display: inline-flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 
