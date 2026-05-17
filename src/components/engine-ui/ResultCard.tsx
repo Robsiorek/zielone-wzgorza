@@ -5,7 +5,7 @@
  * ────────────────────────────────────────────────────────────────────────
  * Premium card with:
  *   - ImageCarousel with swipe + arrows
- *   - LegacyFavoriteButton (heart) on image top-right
+ *   - FavoriteOverlay (canonical heart, MediaOverlay + FavoriteButton) top-right
  *   - Badge on image top-left (e.g. "Wybór gości")
  *   - Name + rating row
  *   - Subtitle (1 line)
@@ -33,7 +33,6 @@ import * as React from "react";
 import { Tag, X as XIcon } from "lucide-react";
 import type { ResultCardData } from "./results-types";
 import { ImageCarousel } from "./ImageCarousel";
-import { FavoriteButton as LegacyFavoriteButton } from "./LegacyFavoriteButton";
 import { Modal } from "./Modal";
 import {
   Popover,
@@ -45,6 +44,7 @@ import { CardSurface } from "./surface/CardSurface";
 import { MediaFrame } from "./media/MediaFrame";
 import { MediaOverlay } from "./media/MediaOverlay";
 import { MediaBadge } from "./media/MediaBadge";
+import { FavoriteOverlay } from "./media/FavoriteOverlay";
 import { Stack } from "./layout/Stack";
 import { ActionRow } from "./layout/ActionRow";
 import { RatingPill } from "./chip/RatingPill";
@@ -144,12 +144,14 @@ export function ResultCard({
             </MediaOverlay>
           )}
 
-          <MediaOverlay position="top-right">
-            <LegacyFavoriteButton
-              active={data.isFavorite}
-              onChange={(next) => onFavoriteChange?.(data.id, next)}
-            />
-          </MediaOverlay>
+          <FavoriteOverlay
+            position="top-right"
+            favorited={data.isFavorite}
+            onChange={(next) => onFavoriteChange?.(data.id, next)}
+            aria-label={
+              data.isFavorite ? "Usuń z ulubionych" : "Dodaj do ulubionych"
+            }
+          />
         </MediaFrame>
 
         {/* ── Content ── */}
