@@ -20,6 +20,11 @@ import {
   Textarea,
   Select,
   type SelectOption,
+  Checkbox,
+  CheckboxGroup,
+  Radio,
+  RadioGroup,
+  Switch,
 } from "@/components/engine-ui/input";
 import { Stack } from "@/components/engine-ui/layout/Stack";
 import { Inline } from "@/components/engine-ui/layout/Inline";
@@ -134,6 +139,12 @@ export function InputySection() {
   // Controlled Select state (for "Architecture" demo + many-options demo)
   const [category, setCategory] = React.useState<string>("apartament");
   const [country, setCountry] = React.useState<string>("pl");
+
+  // Part 11 — Form Controls controlled state
+  const [terms, setTerms] = React.useState(false);
+  const [amenities, setAmenities] = React.useState<string[]>(["wifi"]);
+  const [board, setBoard] = React.useState("bb");
+  const [notify, setNotify] = React.useState(true);
 
   return (
     <LabSection
@@ -551,6 +562,117 @@ export function InputySection() {
             label="Kraj"
             helperText="Tab → trigger; Enter/Space/ArrowDown → otwórz; Arrow/Home/End → highlight; Enter → wybierz; Esc → zamknij"
           />
+        </div>
+      </ComponentShowcase>
+
+      {/* ── Part 11 — Form Controls ── */}
+
+      {/* Checkbox — stany */}
+      <ComponentShowcase
+        title="Checkbox — stany"
+        caption="Native input type=checkbox sr-only + custom box. Stany: default, checked, indeterminate, disabled, disabled+checked, error (standalone). Tri-mode mirror TextField (compound/standalone/bare). B-neutral focus."
+        info={
+          <SpecimenInfo
+            id="Checkbox"
+            hint="indeterminate via input.indeterminate (ref); label INLINE; error via [aria-invalid]"
+          />
+        }
+      >
+        <div style={SPECIMEN_STYLE}>
+          <Stack gap="md">
+            <Checkbox label="Default (unchecked)" />
+            <Checkbox label="Checked" defaultChecked />
+            <Checkbox label="Indeterminate" indeterminate />
+            <Checkbox label="Disabled" disabled />
+            <Checkbox label="Disabled + checked" disabled defaultChecked />
+            <Checkbox
+              label="Akceptuję regulamin"
+              checked={terms}
+              onChange={setTerms}
+              error={!terms ? "Wymagana akceptacja" : undefined}
+            />
+          </Stack>
+        </div>
+      </ComponentShowcase>
+
+      {/* CheckboxGroup — select all + indeterminate */}
+      <ComponentShowcase
+        title="CheckboxGroup — multi + select all"
+        caption="options[]/value[]/onChange. 'Zaznacz wszystkie' = indeterminate gdy częściowo zaznaczone (PO D1). role=group + aria z FieldContext gdy w Field."
+        info={
+          <SpecimenInfo
+            id="CheckboxGroup"
+            hint="select-all indeterminate gdy 0 < zaznaczone < wszystkie enabled"
+          />
+        }
+      >
+        <div style={SPECIMEN_STYLE}>
+          <CheckboxGroup
+            label="Udogodnienia"
+            selectAllLabel="Zaznacz wszystkie"
+            value={amenities}
+            onChange={setAmenities}
+            options={[
+              { value: "wifi", label: "Wi-Fi" },
+              { value: "parking", label: "Parking" },
+              { value: "pets", label: "Zwierzęta dozwolone" },
+              { value: "pool", label: "Basen", disabled: true },
+            ]}
+            helperText="Wybierz dostępne udogodnienia"
+          />
+        </div>
+      </ComponentShowcase>
+
+      {/* RadioGroup — single select + keyboard */}
+      <ComponentShowcase
+        title="RadioGroup — single + keyboard"
+        caption="Native input type=radio ze wspólnym name → strzałki ↑↓←→ + roving focus ZA DARMO (zachowanie przeglądarki, zero custom JS). role=radiogroup + aria z FieldContext."
+        info={
+          <SpecimenInfo
+            id="RadioGroup"
+            hint="shared name = native keyboard; jeden disabled option pomijany"
+          />
+        }
+      >
+        <div style={SPECIMEN_STYLE}>
+          <RadioGroup
+            name="board"
+            label="Wyżywienie"
+            value={board}
+            onChange={setBoard}
+            options={[
+              { value: "ro", label: "Bez wyżywienia" },
+              { value: "bb", label: "Śniadania" },
+              { value: "hb", label: "Śniadania + obiadokolacje" },
+              { value: "ai", label: "All inclusive", disabled: true },
+            ]}
+            helperText="Tab → grupa; strzałki → zmiana wyboru"
+          />
+        </div>
+      </ComponentShowcase>
+
+      {/* Switch — on/off */}
+      <ComponentShowcase
+        title="Switch — stany"
+        caption="Native input type=checkbox role=switch (PO D2, APG-endorsed). Stany: off, on, disabled, disabled+on. Thumb przesuwa się na :checked. B-neutral focus."
+        info={
+          <SpecimenInfo
+            id="Switch"
+            hint="role=switch — AT ogłasza 'switch on/off'; checkbox semantics + form participation"
+          />
+        }
+      >
+        <div style={SPECIMEN_STYLE}>
+          <Stack gap="md">
+            <Switch
+              label="Powiadomienia e-mail"
+              checked={notify}
+              onChange={setNotify}
+            />
+            <Switch label="Domyślnie off" />
+            <Switch label="Disabled" disabled />
+            <Switch label="Disabled + on" disabled defaultChecked />
+          </Stack>
         </div>
       </ComponentShowcase>
     </LabSection>

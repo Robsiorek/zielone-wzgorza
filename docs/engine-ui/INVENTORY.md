@@ -30,7 +30,7 @@
 
 ## Engine UI directories
 
-`src/components/engine-ui/` zawiera 16 sub-directories + 20 root-level files. Total: ~120 plików.
+`src/components/engine-ui/` zawiera 16 sub-directories + 20 root-level files. Total: ~123 plików.
 
 > **Files** = literalna liczba plików w katalogu (incl. `index.ts` / utility `.ts`).
 > Reproducible: `for d in src/components/engine-ui/*/; do echo "$d $(ls $d|wc -l)"; done`.
@@ -42,7 +42,7 @@
 | `button/` | 8 | Button primitives |
 | `chip/` | 9 | Badge / Chip / Tag family |
 | `hooks/` | 10 | Custom React hooks |
-| `input/` | 7 | Field compound (Field/FieldLabel/FieldControl/FieldMessage) + TextField + Textarea + Select + useFieldId (Parts 10a + 10b) |
+| `input/` | 10 | Field compound + TextField + Textarea + Select + useFieldId (Parts 10a/10b) + Checkbox/CheckboxGroup/Radio/RadioGroup/Switch (Part 11) |
 | `interaction/` | 1 | Pressable wrapper |
 | `layout/` | 11 | Stack, Inline, ActionRow etc. |
 | `loading/` | 3 | Spinner + LoadingOverlay (Part 9) |
@@ -116,6 +116,11 @@
 - `TextField` — single-line input z error popover (Part 10a Stage 2)
 - `Textarea` — multi-line input z error popover (Part 10a Stage 3)
 - `Select` — single-select dropdown; Popover (desktop) / BottomSheet (mobile); aria-activedescendant pattern (Part 10b)
+- `Checkbox` — native input sr-only + custom box; tri-mode; indeterminate (Part 11 Stage 1)
+- `CheckboxGroup` — multi-select + "select all" indeterminate; FieldContext-aware (Part 11 Stage 1)
+- `Radio` — native input sr-only + custom dot; tri-mode (Part 11 Stage 2)
+- `RadioGroup` — single-select; shared name → native keyboard arrows; role=radiogroup (Part 11 Stage 2)
+- `Switch` — native input type=checkbox role=switch + custom track/thumb (Part 11 Stage 3)
 - `useFieldId` — hook generujący stable ID set (label/control/error) (Part 10a Stage 1)
 
 ### Layout
@@ -313,7 +318,7 @@ Wszystkie tokeny w `src/styles/globals.css` linie 502-665. **~120 `--eui-*` toke
 - ✅ Part 10a — Inputs Foundation (Field compound + TextField + Textarea + useFieldId + error popover)
 - ✅ Part 10b — Select (Popover desktop + BottomSheet mobile; aria-activedescendant; greenfield listbox/option)
 - ✅ Governance consolidation (Stage 1→3.6) — docs source-of-truth, Visual DNA freeze, focus/radius convergence
-- ⬜ **Part 11 — Form Controls**: Checkbox · CheckboxGroup · Radio · RadioGroup · Switch
+- ✅ **Part 11 — Form Controls**: Checkbox · CheckboxGroup · Radio · RadioGroup · Switch (tri-mode, native+custom, B-neutral focus)
 - ⬜ **Part 12 — Feedback + State**: Toast (+ useToast/Provider) · Tooltip · Alert · Banner · EmptyState · ErrorState
 - ⬜ **Part 13 — Commerce + Utility** (merged ex-13+14): greenfield NightsMeta · Breadcrumb · Pagination · SortMenu; presety PriceBadge · AmenityChip · ReviewSummary · PolicyLink
 - ⬜ Part 14 — (free / TBD — zwolniony po merge 13+14)
