@@ -2591,7 +2591,9 @@
 }
 
 .engine-root .eui-card:focus-visible {
-  box-shadow: 0 0 0 3px var(--eui-brand);
+  /* GOVERNANCE Stage 3.5: B-neutral canonical (był brand-blue — Stage 2
+     FIX1 pominął bo box-shadow mechanizm, nie outline). ResultCard root. */
+  box-shadow: var(--eui-focus-ring);
   border-radius: var(--eui-radius-xl);
 }
 
@@ -4831,8 +4833,9 @@
 .engine-root .eui-secondary-link-inverse { color: var(--eui-grey-0); font-weight: 500; }
 .engine-root .eui-secondary-link-inverse:hover { opacity: 0.8; }
 .engine-root .eui-secondary-link:focus-visible {
-  outline: 2px solid var(--eui-brand);
-  outline-offset: 2px;
+  /* GOVERNANCE Stage 3.5: B-neutral canonical (był brand-blue outline). */
+  outline: none;
+  box-shadow: var(--eui-focus-ring);
   border-radius: 2px;
 }
 .engine-root .eui-secondary-link-icon-left,
@@ -5366,8 +5369,9 @@
 }
 
 .engine-root .eui-thumbnail-strip-item:focus-visible {
-  outline: 2px solid var(--eui-brand);
-  outline-offset: 2px;
+  /* GOVERNANCE Stage 3.5: B-neutral canonical (był brand-blue outline). */
+  outline: none;
+  box-shadow: var(--eui-focus-ring);
 }
 
 .engine-root .eui-thumbnail-strip-sm .eui-thumbnail-strip-item { width: 48px; height: 48px; }

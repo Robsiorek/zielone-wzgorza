@@ -559,6 +559,7 @@ scripts/
 
 docs/
 ├── README.md                   # MAPA dokumentacji — start tutaj
+├── engine-ui/VISUAL-DNA.md     # ✅ CANONICAL konstytucja stylu (focus/border/radius/elevation)
 ├── engine-ui/INVENTORY.md      # ✅ CANONICAL Engine UI source of truth
 ├── engine-ui/LAB-CONVENTIONS.md# Engine UI Lab responsive rules
 ├── legacy/DESIGN_SYSTEM.md     # 🟡 LEGACY admin .bubble (NIE Engine UI truth)
@@ -655,8 +656,12 @@ DB host: localhost:5432
 cat docs/README.md
 
 # Engine UI (canonical) — przed zmianami w engine-ui/*
+cat docs/engine-ui/VISUAL-DNA.md      # konstytucja stylu — czytaj NAJPIERW
 cat docs/engine-ui/INVENTORY.md
 cat docs/engine-ui/LAB-CONVENTIONS.md
+# UWAGA: w sprawach stylu (focus/border/radius/elevation/personality)
+# VISUAL-DNA.md ma PIERWSZEŃSTWO przed historycznymi blueprintami
+# (docs/history/blueprints/). Konflikt → wygrywa VISUAL-DNA.md + kod.
 
 # Admin legacy .bubble (tylko dla /admin/* starego systemu)
 cat docs/legacy/DESIGN_SYSTEM.md

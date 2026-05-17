@@ -2,7 +2,8 @@
 > **Dotyczy `.eui-*` / `--eui-*` / Manrope / Engine UI Lab / przyszłego booking frontu.**
 > To jest **jedyne źródło prawdy** dla Engine UI design system.
 > Stary admin / `.bubble` / Plus Jakarta = **legacy/transitional** → `docs/legacy/DESIGN_SYSTEM.md`.
-> Nowy czat AI: zacznij tutaj (oraz `docs/engine-ui/LAB-CONVENTIONS.md`). Mapa: `docs/README.md`.
+> Styl/DNA (focus/border/radius/elevation/personality): **`docs/engine-ui/VISUAL-DNA.md`** (konstytucja stylu — pierwszeństwo przed historycznymi blueprintami).
+> Nowy czat AI: zacznij tutaj + `VISUAL-DNA.md` + `LAB-CONVENTIONS.md`. Mapa: `docs/README.md`.
 
 ---
 

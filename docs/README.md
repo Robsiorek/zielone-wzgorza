@@ -9,6 +9,7 @@
 
 | Pracujesz nad… | Czytaj |
 |---|---|
+| **Engine UI — styl/DNA** (focus, border, radius, elevation, personality) | `docs/engine-ui/VISUAL-DNA.md` **(CANONICAL — konstytucja stylu, czytaj NAJPIERW)** |
 | **Engine UI** (`.eui-*`, `engine-ui/*`, Lab, przyszły front) | `docs/engine-ui/INVENTORY.md` **(CANONICAL)** + `docs/engine-ui/LAB-CONVENTIONS.md` |
 | **Admin panel legacy** (`.bubble`, `/admin/*` stary system) | `docs/legacy/DESIGN_SYSTEM.md` (LEGACY — nie dla Engine UI) |
 | Strategia / roadmap | `docs/master-plan-v2_5.md` |
