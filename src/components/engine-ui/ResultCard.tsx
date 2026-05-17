@@ -139,12 +139,12 @@ export function ResultCard({
           <ImageCarousel images={data.images ?? []} />
 
           {data.imageBadge && (
-            <MediaOverlay position="top-left" inset="sm">
+            <MediaOverlay position="top-left">
               <MediaBadge variant="default">{data.imageBadge}</MediaBadge>
             </MediaOverlay>
           )}
 
-          <MediaOverlay position="top-right" inset="sm">
+          <MediaOverlay position="top-right">
             <LegacyFavoriteButton
               active={data.isFavorite}
               onChange={(next) => onFavoriteChange?.(data.id, next)}
