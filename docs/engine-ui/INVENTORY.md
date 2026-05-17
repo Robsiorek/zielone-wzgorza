@@ -29,7 +29,7 @@
 
 ## Engine UI directories
 
-`src/components/engine-ui/` zawiera 16 sub-directories + 20 root-level files. Total: ~119 plików.
+`src/components/engine-ui/` zawiera 16 sub-directories + 20 root-level files. Total: ~120 plików.
 
 > **Files** = literalna liczba plików w katalogu (incl. `index.ts` / utility `.ts`).
 > Reproducible: `for d in src/components/engine-ui/*/; do echo "$d $(ls $d|wc -l)"; done`.
@@ -52,7 +52,7 @@
 | `skeleton/` | 7 | Skeleton family (Part 9) |
 | `surface/` | 4 | CardSurface, PanelSurface, ScrollFade |
 | `text/` | 10 | Typography primitives |
-| `tokens/` | 4 | Token const exports (.ts) |
+| `tokens/` | 5 | Token const exports + cx() joiner (.ts) |
 | (root) | 20 | Composite/legacy components |
 
 ---

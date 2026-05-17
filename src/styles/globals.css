@@ -2512,114 +2512,15 @@
 }
 
 
-/* ── ImageCarousel ── */
-.engine-root .eui-carousel {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 4 / 3;
-  border-radius: var(--eui-radius-xl);
-  overflow: hidden;
-  background-color: var(--eui-grey-100);
-}
-
-.engine-root .eui-carousel-track {
-  display: flex;
-  width: 100%;
-  height: 100%;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  scroll-behavior: smooth;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-.engine-root .eui-carousel-track::-webkit-scrollbar { display: none; }
-
-.engine-root .eui-carousel-slide {
-  flex: 0 0 100%;
-  width: 100%;
-  height: 100%;
-  scroll-snap-align: start;
-}
-
-.engine-root .eui-carousel-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  user-select: none;
-}
-
-.engine-root .eui-carousel-placeholder {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--eui-grey-300);
-}
-
-/* Arrows — visible on card hover only */
-.engine-root .eui-carousel-arrow {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 32px;
-  height: 32px;
-  border-radius: 9999px;
-  background: var(--eui-surface-raised);
-  border: none;
-  box-shadow: var(--eui-elev-2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: var(--eui-text-primary);
-  opacity: 0;
-  transition: opacity var(--eui-duration-fast) var(--eui-ease-standard);
-  z-index: 2;
-}
-.engine-root .eui-carousel-prev { left: 8px; }
-.engine-root .eui-carousel-next { right: 8px; }
-
-.engine-root .eui-card:hover .eui-carousel-arrow {
-  opacity: 1;
-}
-
-.engine-root .eui-carousel-arrow:hover {
-  box-shadow: var(--eui-elev-3);
-}
-
-.engine-root .eui-carousel-arrow:active {
-  filter: brightness(0.88);
-}
-
-/* Dots */
-.engine-root .eui-carousel-dots {
-  position: absolute;
-  bottom: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 5px;
-  z-index: 2;
-}
-
-.engine-root .eui-carousel-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 9999px;
-  background-color: rgba(255, 255, 255, 0.5);
-  transition: background-color var(--eui-duration-fast) var(--eui-ease-standard);
-}
-
-.engine-root .eui-carousel-dot-active {
-  background-color: rgba(255, 255, 255, 1);
-}
+/* ── ImageCarousel ──
+   GOVERNANCE Stage 2: martwa rodzina .eui-carousel-* USUNIĘTA (zero
+   referencji w komponentach — zweryfikowane grep). Zastąpiona przez
+   .eui-image-carousel-track (poniżej) w Część 8.5a refactor ImageCarousel. */
 
 /* ──────────────────────────────────────────────────────────────────
  *  CZĘŚĆ 8.5a — ImageCarousel scroll-snap track
  *  Component-specific track (Q2: not promoted to systemic primitive).
- *  Used by refactored ImageCarousel — replaces legacy .eui-carousel-track.
+ *  Aktualna implementacja (legacy .eui-carousel-* usunięte Stage 2).
  * ────────────────────────────────────────────────────────────────── */
 
 .engine-root .eui-image-carousel-track {
