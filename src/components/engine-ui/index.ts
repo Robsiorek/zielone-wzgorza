@@ -349,3 +349,12 @@ export {
   type SelectOption,
   type SelectSize,
 } from "./input";
+
+// ── Part 11 — Form Controls ──────────────────────────────────────
+export {
+  Checkbox,
+  CheckboxGroup,
+  type CheckboxProps,
+  type CheckboxGroupProps,
+  type CheckboxOption,
+} from "./input";

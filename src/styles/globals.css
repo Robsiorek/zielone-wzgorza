@@ -6084,3 +6084,131 @@
 .engine-root .eui-select-bottomsheet .eui-popover-item-title {
   font-size: var(--eui-font-size-md); /* 16px — iOS-friendly tap target */
 }
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * === PART 11 STAGE 1: Checkbox + CheckboxGroup ===
+ * Native <input type=checkbox> sr-only + custom box span (VISUAL-DNA: native
+ * control + custom visual). B-neutral focus na boxie, danger przy
+ * [aria-invalid], szare disabled. Mark (✓/−) widoczny gdy :checked /
+ * .indeterminate (input.indeterminate ustawiany przez ref w komponencie).
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+.engine-root .eui-checkbox {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: var(--eui-space-3);
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.engine-root .eui-checkbox-disabled {
+  cursor: not-allowed;
+}
+
+/* sr-only native input — pełna semantyka/keyboard/form, niewidoczny */
+.engine-root .eui-checkbox-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.engine-root .eui-checkbox-box {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--eui-radius-xs);
+  border: 1px solid var(--eui-border-strong);
+  background: var(--eui-grey-0);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s, border-color 0.15s;
+}
+
+.engine-root .eui-checkbox-mark {
+  width: 13px;
+  height: 13px;
+  color: var(--eui-grey-0);
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+
+/* checked / indeterminate → wypełniony box + widoczny mark */
+.engine-root .eui-checkbox-input:checked ~ .eui-checkbox-box,
+.engine-root .eui-checkbox-input:indeterminate ~ .eui-checkbox-box {
+  background: var(--eui-grey-900);
+  border-color: var(--eui-grey-900);
+}
+.engine-root .eui-checkbox-input:checked ~ .eui-checkbox-box .eui-checkbox-mark,
+.engine-root .eui-checkbox-input:indeterminate ~ .eui-checkbox-box .eui-checkbox-mark {
+  opacity: 1;
+}
+
+/* hover (non-disabled) — spokojniejszy border (B-neutral, NIE razor) */
+.engine-root .eui-checkbox:not(.eui-checkbox-disabled):hover .eui-checkbox-box {
+  border-color: var(--eui-grey-500);
+}
+
+/* focus — B-neutral halo (canonical --eui-focus-ring) */
+.engine-root .eui-checkbox-input:focus-visible ~ .eui-checkbox-box {
+  box-shadow: var(--eui-focus-ring);
+}
+
+/* error — danger border + danger focus halo (spójnie z TextField) */
+.engine-root .eui-checkbox-input[aria-invalid="true"] ~ .eui-checkbox-box {
+  border-color: var(--eui-danger);
+}
+.engine-root .eui-checkbox-input[aria-invalid="true"]:focus-visible ~ .eui-checkbox-box {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--eui-danger) 12%, transparent);
+}
+
+/* disabled — szare tło (VISUAL-DNA: szary = disabled) */
+.engine-root .eui-checkbox-input:disabled ~ .eui-checkbox-box {
+  background: var(--eui-grey-100);
+  border-color: var(--eui-border);
+}
+.engine-root .eui-checkbox-input:disabled:checked ~ .eui-checkbox-box,
+.engine-root .eui-checkbox-input:disabled:indeterminate ~ .eui-checkbox-box {
+  background: var(--eui-grey-300);
+  border-color: var(--eui-grey-300);
+}
+.engine-root .eui-checkbox-disabled .eui-checkbox-label {
+  color: var(--eui-text-muted);
+}
+
+.engine-root .eui-checkbox-label {
+  font-size: var(--eui-font-size-base);
+  line-height: 1.4;
+  color: var(--eui-text-primary);
+  /* drobne wyrównanie do 18px boxa */
+  padding-top: 1px;
+}
+
+/* ── CheckboxGroup ── */
+.engine-root .eui-checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--eui-space-3);
+}
+.engine-root .eui-checkbox-group-legend {
+  font-size: var(--eui-font-size-base);
+  font-weight: var(--eui-font-weight-medium);
+  color: var(--eui-text-primary);
+}
+.engine-root .eui-checkbox-group-items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--eui-space-3);
+}
+/* "select all" — lekkie oddzielenie od listy */
+.engine-root .eui-checkbox-group-all {
+  padding-bottom: var(--eui-space-3);
+  border-bottom: 1px solid var(--eui-border);
+}

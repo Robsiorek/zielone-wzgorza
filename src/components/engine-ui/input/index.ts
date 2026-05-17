@@ -26,3 +26,11 @@ export type { TextareaProps, TextareaSize } from "./Textarea";
 
 export { Select } from "./Select";
 export type { SelectProps, SelectOption, SelectSize } from "./Select";
+
+// Part 11 — Form Controls
+export { Checkbox, CheckboxGroup } from "./Checkbox";
+export type {
+  CheckboxProps,
+  CheckboxGroupProps,
+  CheckboxOption,
+} from "./Checkbox";
