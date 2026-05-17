@@ -4116,9 +4116,13 @@
   border: none;
   box-shadow: none;
 }
-/* Bare na interactive+flat: neutralizuje .eui-card-interactive.eui-card-elev-flat:hover
-   (równa specyficzność 0,3,0 — wygrywa bo zdefiniowane później). */
-.engine-root .eui-card-variant-bare:hover {
+/* Bare = ZERO hover bg. Neutralizuje .eui-card-interactive.eui-card-elev-flat
+   :hover (0,4,0 — grey-50). FIX: poprzedni .eui-card-variant-bare:hover miał
+   tylko (0,3,0) i PRZEGRYWAŁ → szare tło na hover ResultCard (bug zgłoszony).
+   Selektor interactive+elev-flat+variant-bare = (0,5,0) > (0,4,0) →
+   wygrywa jednoznacznie, niezależnie od source-order. */
+.engine-root .eui-card-variant-bare:hover,
+.engine-root .eui-card-interactive.eui-card-elev-flat.eui-card-variant-bare:hover {
   background-color: transparent;
 }
 
