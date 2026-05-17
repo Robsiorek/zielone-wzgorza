@@ -32,8 +32,19 @@ export const SecondaryLink = React.forwardRef<HTMLAnchorElement, SecondaryLinkPr
         {...rest}
       >
         {iconLeft && <span className="eui-secondary-link-icon-left">{iconLeft}</span>}
-        <span className="eui-secondary-link-label">{children}</span>
-        {external && <ExternalLink size={12} className="eui-secondary-link-external" aria-hidden="true" />}
+        {/* External icon INSIDE label span → płynie inline z tekstem i przy
+           zawinięciu zostaje przy końcu tekstu (NIE flex-sibling
+           wyśrodkowany pionowo względem wieloliniowego label). */}
+        <span className="eui-secondary-link-label">
+          {children}
+          {external && (
+            <ExternalLink
+              size={12}
+              className="eui-secondary-link-external"
+              aria-hidden="true"
+            />
+          )}
+        </span>
       </a>
     );
   }

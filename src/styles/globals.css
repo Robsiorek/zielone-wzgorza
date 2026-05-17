@@ -4848,9 +4848,14 @@
 }
 .engine-root .eui-secondary-link-icon-left,
 .engine-root .eui-secondary-link-external {
+  /* Icon teraz INSIDE label span (inline z tekstem) — flex gap rodzica
+     już nie działa, więc własny margin-left odtwarza 4px odstęp.
+     vertical-align: middle dosadza ikonę do linii tekstu. */
   display: inline-flex;
   align-items: center;
   flex-shrink: 0;
+  margin-left: 4px;
+  vertical-align: middle;
 }
 .engine-root .eui-secondary-link-icon-left > svg { width: 14px; height: 14px; }
 
