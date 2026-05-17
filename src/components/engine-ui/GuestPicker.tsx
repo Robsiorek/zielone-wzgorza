@@ -246,6 +246,7 @@ export function GuestPicker({
           key={row.key}
           gap="md"
           align="center"
+          wrap={false}
           className="eui-guestpicker-row"
         >
           <div className="eui-guestpicker-icon" aria-hidden="true">
