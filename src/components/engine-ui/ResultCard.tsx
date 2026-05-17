@@ -146,7 +146,7 @@ export function ResultCard({
 
           <FavoriteOverlay
             position="top-right"
-            favorited={data.isFavorite}
+            favorited={!!data.isFavorite}
             onChange={(next) => onFavoriteChange?.(data.id, next)}
             aria-label={
               data.isFavorite ? "Usuń z ulubionych" : "Dodaj do ulubionych"
