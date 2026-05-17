@@ -4751,7 +4751,9 @@
 .engine-root .eui-chip-variant-warning { background-color: rgba(180, 83, 9, 0.1); color: var(--eui-warning); }
 
 .engine-root .eui-chip-interactive { cursor: pointer; }
-.engine-root .eui-chip-interactive.eui-chip-variant-outline:hover { background-color: var(--eui-grey-50); border-color: var(--eui-grey-900); }
+/* GOVERNANCE Stage 2: zero black razor. grey-900 → grey-600 (zdecydowane
+   ale miękkie, spójne z B-neutral philosophy całego Engine UI). */
+.engine-root .eui-chip-interactive.eui-chip-variant-outline:hover { background-color: var(--eui-grey-50); border-color: var(--eui-grey-600); }
 .engine-root .eui-chip-interactive.eui-chip-variant-neutral:hover { background-color: var(--eui-grey-200); }
 .engine-root .eui-chip-interactive.eui-chip-variant-active:hover { background-color: var(--eui-grey-800); }
 .engine-root .eui-chip-disabled { opacity: 0.4; cursor: not-allowed; }
