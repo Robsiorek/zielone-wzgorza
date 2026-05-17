@@ -797,7 +797,11 @@
 
 .engine-root .eui-popover-content {
   background: var(--eui-surface-raised);
-  border-radius: var(--eui-radius-2xl);
+  /* GOVERNANCE Stage 3.6 (PO-zatwierdzone): radius floating-panels
+     ujednolicony 2xl(24px) → lg(16px). Jeden język wszystkich popover/
+     dropdown (Select/ErrorPopover/DatePicker/GuestPicker/menu). Patrz
+     docs/engine-ui/VISUAL-DNA.md §5. */
+  border-radius: var(--eui-radius-lg);
   box-shadow: var(--eui-elev-4);
   padding: var(--eui-space-5);
   z-index: var(--eui-z-popover);
@@ -5996,10 +6000,11 @@
   width: var(--radix-popover-trigger-width);
   padding: 0;
   overflow: hidden;
-  /* Dropdown nie potrzebuje dużego 2xl (24px) popover radiusa. Tighter
-     lg (16px) + listbox padding 8px > (16 - option_radius 12) → hover
+  /* radius lg + listbox padding 8px > (16 - option_radius 12) → hover
      pierwszej/ostatniej opcji NIE jest przycinany przez zaokrąglony róg.
-     (radius 2xl + padding 4px klipował — PO feedback fix 2.) */
+     Po Stage 3.6 generic .eui-popover-content też = lg, więc ten
+     border-radius jest redundantny ale defensywny (pinuje lg gdyby
+     generic kiedyś się zmienił + dokumentuje clipping-math). */
   border-radius: var(--eui-radius-lg);
 }
 

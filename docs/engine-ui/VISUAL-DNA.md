@@ -51,18 +51,15 @@
 |---|---|---|---|
 | controls (input/select/button/textfield) | `sm` | 8 | ✅ canonical |
 | row items / menu options (PopoverItem, Select option) | `md` | 12 | ✅ canonical |
-| dropdown / popover content | — | — | ⚠️ patrz NEEDS DECISION |
+| dropdown / popover content (Popover/Select/DatePicker/GuestPicker/ErrorPopover) | `lg` | 16 | ✅ canonical (Stage 3.6 — ujednolicone) |
 | cards / surfaces (CardSurface) | `lg`/`xl`/`2xl` | 16/20/24 | per-wariant, świadome |
 | pill | `pill` | 9999 | tylko świadomy pill pattern (chip, niektóre badge) |
 
-**Obecny drift dropdown/popover:** PopoverContent `2xl` 24px, Select content
-`lg` 16px (fix #2 clipping), PopoverItem `md` 12px.
-
-> **NEEDS DECISION:** Czy PopoverContent globalnie zmieniamy z **24px → 16px**,
-> żeby zrównać wszystkie floating panels (Popover/Select/DatePicker/GuestPicker/
-> ErrorPopover) do jednego radiusa? Impact: każdy popover/dropdown w systemie.
-> Rekomendacja CLI w raporcie Stage 3.5 (FAZA E). Do czasu decyzji: drift
-> udokumentowany, nie "ukryty".
+**ROZSTRZYGNIĘTE (Stage 3.6, PO-zatwierdzone 2026-05-16):** wszystkie
+floating panels = **`lg` 16px**. Generic `.eui-popover-content` zmieniony
+`2xl` 24px → `lg` 16px; Select/DatePicker/GuestPicker/ErrorPopover/menu
+dziedziczą jeden radius. PopoverItem (wiersz wewnątrz) zostaje `md` 12px,
+kontrolki `sm` 8px. Drift zlikwidowany — jeden język floating-panels.
 
 ## 6. Surface / elevation philosophy
 
