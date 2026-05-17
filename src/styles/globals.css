@@ -6212,3 +6212,116 @@
   padding-bottom: var(--eui-space-3);
   border-bottom: 1px solid var(--eui-border);
 }
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * === PART 11 STAGE 2: Radio + RadioGroup ===
+ * Native input type=radio sr-only + custom circular box/dot. Mirror
+ * Checkbox CSS pattern (B-neutral focus, danger [aria-invalid], szare
+ * disabled). Natywny name (RadioGroup) → strzałki klawiatury za darmo.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+.engine-root .eui-radio {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: var(--eui-space-3);
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.engine-root .eui-radio-disabled {
+  cursor: not-allowed;
+}
+
+.engine-root .eui-radio-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.engine-root .eui-radio-box {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  border: 1px solid var(--eui-border-strong);
+  background: var(--eui-grey-0);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s;
+}
+
+.engine-root .eui-radio-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 9999px;
+  background: var(--eui-grey-0);
+  transform: scale(0);
+  transition: transform 0.12s;
+}
+
+.engine-root .eui-radio-input:checked ~ .eui-radio-box {
+  background: var(--eui-grey-900);
+  border-color: var(--eui-grey-900);
+}
+.engine-root .eui-radio-input:checked ~ .eui-radio-box .eui-radio-dot {
+  transform: scale(1);
+}
+
+.engine-root .eui-radio:not(.eui-radio-disabled):hover .eui-radio-box {
+  border-color: var(--eui-grey-500);
+}
+
+.engine-root .eui-radio-input:focus-visible ~ .eui-radio-box {
+  box-shadow: var(--eui-focus-ring);
+}
+
+.engine-root .eui-radio-input[aria-invalid="true"] ~ .eui-radio-box {
+  border-color: var(--eui-danger);
+}
+.engine-root .eui-radio-input[aria-invalid="true"]:focus-visible ~ .eui-radio-box {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--eui-danger) 12%, transparent);
+}
+
+.engine-root .eui-radio-input:disabled ~ .eui-radio-box {
+  background: var(--eui-grey-100);
+  border-color: var(--eui-border);
+}
+.engine-root .eui-radio-input:disabled:checked ~ .eui-radio-box {
+  background: var(--eui-grey-300);
+  border-color: var(--eui-grey-300);
+}
+.engine-root .eui-radio-disabled .eui-radio-label {
+  color: var(--eui-text-muted);
+}
+
+.engine-root .eui-radio-label {
+  font-size: var(--eui-font-size-base);
+  line-height: 1.4;
+  color: var(--eui-text-primary);
+  padding-top: 1px;
+}
+
+/* ── RadioGroup ── */
+.engine-root .eui-radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--eui-space-3);
+}
+.engine-root .eui-radio-group-legend {
+  font-size: var(--eui-font-size-base);
+  font-weight: var(--eui-font-weight-medium);
+  color: var(--eui-text-primary);
+}
+.engine-root .eui-radio-group-items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--eui-space-3);
+}
