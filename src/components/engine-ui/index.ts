@@ -362,4 +362,6 @@ export {
   type RadioProps,
   type RadioGroupProps,
   type RadioOption,
+  Switch,
+  type SwitchProps,
 } from "./input";
