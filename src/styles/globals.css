@@ -5945,7 +5945,7 @@
  * > consumer iconRight) and absolute-positioned top-right for Textarea
  * (no iconRight slot exists; positioned within wrap). Triggers carry danger
  * color cue via dedicated class hooks. PopoverContent uses neutral styling
- * (size="contextual"); visual error elevation is on the trigger itself.
+ * (size="small"); visual error elevation is on the trigger itself.
  * ═══════════════════════════════════════════════════════════════════════════ */
 
 /* TextField error popover trigger — danger color override on IconButton ghost */

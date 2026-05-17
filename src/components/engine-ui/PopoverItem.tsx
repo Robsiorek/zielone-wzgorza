@@ -40,6 +40,7 @@
  */
 
 import * as React from "react";
+import { cx } from "./tokens/cx";
 
 // ═══════════════════════════════════════════
 // Types
@@ -78,9 +79,7 @@ export type PopoverItemProps = ButtonProps | AnchorProps;
 // Implementation
 // ═══════════════════════════════════════════
 
-function mergeClass(...parts: Array<string | false | undefined>) {
-  return parts.filter(Boolean).join(" ");
-}
+// className joiner: wspólny cx() z ./tokens/cx (Stage 2 governance)
 
 /**
  * Type guard — narrows the discriminated union on `as`.
@@ -93,7 +92,7 @@ export const PopoverItem = React.forwardRef<
   HTMLButtonElement | HTMLAnchorElement,
   PopoverItemProps
 >(function PopoverItem(props, ref) {
-  const classes = mergeClass(
+  const classes = cx(
     "eui-popover-item",
     props.selected && "eui-selected",
     props.className

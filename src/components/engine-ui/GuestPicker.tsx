@@ -47,6 +47,7 @@
 
 import * as React from "react";
 import { User, Users, Baby, Dog } from "lucide-react";
+import { cx } from "./tokens/cx";
 import { Stepper } from "./Stepper";
 import { type BookingParty } from "@/lib/booking-params";
 
@@ -129,9 +130,7 @@ function areEqual(a: BookingParty, b: BookingParty): boolean {
   );
 }
 
-function mergeClass(...parts: Array<string | false | undefined>) {
-  return parts.filter(Boolean).join(" ");
-}
+// className joiner: wspólny cx() z ./tokens/cx (Stage 2 governance)
 
 // ═══════════════════════════════════════════
 // Component
@@ -185,7 +184,7 @@ export function GuestPicker({
     onApply?.();
   };
 
-  const rootClass = mergeClass("eui-guestpicker", className);
+  const rootClass = cx("eui-guestpicker", className);
 
   // Pre-compute rows so JSX stays tidy.
   const rows: Array<{

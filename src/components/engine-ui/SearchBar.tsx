@@ -46,6 +46,7 @@
 
 import * as React from "react";
 import { Search, Baby, Dog } from "lucide-react";
+import { cx } from "./tokens/cx";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import {
@@ -86,9 +87,7 @@ export interface SearchBarProps {
 // Helpers
 // ═══════════════════════════════════════════
 
-function mergeClass(...parts: Array<string | false | undefined>) {
-  return parts.filter(Boolean).join(" ");
-}
+// className joiner: wspólny cx() z ./tokens/cx (Stage 2 governance)
 
 function fromISO(iso: string): Date {
   const [y, m, d] = iso.split("-").map(Number);
@@ -250,13 +249,13 @@ export function SearchBar({
         <PopoverTrigger asChild>
           <button
             type="button"
-            className={mergeClass("eui-searchbar-segment", activeSegment === "when" && "eui-segment-active")}
+            className={cx("eui-searchbar-segment", activeSegment === "when" && "eui-segment-active")}
             onClick={() => handleSegmentClick("when")}
             aria-expanded={activeSegment === "when"}
             aria-label="Wybierz daty"
           >
             <span className="eui-searchbar-segment-label">Kiedy</span>
-            <span className={mergeClass("eui-searchbar-segment-value", !displayValue && "eui-placeholder")}>
+            <span className={cx("eui-searchbar-segment-value", !displayValue && "eui-placeholder")}>
               {displayValue ?? "Wybierz termin"}
             </span>
           </button>
@@ -285,13 +284,13 @@ export function SearchBar({
         <PopoverTrigger asChild>
           <button
             type="button"
-            className={mergeClass("eui-searchbar-segment", activeSegment === "guests" && "eui-segment-active")}
+            className={cx("eui-searchbar-segment", activeSegment === "guests" && "eui-segment-active")}
             onClick={() => handleSegmentClick("guests")}
             aria-expanded={activeSegment === "guests"}
             aria-label="Wybierz gości"
           >
             <span className="eui-searchbar-segment-label">Kto</span>
-            <span className={mergeClass("eui-searchbar-segment-value", !displayValue && "eui-placeholder")}>
+            <span className={cx("eui-searchbar-segment-value", !displayValue && "eui-placeholder")}>
               {displayValue ?? "Dodaj gości"}
             </span>
           </button>
@@ -327,14 +326,14 @@ export function SearchBar({
       rendered.push(
         <span
           key={`divider-${seg}-${nextSeg}`}
-          className={mergeClass("eui-searchbar-divider", !dividerVisible(seg, nextSeg) && "eui-divider-hidden")}
+          className={cx("eui-searchbar-divider", !dividerVisible(seg, nextSeg) && "eui-divider-hidden")}
           aria-hidden="true"
         />
       );
     }
   });
 
-  const rootClass = mergeClass(
+  const rootClass = cx(
     "eui-searchbar",
     variant === "hero" ? "eui-variant-hero" : "eui-variant-compact",
     activeSegment !== null && "eui-searchbar-open",
@@ -346,7 +345,7 @@ export function SearchBar({
       {rendered}
       <button
         type="button"
-        className={mergeClass("eui-searchbar-submit", iconOnly && "eui-submit-compact")}
+        className={cx("eui-searchbar-submit", iconOnly && "eui-submit-compact")}
         onClick={handleSubmit}
         aria-label="Szukaj"
       >

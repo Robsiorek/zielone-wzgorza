@@ -48,6 +48,7 @@
  */
 
 import * as React from "react";
+import { cx } from "./tokens/cx";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
   addMonths,
@@ -117,9 +118,7 @@ function isBeforeDay(a: Date, b: Date): boolean {
   return isBefore(startOfDay(a), startOfDay(b));
 }
 
-function mergeClass(...parts: Array<string | false | undefined>) {
-  return parts.filter(Boolean).join(" ");
-}
+// className joiner: wspólny cx() z ./tokens/cx (Stage 2 governance)
 
 // ═══════════════════════════════════════════
 // Month-grid building
@@ -323,7 +322,7 @@ export function DateRangePicker({
               );
             }
 
-            const classes = mergeClass(
+            const classes = cx(
               "eui-datepicker-day",
               state.isSelected && "eui-day-selected",
               state.isRangeStart && "eui-day-range-start",
@@ -361,7 +360,7 @@ export function DateRangePicker({
 
   // ── Compose ──
   const rightMonth = addMonths(leftMonth, 1);
-  const rootClass = mergeClass("eui-datepicker", className);
+  const rootClass = cx("eui-datepicker", className);
 
   return (
     <div className={rootClass}>

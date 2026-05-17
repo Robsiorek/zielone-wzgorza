@@ -35,6 +35,7 @@
 
 import * as React from "react";
 import { Minus, Plus } from "lucide-react";
+import { cx } from "./tokens/cx";
 import { IconButton } from "./button/IconButton";
 
 // ═══════════════════════════════════════════
@@ -84,9 +85,7 @@ function clamp(n: number, min: number, max: number): number {
   return n;
 }
 
-function mergeClass(...parts: Array<string | false | undefined>) {
-  return parts.filter(Boolean).join(" ");
-}
+// className joiner: wspólny cx() z ./tokens/cx (Stage 2 governance)
 
 // ═══════════════════════════════════════════
 // Component
@@ -148,7 +147,7 @@ export const Stepper = React.forwardRef<HTMLDivElement, StepperProps>(
       }
     };
 
-    const rootClass = mergeClass(
+    const rootClass = cx(
       "eui-stepper",
       size === "sm" && "eui-stepper-sm",
       disabled && "eui-stepper-disabled",
