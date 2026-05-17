@@ -312,7 +312,16 @@ Wszystkie tokeny w `src/styles/globals.css` linie 502-665. **~120 `--eui-*` toke
 - ✅ Part 9 — Skeleton + Loading System (11 stages, 8 components + 1 hook + 1 refactor)
 - ✅ Part 10a — Inputs Foundation (Field compound + TextField + Textarea + useFieldId + error popover)
 - ✅ Part 10b — Select (Popover desktop + BottomSheet mobile; aria-activedescendant; greenfield listbox/option)
-- ⬜ Parts 11-14 — TBD
+- ✅ Governance consolidation (Stage 1→3.6) — docs source-of-truth, Visual DNA freeze, focus/radius convergence
+- ⬜ **Part 11 — Form Controls**: Checkbox · CheckboxGroup · Radio · RadioGroup · Switch
+- ⬜ **Part 12 — Feedback + State**: Toast (+ useToast/Provider) · Tooltip · Alert · Banner · EmptyState · ErrorState
+- ⬜ **Part 13 — Commerce + Utility** (merged ex-13+14): greenfield NightsMeta · Breadcrumb · Pagination · SortMenu; presety PriceBadge · AmenityChip · ReviewSummary · PolicyLink
+- ⬜ Part 14 — (free / TBD — zwolniony po merge 13+14)
+
+> **Decyzje PO (2026-05-17):** Slider deferred (NIE w Part 11 MVP) · FilterPill
+> NIE robimy (FilterChip wystarcza) · SegmentedControl/Stepper zostają root-level
+> (ewent. przeniesienie → 8.5b) · Part 13+14 scalone w Part 13.
+> Zakres komponentów = canonical; szczegóły przez pre-check/blueprint per Part.
 
 ---
 
