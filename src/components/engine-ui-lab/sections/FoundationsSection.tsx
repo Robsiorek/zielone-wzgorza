@@ -136,8 +136,8 @@ export function FoundationsSection({ theme }: FoundationsSectionProps) {
 
       {/* ── Typography ── */}
       <ComponentShowcase
-        title="Typografia"
-        caption={`Font systemowy: ${font}. Display ma ujemne letter-spacing (premium signal).`}
+        title="Skala typograficzna (tokeny)"
+        caption={`Font systemowy: ${font}. Display ma ujemne letter-spacing (premium signal). Komponenty typografii → sekcja "Typografia".`}
       >
         <div style={{ display: "flex", flexDirection: "column", gap: 20, width: "100%" }}>
           <div>
