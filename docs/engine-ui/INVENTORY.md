@@ -29,27 +29,31 @@
 
 ## Engine UI directories
 
-`src/components/engine-ui/` zawiera 16 sub-directories + 19 root-level composite files. Total: ~113 component files.
+`src/components/engine-ui/` zawiera 16 sub-directories + 20 root-level files. Total: ~119 plików.
 
-| Directory | Components | Purpose |
+> **Files** = literalna liczba plików w katalogu (incl. `index.ts` / utility `.ts`).
+> Reproducible: `for d in src/components/engine-ui/*/; do echo "$d $(ls $d|wc -l)"; done`.
+> Zaktualizowane 2026-05-16 (Stage 2 — counts zsynchronizowane z kodem).
+
+| Directory | Files | Purpose |
 |---|---|---|
 | `a11y/` | 2 | Accessibility utilities (VisuallyHidden + mergeRefs) |
-| `button/` | 7 | Button primitives |
-| `chip/` | 8 | Badge / Chip / Tag family |
-| `hooks/` | 8 | Custom React hooks |
+| `button/` | 8 | Button primitives |
+| `chip/` | 9 | Badge / Chip / Tag family |
+| `hooks/` | 10 | Custom React hooks |
 | `input/` | 7 | Field compound (Field/FieldLabel/FieldControl/FieldMessage) + TextField + Textarea + Select + useFieldId (Parts 10a + 10b) |
 | `interaction/` | 1 | Pressable wrapper |
-| `layout/` | 9 | Stack, Inline, ActionRow etc. |
-| `loading/` | 2 | Spinner + LoadingOverlay (Part 9) |
-| `media/` | 8 | Image + media frames + overlays |
-| `nav/` | 5 | Chevron, NavigationArrow, TabTrigger etc. |
-| `overlay/` | 5 | BottomSheet + Backdrop + DragHandle |
+| `layout/` | 11 | Stack, Inline, ActionRow etc. |
+| `loading/` | 3 | Spinner + LoadingOverlay (Part 9) |
+| `media/` | 10 | Image + media frames + overlays |
+| `nav/` | 6 | Chevron, NavigationArrow, TabTrigger etc. |
+| `overlay/` | 6 | BottomSheet + Backdrop + DragHandle |
 | `primitives/` | 1 | Popover (Radix wrapper) |
-| `skeleton/` | 6 | Skeleton family (Part 9) |
-| `surface/` | 3 | CardSurface, PanelSurface, ScrollFade |
-| `text/` | 9 | Typography primitives |
-| `tokens/` | 4 .ts | Token const exports |
-| (root) | 19 | Composite/legacy components |
+| `skeleton/` | 7 | Skeleton family (Part 9) |
+| `surface/` | 4 | CardSurface, PanelSurface, ScrollFade |
+| `text/` | 10 | Typography primitives |
+| `tokens/` | 4 | Token const exports (.ts) |
+| (root) | 20 | Composite/legacy components |
 
 ---
 
