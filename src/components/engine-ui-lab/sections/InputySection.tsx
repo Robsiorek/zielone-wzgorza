@@ -153,12 +153,16 @@ export function InputySection() {
           />
         }
       >
-        <Inline gap="md" align="start" wrap>
-          <Stack gap="xs">
-            <Text variant="caption" color="muted">
-              Compound (Field-wrapped)
-            </Text>
-            <div style={SPECIMEN_STYLE}>
+        {/* Single-column (jeden pod drugim) — spójne z resztą sekcji.
+            Wcześniej 3-kolumnowy <Inline wrap>: div w Stack-w-Inline →
+            szerokość content-driven → ~60% na mobile (ten sam fix co
+            Select architektura/ikony, commity 5cc08f6/58ba766). */}
+        <div style={SPECIMEN_STYLE}>
+          <Stack gap="md">
+            <Stack gap="xs">
+              <Text variant="caption" color="muted">
+                Compound (Field-wrapped)
+              </Text>
               <Field id="email-compound" required>
                 <FieldLabel>Email</FieldLabel>
                 <FieldControl>
@@ -166,14 +170,12 @@ export function InputySection() {
                 </FieldControl>
                 <FieldMessage>Wpisz służbowy adres</FieldMessage>
               </Field>
-            </div>
-          </Stack>
+            </Stack>
 
-          <Stack gap="xs">
-            <Text variant="caption" color="muted">
-              Standalone (TextField props)
-            </Text>
-            <div style={SPECIMEN_STYLE}>
+            <Stack gap="xs">
+              <Text variant="caption" color="muted">
+                Standalone (TextField props)
+              </Text>
               <TextField
                 type="email"
                 label="Email"
@@ -181,18 +183,16 @@ export function InputySection() {
                 placeholder="adres@example.pl"
                 required
               />
-            </div>
-          </Stack>
+            </Stack>
 
-          <Stack gap="xs">
-            <Text variant="caption" color="muted">
-              Bare (input only)
-            </Text>
-            <div style={SPECIMEN_STYLE}>
+            <Stack gap="xs">
+              <Text variant="caption" color="muted">
+                Bare (input only)
+              </Text>
               <TextField type="email" placeholder="adres@example.pl" />
-            </div>
+            </Stack>
           </Stack>
-        </Inline>
+        </div>
       </ComponentShowcase>
 
       {/* 2. TextField — Sizes */}
@@ -325,26 +325,26 @@ export function InputySection() {
           />
         }
       >
-        <Inline gap="md" align="start" wrap>
-          <Stack gap="xs">
-            <Text variant="caption" color="muted">
-              Krótki error (popover redundant)
-            </Text>
-            <div style={SPECIMEN_STYLE}>
+        {/* Single-column (jeden pod drugim) — spójne z resztą sekcji
+            (ten sam fix co architektura/Select, commity 5cc08f6/58ba766). */}
+        <div style={SPECIMEN_STYLE}>
+          <Stack gap="md">
+            <Stack gap="xs">
+              <Text variant="caption" color="muted">
+                Krótki error (popover redundant)
+              </Text>
               <TextField
                 label="PIN"
                 defaultValue="12"
                 error="PIN za krótki"
                 showErrorPopover
               />
-            </div>
-          </Stack>
+            </Stack>
 
-          <Stack gap="xs">
-            <Text variant="caption" color="muted">
-              Długi error (popover odciąża inline)
-            </Text>
-            <div style={SPECIMEN_STYLE}>
+            <Stack gap="xs">
+              <Text variant="caption" color="muted">
+                Długi error (popover odciąża inline)
+              </Text>
               <TextField
                 type="password"
                 label="Hasło"
@@ -352,23 +352,21 @@ export function InputySection() {
                 error={longErrorMessage}
                 showErrorPopover
               />
-            </div>
-          </Stack>
+            </Stack>
 
-          <Stack gap="xs">
-            <Text variant="caption" color="muted">
-              Textarea z popoverem
-            </Text>
-            <div style={SPECIMEN_STYLE}>
+            <Stack gap="xs">
+              <Text variant="caption" color="muted">
+                Textarea z popoverem
+              </Text>
               <Textarea
                 label="Opis"
                 defaultValue="Brak"
                 error={longErrorMessage}
                 showErrorPopover
               />
-            </div>
+            </Stack>
           </Stack>
-        </Inline>
+        </div>
       </ComponentShowcase>
 
       {/* 7. Select — Architecture: 3 modes side-by-side */}
