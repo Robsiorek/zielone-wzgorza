@@ -382,12 +382,16 @@ export function InputySection() {
           />
         }
       >
-        <Inline gap="md" align="start" wrap>
-          <Stack gap="xs">
-            <Text variant="caption" color="muted">
-              Compound (Field-wrapped)
-            </Text>
-            <div style={SPECIMEN_STYLE}>
+        {/* Single-column (jeden pod drugim) — spójne z resztą sekcji.
+            Wcześniej 3-kolumnowy <Inline wrap>: div w Stack-w-Inline →
+            szerokość content-driven → ciasny trigger/dropdown na mobile
+            (ten sam fix co "z ikonami vs bez ikon", commit 5cc08f6). */}
+        <div style={SPECIMEN_STYLE}>
+          <Stack gap="md">
+            <Stack gap="xs">
+              <Text variant="caption" color="muted">
+                Compound (Field-wrapped)
+              </Text>
               <Field id="category-compound" required>
                 <FieldLabel>Kategoria</FieldLabel>
                 <FieldControl>
@@ -400,14 +404,12 @@ export function InputySection() {
                 </FieldControl>
                 <FieldMessage>Wymagana do utworzenia oferty</FieldMessage>
               </Field>
-            </div>
-          </Stack>
+            </Stack>
 
-          <Stack gap="xs">
-            <Text variant="caption" color="muted">
-              Standalone (props)
-            </Text>
-            <div style={SPECIMEN_STYLE}>
+            <Stack gap="xs">
+              <Text variant="caption" color="muted">
+                Standalone (props)
+              </Text>
               <Select
                 options={CATEGORIES}
                 label="Kategoria"
@@ -415,21 +417,19 @@ export function InputySection() {
                 placeholder="Wybierz kategorię"
                 required
               />
-            </div>
-          </Stack>
+            </Stack>
 
-          <Stack gap="xs">
-            <Text variant="caption" color="muted">
-              Bare (trigger only)
-            </Text>
-            <div style={SPECIMEN_STYLE}>
+            <Stack gap="xs">
+              <Text variant="caption" color="muted">
+                Bare (trigger only)
+              </Text>
               <Select
                 options={CATEGORIES}
                 placeholder="Wybierz kategorię"
               />
-            </div>
+            </Stack>
           </Stack>
-        </Inline>
+        </div>
       </ComponentShowcase>
 
       {/* 8. Select — Sizes */}
