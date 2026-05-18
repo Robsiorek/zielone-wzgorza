@@ -373,4 +373,8 @@ export {
   type AlertProps,
   type BannerProps,
   type AlertVariant,
+  EmptyState,
+  ErrorState,
+  type EmptyStateProps,
+  type ErrorStateProps,
 } from "./feedback";

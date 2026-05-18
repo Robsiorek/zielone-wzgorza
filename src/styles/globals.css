@@ -6533,3 +6533,41 @@
   outline: none;
   box-shadow: var(--eui-focus-ring);
 }
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * === PART 12 STAGE 2: EmptyState + ErrorState ===
+ * Kompozycja: ikona w miękkim kółku + EmptyStateText (reuse) + CTA.
+ * ErrorState = tone=error (danger tint kółka). Statyczny, wycentrowany.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+.engine-root .eui-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--eui-space-4);
+  padding: var(--eui-space-7) var(--eui-space-5);
+  text-align: center;
+  font-family: inherit;
+}
+
+.engine-root .eui-empty-state-icon {
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  border-radius: 9999px;
+  background: var(--eui-grey-100);
+  color: var(--eui-text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.engine-root .eui-empty-state-icon-error {
+  background: var(--eui-danger-bg-soft);
+  color: var(--eui-danger);
+}
+
+.engine-root .eui-empty-state-action {
+  margin-top: var(--eui-space-2);
+}

@@ -2,3 +2,6 @@
 
 export { Alert, Banner } from "./Alert";
 export type { AlertProps, BannerProps, AlertVariant } from "./Alert";
+
+export { EmptyState, ErrorState } from "./EmptyState";
+export type { EmptyStateProps, ErrorStateProps } from "./EmptyState";
