@@ -380,3 +380,15 @@ export {
   Tooltip,
   type TooltipProps,
 } from "./feedback";
+
+// ── Part 13 — Commerce + Utility (final) ─────────────────────────
+// Mały finalny Part. Zakres przycięty w pre-checku (PO D1/D2):
+// DROP ReviewSummary→RatingPill, PolicyLink→SecondaryLink external,
+// AmenityChip→FeatureChips. DEFER SortMenu/Pagination/Breadcrumb
+// (brak popytu engine-ui — popyt w legacy admin, nie-konsument).
+export {
+  NightsMeta,
+  type NightsMetaProps,
+  formatNights,
+  nightsLabel,
+} from "./text";
