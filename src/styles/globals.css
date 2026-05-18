@@ -6100,6 +6100,9 @@
   gap: var(--eui-space-3);
   cursor: pointer;
   font-family: inherit;
+  /* Part 11.1 sizing (PO-zatwierdzone): consumer-grade tap-row ≥32px
+     (VISUAL-DNA §7 — NIE pełne 44px by nie rozdąć długich list). */
+  min-height: 32px;
 }
 
 .engine-root .eui-checkbox-disabled {
@@ -6121,8 +6124,8 @@
 
 .engine-root .eui-checkbox-box {
   flex-shrink: 0;
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   border-radius: var(--eui-radius-xs);
   border: 1px solid var(--eui-border-strong);
   background: var(--eui-grey-0);
@@ -6133,8 +6136,8 @@
 }
 
 .engine-root .eui-checkbox-mark {
-  width: 13px;
-  height: 13px;
+  width: 14px;
+  height: 14px;
   color: var(--eui-grey-0);
   opacity: 0;
   transition: opacity 0.12s;
@@ -6227,6 +6230,8 @@
   gap: var(--eui-space-3);
   cursor: pointer;
   font-family: inherit;
+  /* Part 11.1 sizing (PO-zatwierdzone) — patrz .eui-checkbox / VISUAL-DNA §7 */
+  min-height: 32px;
 }
 
 .engine-root .eui-radio-disabled {
@@ -6247,8 +6252,8 @@
 
 .engine-root .eui-radio-box {
   flex-shrink: 0;
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   border-radius: 9999px;
   border: 1px solid var(--eui-border-strong);
   background: var(--eui-grey-0);
@@ -6259,8 +6264,8 @@
 }
 
 .engine-root .eui-radio-dot {
-  width: 9px;
-  height: 9px;
+  width: 10px;
+  height: 10px;
   border-radius: 9999px;
   background: var(--eui-grey-0);
   transform: scale(0);
@@ -6340,6 +6345,8 @@
   gap: var(--eui-space-3);
   cursor: pointer;
   font-family: inherit;
+  /* Part 11.1 sizing (PO-zatwierdzone) — patrz .eui-checkbox / VISUAL-DNA §7 */
+  min-height: 32px;
 }
 
 .engine-root .eui-switch-disabled {
@@ -6360,8 +6367,8 @@
 
 .engine-root .eui-switch-track {
   flex-shrink: 0;
-  width: 36px;
-  height: 20px;
+  width: 44px;
+  height: 24px;
   border-radius: 9999px;
   background: var(--eui-grey-300);
   border: 1px solid var(--eui-border-strong);
@@ -6372,8 +6379,8 @@
 }
 
 .engine-root .eui-switch-thumb {
-  width: 14px;
-  height: 14px;
+  width: 20px;
+  height: 20px;
   border-radius: 9999px;
   background: var(--eui-grey-0);
   box-shadow: var(--eui-elev-1);
@@ -6386,7 +6393,8 @@
   border-color: var(--eui-grey-900);
 }
 .engine-root .eui-switch-input:checked ~ .eui-switch-track .eui-switch-thumb {
-  transform: translateX(16px);
+  /* travel = innerWidth(44-2border-4pad=38) - thumb(20) = 18px */
+  transform: translateX(18px);
 }
 
 .engine-root .eui-switch:not(.eui-switch-disabled):hover .eui-switch-track {

@@ -86,6 +86,12 @@ kontrolki `sm` 8px. Drift zlikwidowany — jeden język floating-panels.
 - Dual API: compound `<Field>` (consumer chrome) + standalone
   (`label`/`helperText`/`error` props). Detekcja przez `useFieldContext`.
 - Select: Popover (desktop) / BottomSheet (mobile ≤767px via `useIsMobile`).
+- **Toggle controls sizing (Part 11.1 canonical, PO 2026-05-18):** consumer-grade,
+  tactile — NIE dense-admin. Checkbox box **20×20** (mark 14), Radio box
+  **20×20** (dot 10), Switch track **44×24** (thumb 20, travel 18). Klikalny
+  `<label>` row `min-height: 32px` (komfort tap, NIE pełne 44 by nie rozdąć
+  długich list typu CheckboxGroup). Jeden canonical rozmiar — bez `size` prop
+  dopóki realna potrzeba dense-table (wtedy dodać `size="sm"`, nie pre-budować).
 
 ## 8. Popover / dropdown language
 
