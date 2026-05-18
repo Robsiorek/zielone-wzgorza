@@ -391,4 +391,7 @@ export {
   type NightsMetaProps,
   formatNights,
   nightsLabel,
+  PriceBadge,
+  type PriceBadgeProps,
+  type PriceBadgeSize,
 } from "./text";

@@ -6606,3 +6606,24 @@
 @media (prefers-reduced-motion: reduce) {
   .engine-root .eui-tooltip { animation: none; }
 }
+
+/* ───────────────────────────────────────────────────────────────
+ * === PART 13: PriceBadge (Commerce + Utility) ===
+ * Canonical promo-flag przy cenie. Token-kolor var(--eui-success)
+ * (spłaca dług hardcoded #16a34a), zero external margin (rodzic
+ * własi odstęp). Własna klasa .eui-price-flag — NIE koliduje z legacy
+ * .eui-price-badge / .eui-card-price-badge (PO D7=C, bez migracji).
+ * size sm/md = parytet-capable z legacy na przyszły cleanup.
+ * ─────────────────────────────────────────────────────────────── */
+.engine-root .eui-price-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--eui-success);
+  font-weight: var(--eui-font-weight-semibold);
+  line-height: 1;
+}
+.engine-root .eui-price-flag-sm { font-size: 11px; }
+.engine-root .eui-price-flag-md { font-size: var(--eui-font-size-sm); }
+.engine-root .eui-price-flag-icon { display: inline-flex; flex-shrink: 0; }
+.engine-root .eui-price-flag-icon > svg { width: 12px; height: 12px; }

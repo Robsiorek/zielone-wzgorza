@@ -23,3 +23,8 @@ export {
   formatNights,
   nightsLabel,
 } from "./NightsMeta";
+export {
+  PriceBadge,
+  type PriceBadgeProps,
+  type PriceBadgeSize,
+} from "./PriceBadge";
