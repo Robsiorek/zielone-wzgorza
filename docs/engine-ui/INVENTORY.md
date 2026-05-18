@@ -11,7 +11,7 @@
 
 > Wewnętrzny mental map Engine UI design system. Inventory-level — 1 linia per component, brak prop signatures. Zapobiega duplikacji w future Parts.
 >
-> **Ostatnia aktualizacja:** 2026-05-15 (post Part 10b: Select). Reorganizacja docs/ 2026-05-16 (Stage 1 governance consolidation).
+> **Ostatnia aktualizacja:** 2026-05-18 (post Part 12: Feedback + State). Reorganizacja docs/ 2026-05-16 (Stage 1 governance consolidation).
 
 ---
 
@@ -30,7 +30,7 @@
 
 ## Engine UI directories
 
-`src/components/engine-ui/` zawiera 16 sub-directories + 20 root-level files. Total: ~123 plików.
+`src/components/engine-ui/` zawiera 17 sub-directories + 20 root-level files. Total: ~127 plików.
 
 > **Files** = literalna liczba plików w katalogu (incl. `index.ts` / utility `.ts`).
 > Reproducible: `for d in src/components/engine-ui/*/; do echo "$d $(ls $d|wc -l)"; done`.
@@ -41,6 +41,7 @@
 | `a11y/` | 2 | Accessibility utilities (VisuallyHidden + mergeRefs) |
 | `button/` | 8 | Button primitives |
 | `chip/` | 9 | Badge / Chip / Tag family |
+| `feedback/` | 4 | Alert/Banner + EmptyState/ErrorState + Tooltip (Part 12) |
 | `hooks/` | 10 | Custom React hooks |
 | `input/` | 10 | Field compound + TextField + Textarea + Select + useFieldId (Parts 10a/10b) + Checkbox/CheckboxGroup/Radio/RadioGroup/Switch (Part 11) |
 | `interaction/` | 1 | Pressable wrapper |
@@ -122,6 +123,14 @@
 - `RadioGroup` — single-select; shared name → native keyboard arrows; role=radiogroup (Part 11 Stage 2)
 - `Switch` — native input type=checkbox role=switch + custom track/thumb (Part 11 Stage 3)
 - `useFieldId` — hook generujący stable ID set (label/control/error) (Part 10a Stage 1)
+
+### Feedback (Part 12)
+
+- `Alert` — inline severity box (info/success/warning/error); role=alert|status (Part 12 Stage 1)
+- `Banner` — page-level full-width square modyfikator Alert (Part 12 Stage 1)
+- `EmptyState` — ikona+EmptyStateText+opcjonalny CTA; tone neutral/error (Part 12 Stage 2)
+- `ErrorState` — preset EmptyState (error tint + onRetry) (Part 12 Stage 2)
+- `Tooltip` — @floating-ui chip; hover+focus+tap-toggle (D6); portal root=.engine-root (Part 12 Stage 3)
 
 ### Layout
 
@@ -270,7 +279,8 @@
 | 13 | `results` | Warstwa wyników | ResultsHeader + ResultCard + ResultsSkeleton + ResultsEmptyState |
 | 14 | `buttons` | Przyciski | Button + IconButton + 5 specialized buttons |
 | 15 | `skeleton` | Stany ładowania | Skeleton family + Spinner + LoadingOverlay + useDelayedLoading (Part 9 NEW) |
-| 16 | `inputy` | Inputy | Field compound + TextField + Textarea + error popover (Part 10a) + Select (Part 10b NEW) |
+| 16 | `inputy` | Inputy | Field compound + TextField + Textarea + error popover (Part 10a) + Select (Part 10b) + Form Controls (Part 11) |
+| 17 | `feedback` | Feedback | Alert/Banner + EmptyState/ErrorState + Tooltip (Part 12 NEW) |
 
 ---
 
@@ -319,7 +329,7 @@ Wszystkie tokeny w `src/styles/globals.css` linie 502-665. **~120 `--eui-*` toke
 - ✅ Part 10b — Select (Popover desktop + BottomSheet mobile; aria-activedescendant; greenfield listbox/option)
 - ✅ Governance consolidation (Stage 1→3.6) — docs source-of-truth, Visual DNA freeze, focus/radius convergence
 - ✅ **Part 11 — Form Controls**: Checkbox · CheckboxGroup · Radio · RadioGroup · Switch (tri-mode, native+custom, B-neutral focus)
-- ⬜ **Part 12 — Feedback + State**: Toast (+ useToast/Provider) · Tooltip · Alert · Banner · EmptyState · ErrorState
+- ✅ **Part 12 — Feedback + State**: Alert · Banner · EmptyState · ErrorState · Tooltip (tokeny semantic, B-neutral focus, @floating-ui portal=.engine-root). Toast → odroczony do **Part 12.1** (osobna architektura: useToast/Provider/queue)
 - ⬜ **Part 13 — Commerce + Utility** (merged ex-13+14): greenfield NightsMeta · Breadcrumb · Pagination · SortMenu; presety PriceBadge · AmenityChip · ReviewSummary · PolicyLink
 - ⬜ Part 14 — (free / TBD — zwolniony po merge 13+14)
 

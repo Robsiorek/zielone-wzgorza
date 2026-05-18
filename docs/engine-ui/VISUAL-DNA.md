@@ -73,7 +73,7 @@ kontrolki `sm` 8px. Drift zlikwidowany — jeden język floating-panels.
   - `bare` — transparent + bez border/shadow (legacy `.eui-card` look).
   - `elevation` prop (flat/raised/elevated/floating) — niezależny od variant.
 - **Nie obchodzić CardSurface `!important`.** Jeśli consumer musi nadpisać
-  primitive → primitive potrzebuje wariantu (patrz §12 When to stop).
+  primitive → primitive potrzebuje wariantu (patrz §13 When to stop).
 
 ## 7. Form controls language
 
@@ -93,7 +93,40 @@ kontrolki `sm` 8px. Drift zlikwidowany — jeden język floating-panels.
   długich list typu CheckboxGroup). Jeden canonical rozmiar — bez `size` prop
   dopóki realna potrzeba dense-table (wtedy dodać `size="sm"`, nie pre-budować).
 
-## 8. Popover / dropdown language
+## 8. Feedback / state language
+
+- **Tokeny semantic = jedyne źródło koloru severity.** Warianty
+  info/success/warning/error mapują 1:1 na `--eui-{info,success,warning,
+  danger}` + `-bg-soft` + `-foreground`. **Zero hardcoded hsl** w komponencie
+  (legacy admin tooltip = inline hsl → NIE powielać).
+- Ikony severity spójne z HelperText: Info / CheckCircle2 / AlertTriangle
+  / AlertCircle. Override przez `icon` prop, `icon={null}` = bez ikony.
+- A11y kontrakt: error/warning = `role="alert"` (assertive);
+  info/success = `role="status" aria-live="polite"`. EmptyState/ErrorState
+  = statyczne (brak aria-live). Tooltip = `role="tooltip"` + `aria-describedby`.
+- **Alert vs Banner = jeden rdzeń, modyfikator.** Alert inline (radius-sm,
+  w treści). Banner full-width, krawędzie proste (radius 0), border-bottom,
+  page-level. NIE dwa osobne komponenty z rozjechanym stylem.
+- EmptyState = ikona w miękkim kółku + **reuse `EmptyStateText`** (DRY
+  typografia, NIE lokalne nagłówki) + opcjonalny CTA. ErrorState = preset
+  EmptyState (`tone="error"` danger tint + `onRetry`) — zastępuje ad-hoc
+  bloki `AlertCircle` w booking, nie nowy layout.
+- Dismiss / CTA focus = **B-neutral ring** (`var(--eui-focus-ring)`),
+  dziedziczony z Button/Pressable. Zero brand-blue, zero czarnej żyletki.
+- **Tooltip = chip grey-900** (grey-0 text), `--eui-z-toast`, animacja
+  przez CSS keyframe (NIE JS `document.head` injection jak legacy admin),
+  `prefers-reduced-motion` respektowany.
+- **Portal scoping (twarda reguła):** komponenty portalujące poza drzewo
+  (Tooltip `FloatingPortal`) MUSZĄ mieć `root` = element `.engine-root`
+  (wzorzec BottomSheet: `useState`+`useEffect` query, guard `&& container`).
+  Domyślny body-portal = poza scope `.engine-root .eui-*` → styl martwy.
+- **Interakcja Tooltip (PO D6 canonical):** hover+focus na desktop/klawiaturze,
+  tap-to-toggle na touch (`useClick`), ESC zamyka (`useDismiss`). `disabled`
+  = pass-through children bez wrappera.
+- @floating-ui/react = istniejąca dep (mirror działającego admin tooltip).
+  **Bez nowych paczek** na Tooltip — zero radix-tooltip/toast/sonner.
+
+## 9. Popover / dropdown language
 
 - **`Popover` primitive (Radix wrapper) = source of truth.**
 - Konsumenci: Select, ErrorPopover (TextField/Textarea), DatePicker, GuestPicker.
@@ -102,7 +135,7 @@ kontrolki `sm` 8px. Drift zlikwidowany — jeden język floating-panels.
 - Radius family: obecny vs target — patrz §5 + NEEDS DECISION.
 - A11y: listbox/option + `aria-activedescendant` (Select wzorzec greenfield).
 
-## 9. Button / chip / nav language
+## 10. Button / chip / nav language
 
 - Konwergują do **B-neutral focus** (token `--eui-focus-ring`).
 - Chip razor `grey-900` hover **zabroniony** — używać grey-500/600.
@@ -110,7 +143,7 @@ kontrolki `sm` 8px. Drift zlikwidowany — jeden język floating-panels.
 - Icon sizing świadome per kontekst (14 stepper / 16 input / 18 chevron /
   20 select-option / 40 popover-item koperta) — nie losowe.
 
-## 10. Lab presentation rules
+## 11. Lab presentation rules
 
 - Lab pokazuje **canonical** system. Legacy oznaczać jako legacy lub nie
   pokazywać jako canonical.
@@ -123,7 +156,7 @@ kontrolki `sm` 8px. Drift zlikwidowany — jeden język floating-panels.
   **Typography = components** (showcase "Skala typograficzna (tokeny)" ≠
   sekcja "Typografia").
 
-## 11. Forbidden patterns
+## 12. Forbidden patterns
 
 - `.bubble` w Engine UI.
 - Raw Tailwind override w primitywach (bg-/text-/border- zamiast `.eui-*`).
@@ -133,8 +166,11 @@ kontrolki `sm` 8px. Drift zlikwidowany — jeden język floating-panels.
 - Lokalne `mergeClass` zamiast wspólnego `cx()` (`tokens/cx.ts`).
 - Nowe docs bez statusu w nagłówku: `CANONICAL` / `LEGACY` / `HISTORY` / `OPS`.
 - Multi-column `<Inline wrap>` z pełnoszerokościowymi specimenami w Lab.
+- Hardcoded `hsl()`/kolor severity w komponencie zamiast tokenów semantic.
+- Body-portal (default `FloatingPortal`) bez `root=.engine-root` — styl martwy.
+- JS-injected keyframes (`document.head`) zamiast CSS `@keyframes`.
 
-## 12. When to stop (halt rules)
+## 13. When to stop (halt rules)
 
 Zatrzymaj się i raportuj (nie cichy commit), jeśli:
 - nowy komponent wymaga override primitive → primitive potrzebuje wariantu.
@@ -146,3 +182,4 @@ Zatrzymaj się i raportuj (nie cichy commit), jeśli:
 
 ---
 *Utworzony: Stage 3.5 (2026-05-16). Visual DNA freeze przed Part 11.*
+*Rozszerzony: 2026-05-18 — §8 Feedback / state language (Part 12: Alert · Banner · EmptyState · ErrorState · Tooltip). Sekcje 8→13 przenumerowane.*

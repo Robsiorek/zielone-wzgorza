@@ -36,6 +36,7 @@ import {
   Image as ImageIcon,
   Loader2,
   TextCursorInput,
+  MessageSquareWarning,
 } from "lucide-react";
 
 import { useWidgetTheme } from "@/components/engine-ui/hooks/useWidgetTheme";
@@ -56,6 +57,7 @@ import { LayoutSection } from "./sections/LayoutSection";
 import { MediaSection } from "./sections/MediaSection";
 import { SkeletonSection } from "./sections/SkeletonSection";
 import { InputySection } from "./sections/InputySection";
+import { FeedbackSection } from "./sections/FeedbackSection";
 
 const SIDEBAR_ITEMS = [
   { id: "foundations", label: "Fundamenty",        icon: <Palette size={16} aria-hidden="true" /> },
@@ -74,6 +76,7 @@ const SIDEBAR_ITEMS = [
   { id: "buttons",     label: "Przyciski",          icon: <MousePointerClick size={16} aria-hidden="true" /> },
   { id: "skeleton",    label: "Stany ładowania",   icon: <Loader2 size={16} aria-hidden="true" /> },
   { id: "inputy",      label: "Inputy",             icon: <TextCursorInput size={16} aria-hidden="true" /> },
+  { id: "feedback",    label: "Feedback",           icon: <MessageSquareWarning size={16} aria-hidden="true" /> },
 ];
 
 export function EngineUiLab() {
@@ -118,6 +121,7 @@ export function EngineUiLab() {
           <ButtonsSection />
           <SkeletonSection />
           <InputySection />
+          <FeedbackSection />
         </div>
       </div>
     </div>
