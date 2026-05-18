@@ -169,6 +169,8 @@ kontrolki `sm` 8px. Drift zlikwidowany — jeden język floating-panels.
 - Hardcoded `hsl()`/kolor severity w komponencie zamiast tokenów semantic.
 - Body-portal (default `FloatingPortal`) bez `root=.engine-root` — styl martwy.
 - JS-injected keyframes (`document.head`) zamiast CSS `@keyframes`.
+- Cienki duplikat istniejącego primitive „dla odkrywalności w barrelu" zamiast reuse (§14).
+- Nowa klasa CSS kolidująca z legacy selektorem podczas współistnienia (cichy override).
 
 ## 13. When to stop (halt rules)
 
@@ -180,6 +182,33 @@ Zatrzymaj się i raportuj (nie cichy commit), jeśli:
 - zmiana dotyka globalnych tokenów (`--eui-*`) lub generycznego primitive
   używanego przez wielu konsumentów → najpierw raport impact + NEEDS DECISION.
 
+## 14. Commerce / utility & preset discipline
+
+- **Preset-first / anti-duplikacja:** jeśli istniejący primitive w pełni
+  pokrywa potrzebę — **reuse, NIE nowy cienki duplikat** „dla odkrywalności
+  w barrelu". Odkrywalność ≠ powód na komponent. Kanon (PO D1 Part 13):
+  rating+count = `RatingPill`; link polityki = `SecondaryLink external`;
+  amenity chips = `FeatureChips` / `Chip`. Duplikat = bloat barrela +
+  dezorientacja API („którego użyć?").
+- **Speculative-defer:** komponent bez realnego popytu w engine-ui (booking
+  front) — popyt wyłącznie w **legacy admin** (z def. nie-konsument
+  engine-ui) — **odraczany, nie budowany spekulatywnie** (PO D2:
+  SortMenu/Pagination/Breadcrumb). Wraca gdy front realnie potrzebuje.
+- **Kanoniczny formatter domenowy:** formatowanie domenowe (PL pluralizacja
+  nocy itp.) ma **jedno źródło** (`formatNights`/`nightsLabel`). Dodawane
+  **addytywnie**; dedup istniejących call-sites = świadomy osobny krok
+  (PO D3) — NIE ukryta zmiana zachowania (edge'e zostają jak były aż do
+  świadomej decyzji).
+- **Promo/price flag:** token-kolor (`var(--eui-success)`, NIE hardcoded
+  `#16a34a`), **zero external margin** (odstęp własi rodzic), własna klasa
+  nie kolidująca z legacy podczas współistnienia (PO D7=C: `.eui-price-flag`
+  obok nietkniętych `.eui-price-badge`/`.eui-card-price-badge`).
+- **Migracja legacy ↔ canonical:** gdy pixel-exact parity wymaga by
+  komponent własił margines / hack przy call-site / refactor layoutu
+  rodzica → **HALT + matryca opcji + PO sign-off**, nie cichy pixel-shift
+  (precedens: Stage 2 HALT report Part 13, D4/D7).
+
 ---
 *Utworzony: Stage 3.5 (2026-05-16). Visual DNA freeze przed Part 11.*
 *Rozszerzony: 2026-05-18 — §8 Feedback / state language (Part 12: Alert · Banner · EmptyState · ErrorState · Tooltip). Sekcje 8→13 przenumerowane.*
+*Rozszerzony: 2026-05-19 — §14 Commerce / utility & preset discipline (Part 13: NightsMeta · PriceBadge; preset-first, speculative-defer, kanoniczny formatter, migracja=HALT+sign-off). 2 nowe forbidden patterns.*

@@ -37,6 +37,7 @@ import {
   Loader2,
   TextCursorInput,
   MessageSquareWarning,
+  Receipt,
 } from "lucide-react";
 
 import { useWidgetTheme } from "@/components/engine-ui/hooks/useWidgetTheme";
@@ -58,6 +59,7 @@ import { MediaSection } from "./sections/MediaSection";
 import { SkeletonSection } from "./sections/SkeletonSection";
 import { InputySection } from "./sections/InputySection";
 import { FeedbackSection } from "./sections/FeedbackSection";
+import { CommerceSection } from "./sections/CommerceSection";
 
 const SIDEBAR_ITEMS = [
   { id: "foundations", label: "Fundamenty",        icon: <Palette size={16} aria-hidden="true" /> },
@@ -77,6 +79,7 @@ const SIDEBAR_ITEMS = [
   { id: "skeleton",    label: "Stany ładowania",   icon: <Loader2 size={16} aria-hidden="true" /> },
   { id: "inputy",      label: "Inputy",             icon: <TextCursorInput size={16} aria-hidden="true" /> },
   { id: "feedback",    label: "Feedback",           icon: <MessageSquareWarning size={16} aria-hidden="true" /> },
+  { id: "commerce",    label: "Commerce / Utility", icon: <Receipt size={16} aria-hidden="true" /> },
 ];
 
 export function EngineUiLab() {
@@ -122,6 +125,7 @@ export function EngineUiLab() {
           <SkeletonSection />
           <InputySection />
           <FeedbackSection />
+          <CommerceSection />
         </div>
       </div>
     </div>

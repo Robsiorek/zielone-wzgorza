@@ -11,7 +11,7 @@
 
 > Wewnętrzny mental map Engine UI design system. Inventory-level — 1 linia per component, brak prop signatures. Zapobiega duplikacji w future Parts.
 >
-> **Ostatnia aktualizacja:** 2026-05-18 (post Part 12: Feedback + State). Reorganizacja docs/ 2026-05-16 (Stage 1 governance consolidation).
+> **Ostatnia aktualizacja:** 2026-05-19 (post Part 13: Commerce + Utility — finalny Part). Reorganizacja docs/ 2026-05-16 (Stage 1 governance consolidation).
 
 ---
 
@@ -30,7 +30,7 @@
 
 ## Engine UI directories
 
-`src/components/engine-ui/` zawiera 17 sub-directories + 20 root-level files. Total: ~127 plików.
+`src/components/engine-ui/` zawiera 17 sub-directories + 20 root-level files. Total: ~129 plików.
 
 > **Files** = literalna liczba plików w katalogu (incl. `index.ts` / utility `.ts`).
 > Reproducible: `for d in src/components/engine-ui/*/; do echo "$d $(ls $d|wc -l)"; done`.
@@ -53,7 +53,7 @@
 | `primitives/` | 1 | Popover (Radix wrapper) |
 | `skeleton/` | 7 | Skeleton family (Part 9) |
 | `surface/` | 4 | CardSurface, PanelSurface, ScrollFade |
-| `text/` | 10 | Typography primitives |
+| `text/` | 12 | Typography primitives + NightsMeta/PriceBadge (Part 13) |
 | `tokens/` | 5 | Token const exports + cx() joiner (.ts) |
 | (root) | 20 | Composite/legacy components |
 
@@ -86,6 +86,8 @@
 - `EmptyStateText` — text dla empty states
 - `InlineMeta` — inline metadata separator
 - `SecondaryLink` — pomocniczy link styling
+- `NightsMeta` — preset MetaText: liczba nocy + kanoniczny formatter `formatNights`/`nightsLabel` (Part 13 Stage 1)
+- `PriceBadge` — promo-flag przy cenie; token `var(--eui-success)`, klasa `.eui-price-flag` (Part 13 Stage 2)
 
 ### Chip (Badge family)
 
@@ -280,7 +282,8 @@
 | 14 | `buttons` | Przyciski | Button + IconButton + 5 specialized buttons |
 | 15 | `skeleton` | Stany ładowania | Skeleton family + Spinner + LoadingOverlay + useDelayedLoading (Part 9 NEW) |
 | 16 | `inputy` | Inputy | Field compound + TextField + Textarea + error popover (Part 10a) + Select (Part 10b) + Form Controls (Part 11) |
-| 17 | `feedback` | Feedback | Alert/Banner + EmptyState/ErrorState + Tooltip (Part 12 NEW) |
+| 17 | `feedback` | Feedback | Alert/Banner + EmptyState/ErrorState + Tooltip (Part 12) |
+| 18 | `commerce` | Commerce / Utility | NightsMeta + PriceBadge (Part 13 NEW) |
 
 ---
 
@@ -330,8 +333,8 @@ Wszystkie tokeny w `src/styles/globals.css` linie 502-665. **~120 `--eui-*` toke
 - ✅ Governance consolidation (Stage 1→3.6) — docs source-of-truth, Visual DNA freeze, focus/radius convergence
 - ✅ **Part 11 — Form Controls**: Checkbox · CheckboxGroup · Radio · RadioGroup · Switch (tri-mode, native+custom, B-neutral focus)
 - ✅ **Part 12 — Feedback + State**: Alert · Banner · EmptyState · ErrorState · Tooltip (tokeny semantic, B-neutral focus, @floating-ui portal=.engine-root). Toast → odroczony do **Part 12.1** (osobna architektura: useToast/Provider/queue)
-- ⬜ **Part 13 — Commerce + Utility** (merged ex-13+14): greenfield NightsMeta · Breadcrumb · Pagination · SortMenu; presety PriceBadge · AmenityChip · ReviewSummary · PolicyLink
-- ⬜ Part 14 — (free / TBD — zwolniony po merge 13+14)
+- ✅ **Part 13 — Commerce + Utility** (final, przycięty w pre-checku): **NightsMeta** (+ kanoniczny `formatNights`/`nightsLabel`) · **PriceBadge** (token `var(--eui-success)`, `.eui-price-flag`, addytywnie — PriceBlock/ResultCard nietknięte, migracja = cleanup-later). **DROP** (PO D1, zero duplikatów dla odkrywalności): ReviewSummary→`RatingPill`, PolicyLink→`SecondaryLink external`, AmenityChip→`FeatureChips`. **DEFER** (PO D2, brak popytu engine-ui — popyt w legacy admin = nie-konsument): SortMenu · Pagination · Breadcrumb
+- ⬜ Part 14 — (free / TBD): rezerwa na odroczone SortMenu/Pagination/Breadcrumb gdy booking front realnie ich potrzeba
 
 > **Decyzje PO (2026-05-17):** Slider deferred (NIE w Part 11 MVP) · FilterPill
 > NIE robimy (FilterChip wystarcza) · SegmentedControl/Stepper zostają root-level
