@@ -3,7 +3,7 @@
 import React from "react";
 import { CheckCircle2, Copy, CalendarDays, Home, CreditCard, ExternalLink } from "lucide-react";
 import type { BookingDates, SelectedResource, ClientData, BookingResult } from "./BookingWidget";
-import { Tooltip } from "@/components/ui/tooltip";
+import { Tooltip } from "@/components/engine-ui";
 
 interface Props {
   result: BookingResult;

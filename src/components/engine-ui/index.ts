@@ -377,4 +377,6 @@ export {
   ErrorState,
   type EmptyStateProps,
   type ErrorStateProps,
+  Tooltip,
+  type TooltipProps,
 } from "./feedback";

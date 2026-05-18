@@ -6571,3 +6571,38 @@
 .engine-root .eui-empty-state-action {
   margin-top: var(--eui-space-2);
 }
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * === PART 12 STAGE 3: Tooltip ===
+ * @floating-ui-driven; portal root = .engine-root (scoping). Dark chip,
+ * tokeny (NIE inline hardcoded jak legacy admin). Animacja CSS keyframe
+ * (NIE JS-injected). Touch: tap-toggle (PO D6, useClick w komponencie).
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+.engine-root .eui-tooltip-layer {
+  z-index: var(--eui-z-toast);
+}
+
+.engine-root .eui-tooltip {
+  position: relative;
+  background: var(--eui-grey-900);
+  color: var(--eui-grey-0);
+  border-radius: var(--eui-radius-md);
+  padding: 7px 14px;
+  font-size: var(--eui-font-size-xs);
+  font-weight: var(--eui-font-weight-medium);
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+  box-shadow: var(--eui-elev-3);
+  animation: eui-tooltip-in 0.15s var(--eui-ease-enter) both;
+}
+
+@keyframes eui-tooltip-in {
+  from { opacity: 0; transform: scale(0.96) translateY(3px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .engine-root .eui-tooltip { animation: none; }
+}
