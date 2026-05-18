@@ -6429,3 +6429,107 @@
   line-height: 1.4;
   color: var(--eui-text-primary);
 }
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * === PART 12 STAGE 1: Alert + Banner ===
+ * Statyczny komunikat severity. Alert = inline (radius). Banner =
+ * full-width square (page-level). Wspólny rdzeń, semantic tokeny bg-soft.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+.engine-root .eui-alert,
+.engine-root .eui-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--eui-space-3);
+  font-family: inherit;
+  color: var(--eui-text-primary);
+}
+
+.engine-root .eui-alert {
+  padding: var(--eui-space-4) var(--eui-space-5);
+  border: 1px solid;
+  border-radius: var(--eui-radius-sm);
+}
+.engine-root .eui-banner {
+  width: 100%;
+  padding: var(--eui-space-4) var(--eui-space-6);
+  border: 0;
+  border-bottom: 1px solid;
+  border-radius: 0;
+}
+
+/* Variant tints — border + bg-soft + icon color (Alert) */
+.engine-root .eui-alert-info    { border-color: var(--eui-info);    background: var(--eui-info-bg-soft); }
+.engine-root .eui-alert-success { border-color: var(--eui-success); background: var(--eui-success-bg-soft); }
+.engine-root .eui-alert-warning { border-color: var(--eui-warning); background: var(--eui-warning-bg-soft); }
+.engine-root .eui-alert-error   { border-color: var(--eui-danger);  background: var(--eui-danger-bg-soft); }
+.engine-root .eui-alert-info    .eui-alert-icon { color: var(--eui-info); }
+.engine-root .eui-alert-success .eui-alert-icon { color: var(--eui-success); }
+.engine-root .eui-alert-warning .eui-alert-icon { color: var(--eui-warning); }
+.engine-root .eui-alert-error   .eui-alert-icon { color: var(--eui-danger); }
+
+/* Variant tints — Banner (bg-soft + bottom border-color + icon) */
+.engine-root .eui-banner-info    { border-color: var(--eui-info);    background: var(--eui-info-bg-soft); }
+.engine-root .eui-banner-success { border-color: var(--eui-success); background: var(--eui-success-bg-soft); }
+.engine-root .eui-banner-warning { border-color: var(--eui-warning); background: var(--eui-warning-bg-soft); }
+.engine-root .eui-banner-error   { border-color: var(--eui-danger);  background: var(--eui-danger-bg-soft); }
+.engine-root .eui-banner-info    .eui-banner-icon { color: var(--eui-info); }
+.engine-root .eui-banner-success .eui-banner-icon { color: var(--eui-success); }
+.engine-root .eui-banner-warning .eui-banner-icon { color: var(--eui-warning); }
+.engine-root .eui-banner-error   .eui-banner-icon { color: var(--eui-danger); }
+
+/* Shared inner slots (both prefixes) */
+.engine-root .eui-alert-icon,
+.engine-root .eui-banner-icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  margin-top: 1px;
+}
+.engine-root .eui-alert-body,
+.engine-root .eui-banner-body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.engine-root .eui-alert-title,
+.engine-root .eui-banner-title {
+  font-size: var(--eui-font-size-base);
+  font-weight: var(--eui-font-weight-medium);
+  line-height: 1.4;
+}
+.engine-root .eui-alert-message,
+.engine-root .eui-banner-message {
+  font-size: var(--eui-font-size-sm);
+  line-height: 1.45;
+  color: var(--eui-text-secondary);
+}
+.engine-root .eui-alert-dismiss,
+.engine-root .eui-banner-dismiss {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  background: transparent;
+  border-radius: var(--eui-radius-xs);
+  color: var(--eui-text-muted);
+  cursor: pointer;
+  transition: color 0.15s, background-color 0.15s;
+}
+.engine-root .eui-alert-dismiss:hover,
+.engine-root .eui-banner-dismiss:hover {
+  color: var(--eui-text-primary);
+  background: color-mix(in srgb, var(--eui-grey-900) 6%, transparent);
+}
+/* B-neutral focus (canonical --eui-focus-ring) */
+.engine-root .eui-alert-dismiss:focus-visible,
+.engine-root .eui-banner-dismiss:focus-visible {
+  outline: none;
+  box-shadow: var(--eui-focus-ring);
+}

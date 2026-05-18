@@ -365,3 +365,12 @@ export {
   Switch,
   type SwitchProps,
 } from "./input";
+
+// ── Part 12 — Feedback + State ───────────────────────────────────
+export {
+  Alert,
+  Banner,
+  type AlertProps,
+  type BannerProps,
+  type AlertVariant,
+} from "./feedback";
